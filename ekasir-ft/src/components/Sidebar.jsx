@@ -1,0 +1,68 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import '../assets/css/sidebar.css';
+
+// Import icon sesuai struktur foldermu
+import logo from '../assets/icons/produk.png'; // Ganti dengan logo kasirmu
+import manajemenIcon from '../assets/icons/manajemen.png';
+import transaksiIcon from '../assets/icons/keuangan.png';
+import laporanIcon from '../assets/icons/report.png';
+import shiftIcon from '../assets/icons/shift.png';
+import stokIcon from '../assets/icons/stock.png';
+import userIcon from '../assets/icons/user.png';
+import settingIcon from '../assets/icons/settings.png';
+import logoutIcon from '../assets/icons/logout.png';
+
+const Sidebar = ({ isOpen, toggleSidebar }) => {
+    return (
+        <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+            <div className="sidebar-header">
+                <img src={logo} alt="Logo" className="logo-img" />
+                {isOpen && <h2 className="brand-name">Kasir App</h2>}
+            </div>
+
+            <div className="sidebar-menu">
+                <p className="menu-label">{isOpen ? 'MAIN' : '...'}</p>
+                <Link to="/dashboard" className="menu-item active">
+                    <img src={manajemenIcon} alt="icon" />
+                    {isOpen && <span>Manajemen</span>}
+                </Link>
+                <Link to="/transaksi" className="menu-item">
+                    <img src={transaksiIcon} alt="icon" />
+                    {isOpen && <span>Transaksi</span>}
+                </Link>
+                <Link to="/laporan" className="menu-item">
+                    <img src={laporanIcon} alt="icon" />
+                    {isOpen && <span>Laporan</span>}
+                </Link>
+                <Link to="/shift" className="menu-item">
+                    <img src={shiftIcon} alt="icon" />
+                    {isOpen && <span>Shift</span>}
+                </Link>
+                <Link to="/stok" className="menu-item">
+                    <img src={stokIcon} alt="icon" />
+                    {isOpen && <span>Stok Opname</span>}
+                </Link>
+
+                <p className="menu-label" style={{ marginTop: '20px' }}>{isOpen ? 'MORE' : '...'}</p>
+                <Link to="/akun" className="menu-item">
+                    <img src={userIcon} alt="icon" />
+                    {isOpen && <span>Akun Saya</span>}
+                </Link>
+                <Link to="/pengaturan" className="menu-item">
+                    <img src={settingIcon} alt="icon" />
+                    {isOpen && <span>Pengaturan</span>}
+                </Link>
+            </div>
+
+            <div className="sidebar-footer">
+                <button className="logout-btn">
+                    <img src={logoutIcon} alt="logout" />
+                    {isOpen && <span>Keluar</span>}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default Sidebar;

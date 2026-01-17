@@ -1,0 +1,132 @@
+.dashboard-container {
+  display: flex;
+  background-color: #f4f7fe; /* Warna background abu kebiruan lembut */
+  min-height: 100vh;
+}
+
+/* Area Konten Utama */
+.main-content {
+  flex: 1;
+  margin-left: 80px; /* Jarak default saat sidebar ciut */
+  padding: 30px;
+  transition: margin-left 0.3s ease;
+}
+
+/* Jika Sidebar Terbuka */
+.main-content.shifted {
+  margin-left: 240px;
+}
+
+/* Header di dalam Konten */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.header-left h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+.badge {
+  background: #333;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.notif {
+  background: white;
+  padding: 8px 15px;
+  border-radius: 12px;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Grid Layout untuk Card */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+/* Styling Card Satuan */
+.menu-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.card-text h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #2d3436;
+}
+.card-text p {
+  font-size: 13px;
+  color: #636e72;
+  line-height: 1.6;
+}
+
+.card-icon {
+  background: #fff1f2;
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.btn-atur {
+  background-color: #d90429;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-atur:hover {
+  background-color: #b90322;
+  box-shadow: 0 4px 10px rgba(217, 4, 41, 0.3);
+}
