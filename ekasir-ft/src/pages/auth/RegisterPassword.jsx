@@ -79,7 +79,10 @@ export default function RegisterPassword() {
                         </label>
                     </div>
 
-                    <button className="auth-btn">Daftar</button>
+                    <button
+                        className="auth-btn"
+                        onClick={() => navigate("/dashboard")}
+                    >Daftar</button>
 
                     <div className="auth-link">
                         Sudah punya akun?{" "}

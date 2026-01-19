@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import '../assets/css/sidebar.css';
 
 // Import icon sesuai struktur foldermu
-import logo from '../assets/icons/produk.png'; // Ganti dengan logo kasirmu
+import logo from '../assets/img/logo.png';
 import manajemenIcon from '../assets/icons/manajemen.png';
 import transaksiIcon from '../assets/icons/keuangan.png';
 import laporanIcon from '../assets/icons/report.png';
@@ -23,7 +23,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
             <div className="sidebar-menu">
                 <p className="menu-label">{isOpen ? 'MAIN' : '...'}</p>
-                <Link to="/dashboard" className="menu-item active">
+                <Link to="/dashboard" className="menu-item">
                     <img src={manajemenIcon} alt="icon" />
                     {isOpen && <span>Manajemen</span>}
                 </Link>
@@ -53,13 +53,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <img src={settingIcon} alt="icon" />
                     {isOpen && <span>Pengaturan</span>}
                 </Link>
-            </div>
 
-            <div className="sidebar-footer">
-                <button className="logout-btn">
+
+                <p className="menu-label" style={{ marginTop: '180px' }}>{isOpen ? 'LOGOUT' : '...'}</p>
+                <Link to="/logout" className="menu-item">
                     <img src={logoutIcon} alt="logout" />
                     {isOpen && <span>Keluar</span>}
-                </button>
+                </Link>
             </div>
         </div>
     );

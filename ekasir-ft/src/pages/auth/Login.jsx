@@ -12,7 +12,7 @@ export default function Login() {
     const navigate = useNavigate();
 
     const handleLogin = () => {
-        login("admin@gmail.com");
+        // login("admin@gmail.com");
         navigate("/dashboard");
     };
 
