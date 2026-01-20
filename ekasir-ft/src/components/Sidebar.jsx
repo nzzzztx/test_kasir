@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/sidebar.css';
 
-// Import icon sesuai struktur foldermu
 import logo from '../assets/img/logo.png';
 import manajemenIcon from '../assets/icons/manajemen.png';
 import transaksiIcon from '../assets/icons/keuangan.png';
@@ -55,7 +54,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </Link>
 
 
-                <p className="menu-label" style={{ marginTop: '180px' }}>{isOpen ? 'LOGOUT' : '...'}</p>
+                <p className="menu-label" style={{ marginTop: '160px' }}>{isOpen ? 'LOGOUT' : '...'}</p>
                 <Link to="/logout" className="menu-item">
                     <img src={logoutIcon} alt="logout" />
                     {isOpen && <span>Keluar</span>}

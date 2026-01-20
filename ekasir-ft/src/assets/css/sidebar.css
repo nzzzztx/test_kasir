@@ -141,3 +141,12 @@
     transform: translateX(-100%);
   }
 }
+
+@media (max-width: 767px) {
+  .sidebar {
+    height: auto;
+    min-height: 100%;
+    top: 0;
+    bottom: 0;
+  }
+}

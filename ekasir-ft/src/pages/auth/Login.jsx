@@ -12,7 +12,7 @@ export default function Login() {
     const navigate = useNavigate();
 
     const handleLogin = () => {
-        // login("admin@gmail.com");
+        login("admin@gmail.com", "123456");
         navigate("/dashboard");
     };
 
@@ -20,12 +20,10 @@ export default function Login() {
 
     return (
         <div className="auth-wrapper">
-            {/* LEFT */}
             <div className="auth-left">
                 <img src={illustration} alt="login" />
             </div>
 
-            {/* RIGHT */}
             <div className="auth-right">
                 <img src={logo} alt="logo" className="auth-logo" />
 
@@ -63,6 +61,10 @@ export default function Login() {
                     <button className="auth-btn" onClick={handleLogin}>
                         Masuk
                     </button>
+
+                    {/* <button className="auth-btn" onClick={() => navigate("/dashboard")}>
+                        Masuk
+                    </button> */}
 
                     <div className="auth-link">
                         Belum punya akun?{" "}
