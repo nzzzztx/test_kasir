@@ -3,7 +3,7 @@ import '../../assets/css/product.css';
 import imageIcon from '../../assets/icons/camera.png';
 import productDummy from '../../assets/img/product.png';
 
-const EditProduct = ({ product, onClose, onSave }) => {
+const EditProduct = ({ product, onClose, onSave, categories }) => {
     const [form, setForm] = useState({
         name: '',
         type: '',
@@ -157,9 +157,13 @@ const EditProduct = ({ product, onClose, onSave }) => {
                         onChange={(e) => handleChange('category', e.target.value)}
                     >
                         <option value="">Pilih</option>
-                        <option value="Snack">Snack</option>
-                        <option value="Peralatan Tulis dan Kantor">Peralatan Tulis dan Kantor</option>
-                        <option value="Alat Rumah Tangga">Alat Rumah Tangga</option>
+
+                        {Array.isArray(categories) &&
+                            categories.map((cat, idx) => (
+                                <option key={idx} value={cat}>
+                                    {cat}
+                                </option>
+                            ))}
                     </select>
                 </div>
 

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import '../../assets/css/dashboard.css';
-import '../../assets/css/product.css';
 import '../../assets/css/categories.css';
 
 import Sidebar from '../../components/Sidebar';
+import AddCategoryModal from '../../components/Categories/AddCategoryModal';
+import DeleteCategoryModal from '../../components/Categories/DeleteCategoryModal';
+
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import userDummy from '../../assets/img/user1.png';
@@ -13,17 +15,15 @@ import searchIcon from '../../assets/icons/search.png';
 
 const defaultCategories = [
     { id: 1, name: 'Kebutuhan Rumah Tangga' },
-    { id: 2, name: 'Makanan dan Minuman' },
-    { id: 3, name: 'Elektronik' },
-    { id: 4, name: 'Peralatan Tulis dan Kantor' },
+    { id: 2, name: 'Peralatan Tulis dan Kantor' },
 ];
 
 const dummyProducts = [
     {
         id: 1,
-        name: 'Chitato Rasa Sapi Panggang',
+        name: 'Tisu Paseo',
         code: '000001',
-        category: 'Makanan dan Minuman',
+        category: 'Kebutuhan Rumah Tangga',
         stock: 100,
         priceMin: 5000,
         priceMax: 8000,
@@ -48,6 +48,9 @@ const Categories = () => {
     const [search, setSearch] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [showAdd, setShowAdd] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
 
     useEffect(() => {
         const savedCategories = localStorage.getItem('categories');
@@ -66,12 +69,25 @@ const Categories = () => {
         )
         : [];
 
+    const handleAddCategory = (name) => {
+        const newCategory = {
+            id: Date.now(),
+            name,
+        };
+
+        const updatedCategories = [...categories, newCategory];
+
+        setCategories(updatedCategories);
+        localStorage.setItem("categories", JSON.stringify(updatedCategories));
+
+        setShowAdd(false);
+    };
+
     return (
         <div className="dashboard-container">
             <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
-                {/* HEADER */}
                 <header className="content-header">
                     <div className="header-left">
                         <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -81,9 +97,44 @@ const Categories = () => {
                     </div>
 
                     <div className="header-right">
-                        <div className="notif" onClick={() => setNotificationOpen(!notificationOpen)}>
+                        <div
+                            className="notif"
+                            onClick={() => setNotificationOpen(!notificationOpen)}
+                        >
                             <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <span>Notifikasi</span>
+
+                            {notificationOpen && (
+                                <div className="notif-dropdown">
+                                    <div className="notif-header">
+                                        <span>Notifikasi (0)</span>
+                                    </div>
+
+                                    <div className="notif-body empty">
+                                        <div className="notif-icon">
+                                            <img
+                                                src={notificationIcon}
+                                                alt="no notification"
+                                                className="notif-icon-img"
+                                            />
+                                        </div>
+                                        <p className="notif-title">Tidak Ada Notifikasi</p>
+                                        <p className="notif-desc">
+                                            Informasi terkait layanan darurat akan muncul disini.
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        className="notif-footer"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setNotificationOpen(false);
+                                        }}
+                                    >
+                                        Tutup
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="profile-box">
                             <img src={userDummy} alt="profile" />
@@ -91,9 +142,7 @@ const Categories = () => {
                     </div>
                 </header>
 
-                {/* CONTENT */}
                 <div className="categories-wrapper">
-                    {/* LEFT */}
                     <div className="categories-left">
                         <div className="category-search">
                             <img src={searchIcon} alt="search" />
@@ -127,7 +176,13 @@ const Categories = () => {
 
                                         <div className="category-right">
                                             <p className="price">Modal : Rp {totalModal.toLocaleString()}</p>
-                                            <button className="icon-btn">
+                                            <button
+                                                className="icon-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteTarget(cat);
+                                                }}
+                                            >
                                                 <img src={trashIcon} alt="hapus" />
                                             </button>
                                         </div>
@@ -136,10 +191,11 @@ const Categories = () => {
                             })}
                         </div>
 
-                        <button className="btn-add-category">+ Tambah Kategori</button>
+                        <button className="btn-add-category" onClick={() => setShowAdd(true)}>
+                            + Tambah Kategori
+                        </button>
                     </div>
 
-                    {/* RIGHT */}
                     <div className="categories-right">
                         <h3>Barang / Produk :</h3>
 
@@ -163,6 +219,31 @@ const Categories = () => {
                             </div>
                         ))}
                     </div>
+                    {showAdd && (
+                        <AddCategoryModal
+                            onClose={() => setShowAdd(false)}
+                            onSubmit={handleAddCategory}
+                        />
+                    )}
+
+                    {deleteTarget && (
+                        <DeleteCategoryModal
+                            category={deleteTarget}
+                            onCancel={() => setDeleteTarget(null)}
+                            onConfirm={(cat) => {
+                                const updated = categories.filter(c => c.id !== cat.id);
+
+                                setCategories(updated);
+                                localStorage.setItem('categories', JSON.stringify(updated));
+
+                                setDeleteTarget(null);
+
+                                if (selectedCategory?.id === cat.id) {
+                                    setSelectedCategory(null);
+                                }
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </div>

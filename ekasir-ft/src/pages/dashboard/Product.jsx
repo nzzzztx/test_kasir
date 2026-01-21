@@ -25,8 +25,6 @@ const initialProducts = [
     },
 ];
 
-const categories = ['Semua', 'Snack', 'Alat Rumah Tangga', 'Peralatan Tulis dan Kantor'];
-
 const Product = () => {
     const [products, setProducts] = useState(() => {
         const saved = localStorage.getItem('products');
@@ -46,6 +44,8 @@ const Product = () => {
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('Semua');
 
+    const [categories, setCategories] = useState([]);
+
     useEffect(() => {
         if (products.length && !selectedProduct) {
             setSelectedProduct(products[0]);
@@ -62,6 +62,12 @@ const Product = () => {
             activeCategory === 'Semua' || p.category === activeCategory;
         return matchSearch && matchCategory;
     });
+
+    useEffect(() => {
+        const saved = localStorage.getItem('categories');
+        const parsed = saved ? JSON.parse(saved) : [];
+        setCategories(['Semua', ...parsed.map((c) => c.name)]);
+    }, []);
 
     return (
         <div className="dashboard-container">
@@ -315,6 +321,7 @@ const Product = () => {
 
                 {showAddModal && (
                     <AddProduct
+                        categories={categories.filter(c => c !== 'Semua')}
                         onClose={() => setShowAddModal(false)}
                         onSave={(data) => {
                             const newProduct = {
@@ -331,12 +338,11 @@ const Product = () => {
                 {showEditModal && selectedProduct && (
                     <EditProduct
                         product={selectedProduct}
+                        categories={categories.filter(c => c !== 'Semua')}
                         onClose={() => setShowEditModal(false)}
                         onSave={(updated) => {
                             setProducts((prev) =>
-                                prev.map((p) =>
-                                    p.id === updated.id ? updated : p
-                                )
+                                prev.map((p) => (p.id === updated.id ? updated : p))
                             );
                             setSelectedProduct(updated);
                             setShowEditModal(false);

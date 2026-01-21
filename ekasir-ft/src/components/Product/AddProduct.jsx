@@ -3,7 +3,7 @@ import '../../assets/css/product.css';
 import imageIcon from '../../assets/icons/camera.png';
 import dummyProduct from '../../assets/img/product.png';
 
-const AddProduct = ({ onClose, onSave }) => {
+const AddProduct = ({ onClose, onSave, categories }) => {
     const [imagePreview, setImagePreview] = useState(dummyProduct);
 
     const [name, setName] = useState('');
@@ -71,9 +71,17 @@ const AddProduct = ({ onClose, onSave }) => {
                     <label>Kategori</label>
                     <select value={category} onChange={(e) => setCategory(e.target.value)}>
                         <option value="">Pilih</option>
-                        <option value="Snack">Snack</option>
-                        <option value="Peralatan Tulis dan Kantor">Peralatan Tulis dan Kantor</option>
-                        <option value="Kebutuhan Rumah Tangga">Kebutuhan Rumah Tangga</option>
+
+                        {Array.isArray(categories) && categories.length === 0 && (
+                            <option disabled>Belum ada kategori</option>
+                        )}
+
+                        {Array.isArray(categories) &&
+                            categories.map((cat, idx) => (
+                                <option key={idx} value={cat}>
+                                    {cat}
+                                </option>
+                            ))}
                     </select>
                 </div>
 
