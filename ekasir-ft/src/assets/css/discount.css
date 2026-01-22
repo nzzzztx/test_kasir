@@ -1,0 +1,451 @@
+.discount-page {
+  max-width: 1480px;
+  margin: 32px auto;
+  padding: 32px 36px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.discount-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.discount-search {
+  position: relative;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.discount-search img {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  opacity: 0.5;
+}
+
+.discount-search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 40px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.discount-search input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.15);
+  outline: none;
+}
+
+.discount-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.discount-list-wrapper {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.discount-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.discount-list-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.discount-list-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 106, 0, 0.45);
+  border-radius: 6px;
+}
+
+.discount-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 106, 0, 0.7);
+}
+
+.discount-list-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 106, 0, 0.6) transparent;
+}
+
+.discount-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.discount-item:hover {
+  background: #fff7ed;
+  border-color: #ff6a00;
+}
+
+.discount-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.discount-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #ff6a00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.discount-icon img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
+.discount-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.discount-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.discount-percent {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff6a00;
+}
+
+.discount-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.discount-actions button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  background: transparent;
+}
+
+.discount-actions img {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.discount-add-btn {
+  margin-left: auto;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.discount-edit {
+  background: #ffb355;
+  color: #ff6a00;
+}
+
+.discount-edit:hover {
+  background: #f5c07a;
+}
+
+.discount-delete {
+  background: #ff5353;
+  color: #991b1b;
+}
+
+.discount-delete:hover {
+  background: #fecaca;
+}
+
+@media (max-width: 640px) {
+  .discount-page {
+    padding: 20px;
+  }
+
+  .discount-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .discount-search {
+    width: 100%;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.discount-modal {
+  width: 420px;
+  max-width: calc(100% - 32px);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 22px 22px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+  animation: modalScale 0.2s ease;
+}
+
+.discount-modal input {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb;
+}
+
+.discount-modal input::placeholder {
+  color: #9ca3af;
+}
+
+.discount-modal input,
+.discount-modal button {
+  pointer-events: auto;
+}
+
+.discount-modal input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.15);
+}
+
+.discount-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.discount-modal-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.discount-modal .modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.discount-modal .modal-close:hover {
+  background: #fff7ed;
+  border-color: #ff6a00;
+  color: #ff6a00;
+}
+
+.discount-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.discount-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.discount-modal .form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.discount-modal .form-group input {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  outline: none;
+}
+
+.discount-modal .form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.discount-modal .form-group input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.15);
+}
+
+.discount-value-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discount-value-group input {
+  flex: 1;
+}
+
+.discount-type-toggle {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.discount-type-toggle button {
+  width: 44px;
+  height: 42px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.discount-type-toggle button:hover {
+  background: #fff7ed;
+}
+
+.discount-type-toggle button.active {
+  background: #ff6a00;
+  color: #ffffff;
+}
+
+.btn-submit-discount {
+  margin-top: 6px;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, #ff6a00, #ff4500);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.discount-type-toggle button img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  filter: brightness(0) saturate(100%);
+}
+
+.discount-type-toggle button.active img {
+  filter: brightness(0) invert(1);
+}
+
+.btn-submit-discount:hover {
+  opacity: 0.95;
+}
+
+.btn-submit-discount:active {
+  transform: scale(0.97);
+}
+
+@keyframes modalScale {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .discount-modal {
+    width: 100%;
+    padding: 18px 18px 20px;
+  }
+
+  .discount-value-group {
+    gap: 8px;
+  }
+
+  .discount-type-toggle button {
+    width: 40px;
+  }
+}
+
+.delete-discount-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-size: 13px;
+  color: #374151;
+  text-align: center;
+}
+
+.delete-discount-body strong {
+  color: #111827;
+}
+
+.delete-discount-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.delete-discount-actions .btn-outline {
+  flex: 1;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-discount-actions .btn-outline:hover {
+  background: #f9fafb;
+}
+
+.delete-discount-actions .btn-submit-discount {
+  flex: 1;
+}

@@ -1,15 +1,24 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [authData, setAuthData] = useState({
-        email: "",
-        password: "",
-        phone: "",
-        otpVerified: false,
-        isLoggedIn: false,
+    const [authData, setAuthData] = useState(() => {
+        const saved = localStorage.getItem("auth");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                email: "",
+                password: "",
+                phone: "",
+                otpVerified: false,
+                isLoggedIn: false,
+            };
     });
+
+    useEffect(() => {
+        localStorage.setItem("auth", JSON.stringify(authData));
+    }, [authData]);
 
     const register = (data) => {
         setAuthData({
@@ -29,7 +38,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = (email, password) => {
-        // simulasi login (nanti bisa diganti API)
         if (email && password) {
             setAuthData((prev) => ({
                 ...prev,
@@ -43,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
+        localStorage.removeItem("auth");
         setAuthData({
             email: "",
             password: "",

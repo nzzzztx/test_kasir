@@ -94,8 +94,6 @@ const Customers = () => {
         reader.readAsArrayBuffer(file);
     };
 
-
-
     return (
         <div className="dashboard-container">
             <Sidebar
@@ -122,6 +120,38 @@ const Customers = () => {
                         >
                             <img src={notificationIcon} alt="notif" />
                             <span>Notifikasi</span>
+
+                            {notificationOpen && (
+                                <div className="notif-dropdown">
+                                    <div className="notif-header">
+                                        <span>Notifikasi (0)</span>
+                                    </div>
+
+                                    <div className="notif-body empty">
+                                        <div className="notif-icon">
+                                            <img
+                                                src={notificationIcon}
+                                                alt="no notification"
+                                                className="notif-icon-img"
+                                            />
+                                        </div>
+                                        <p className="notif-title">Tidak Ada Notifikasi</p>
+                                        <p className="notif-desc">
+                                            Informasi terkait layanan darurat akan muncul disini.
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        className="notif-footer"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setNotificationOpen(false);
+                                        }}
+                                    >
+                                        Tutup
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="profile-box">
@@ -218,8 +248,12 @@ const Customers = () => {
                     </div>
 
                     <div className="customers-footer">
-                        <span>Tampilkan: 5</span>
-                        <span>Ditampilkan 1 - 5 dari 17 data</span>
+                        <span>Tampilkan: {ITEMS_PER_PAGE}</span>
+                        <span>
+                            Ditampilkan {(page - 1) * ITEMS_PER_PAGE + 1} -{" "}
+                            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} dari{" "}
+                            {filtered.length} data
+                        </span>
                         <div className="pagination">
                             {Array.from({ length: totalPages }, (_, i) => (
                                 <button

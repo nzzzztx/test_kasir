@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <img src={manajemenIcon} alt="icon" />
                     {isOpen && <span>Manajemen</span>}
                 </Link>
-                <Link to="/transaksi" className="menu-item">
+                <Link to="/dashboard/transaction" className="menu-item">
                     <img src={transaksiIcon} alt="icon" />
                     {isOpen && <span>Transaksi</span>}
                 </Link>

@@ -13,7 +13,12 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import Product from "../pages/dashboard/Product";
 import Categories from "../pages/dashboard/Categories";
 import Customers from "../pages/dashboard/Customers";
+import Suppliers from "../pages/dashboard/Suppliers";
+import Discount from "../pages/dashboard/Discount";
 import Stock from "../pages/dashboard/Stock";
+import Logistic from "../pages/dashboard/Logistic";
+
+import Transaction from "../pages/dashboard/Transaction";
 
 export default function AppRoutes() {
     return (
@@ -50,8 +55,24 @@ export default function AppRoutes() {
                 element={<ProtectRoute><Customers /></ProtectRoute>}
             />
             <Route
+                path="/dashboard/suppliers"
+                element={<ProtectRoute><Suppliers /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/discount"
+                element={<ProtectRoute><Discount /></ProtectRoute>}
+            />
+            <Route
                 path="/dashboard/stock"
                 element={<ProtectRoute><Stock /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/stock/logistic"
+                element={<ProtectRoute><Logistic /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/transaction"
+                element={<ProtectRoute><Transaction /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />
