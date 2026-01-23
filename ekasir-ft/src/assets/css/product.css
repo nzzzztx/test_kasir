@@ -818,11 +818,44 @@
   border-radius: 999px;
 }
 
-@media (max-width: 480px) {
-  body {
-    overflow-x: hidden;
+@media (max-width: 1024px) {
+  .main-content.shifted .product-wrapper {
+    margin-left: 0;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .product-wrapper {
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    max-width: 100%;
   }
 
+  .main-content.shifted .product-wrapper {
+    margin-left: 276px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .product-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .product-left,
+  .product-right {
+    width: 100%;
+    height: auto;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 767px) {
   .product-wrapper {
     display: flex;
     flex-direction: column;
@@ -831,71 +864,18 @@
     max-width: 100%;
   }
 
+  .product-left,
   .product-right {
     width: 100%;
+    height: auto;
     min-height: auto;
-    order: 2;
-    margin-top: 4px;
-  }
-
-  .product-left {
-    width: 100%;
-    min-height: auto;
-    order: 1;
   }
 
   .product-list {
-    overflow-x: hidden;
+    max-height: 420px;
   }
 
   .btn-add-product {
     width: 100%;
-  }
-}
-
-@media (min-width: 481px) and (max-width: 767px) {
-  .modal-add-product {
-    width: 92%;
-    max-width: 520px;
-    max-height: 88vh;
-    padding: 20px 20px 16px;
-    border-radius: 16px;
-  }
-
-  .form-grid-2 {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .image-upload img {
-    width: 96px;
-    height: 96px;
-  }
-
-  .modal-actions {
-    padding-top: 12px;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  .modal-add-product {
-    width: 560px;
-    max-width: calc(100% - 48px);
-    max-height: 86vh;
-    padding: 22px 22px 18px;
-    border-radius: 16px;
-  }
-
-  .form-grid-2 {
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .form-group textarea {
-    min-height: 96px;
-  }
-
-  .modal-actions {
-    padding-top: 14px;
   }
 }

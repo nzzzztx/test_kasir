@@ -17,6 +17,7 @@ import Suppliers from "../pages/dashboard/Suppliers";
 import Discount from "../pages/dashboard/Discount";
 import Stock from "../pages/dashboard/Stock";
 import Logistic from "../pages/dashboard/Logistic";
+import Payment from "../pages/dashboard/Payment";
 
 import Transaction from "../pages/dashboard/Transaction";
 
@@ -73,6 +74,10 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/transaction"
                 element={<ProtectRoute><Transaction /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/transaction/payment"
+                element={<ProtectRoute><Payment /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

@@ -127,7 +127,7 @@
   }
 }
 
-@media (max-width: 1024px) and (orientation: landscape) {
+@media (max-width: 1024px) {
   .sidebar {
     width: 240px;
     transform: translateX(-100%);
@@ -144,9 +144,8 @@
 
 @media (max-width: 767px) {
   .sidebar {
-    height: auto;
-    min-height: 100%;
+    height: 100vh;
     top: 0;
-    bottom: 0;
+    bottom: auto;
   }
 }

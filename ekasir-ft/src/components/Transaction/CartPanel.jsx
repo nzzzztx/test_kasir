@@ -1,98 +1,152 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import trashIcon from "../../assets/icons/trash.png";
+import editIcon from "../../assets/icons/edit.png";
+
+import EditCartModal from "./EditCartModal";
+import DiscountModal from "./DiscountModal";
 
 const CartPanel = ({ cart, setCart, userEmail }) => {
     const [discount, setDiscount] = useState(null);
+    const [showDiscount, setShowDiscount] = useState(false);
+    const [editItem, setEditItem] = useState(null);
 
     const total = cart.reduce(
         (sum, i) => sum + i.sellPrice * i.qty,
         0
     );
 
-    const finalTotal = discount
-        ? total - (total * discount.value) / 100
-        : total;
+    const finalTotal = (() => {
+        if (!discount) return total;
+
+        if (discount.type === "percent") {
+            return Math.max(
+                total - total * (discount.value / 100),
+                0
+            );
+        }
+
+        return Math.max(total - discount.value, 0);
+    })();
+
 
     const removeItem = (code) => {
         setCart((prev) => prev.filter((i) => i.code !== code));
     };
 
+    const handleOpenDiscount = () => {
+        const discounts = JSON.parse(
+            localStorage.getItem("discounts") || "[]"
+        );
+
+        if (!discounts.length) {
+            alert("Tidak ada diskon tersedia");
+            return;
+        }
+
+        setShowDiscount(true);
+    };
+
     const handlePay = () => {
         if (!cart.length) return;
 
-        // update STOCK
-        const products = JSON.parse(
-            localStorage.getItem("products") || "[]"
-        );
-
-        const updatedProducts = products.map((p) => {
-            const item = cart.find((c) => c.code === p.code);
-            if (!item) return p;
-
-            return {
-                ...p,
-                stock: p.stock - item.qty,
-            };
-        });
+        const payload = {
+            items: [...cart],
+            discount,
+            total,
+            finalTotal,
+            paidAt: new Date().toISOString(),
+            cashier: userEmail,
+        };
 
         localStorage.setItem(
-            "products",
-            JSON.stringify(updatedProducts)
-        );
-
-        // LOGISTIK (KELUAR)
-        const prevLogs = JSON.parse(
-            localStorage.getItem("logistics") || "[]"
-        );
-
-        const newLogs = cart.map((item) => ({
-            id: Date.now() + Math.random(),
-            code: item.code,
-            date: new Date().toISOString().split("T")[0],
-            in: 0,
-            out: item.qty,
-            stock: item.stock - item.qty,
-            basePrice: item.basePrice,
-            sellPrice: item.sellPrice,
-            email: userEmail,
-            mode: "Transaksi Penjualan",
-        }));
-
-        localStorage.setItem(
-            "logistics",
-            JSON.stringify([...newLogs, ...prevLogs])
+            "current_transaction",
+            JSON.stringify(payload)
         );
 
         setCart([]);
-        alert("Transaksi berhasil");
+        setDiscount(null);
+
+        window.location.href = "/dashboard/transaction/payment";
     };
+
 
     return (
         <div className="cart-panel">
-            <h3>List Barang</h3>
+            <h3 className="cart-title">List Barang</h3>
 
-            {cart.map((item) => (
-                <div key={item.code} className="cart-item">
-                    <span className="qty">{item.qty}</span>
-                    <span className="name">{item.name}</span>
-                    <span className="price">
-                        Rp{" "}
-                        {(item.sellPrice * item.qty).toLocaleString(
-                            "id-ID"
-                        )}
-                    </span>
-                    <button onClick={() => removeItem(item.code)}>
-                        🗑
-                    </button>
-                </div>
-            ))}
+            <div className="cart-list">
+                {cart.map((item) => (
+                    <div key={item.code} className="cart-item">
+                        <div className="cart-qty">{item.qty}</div>
 
-            <div className="cart-discount">
-                <span>Lihat Diskon</span>
+                        <div className="cart-info">
+                            <div className="cart-name">{item.name}</div>
+                            <div className="cart-price">
+                                Rp {(item.sellPrice * item.qty).toLocaleString("id-ID")}
+                            </div>
+                        </div>
+
+                        <div className="cart-actions">
+                            <button
+                                className="cart-edit"
+                                onClick={() => setEditItem(item)}
+                                title="Edit item"
+                            >
+                                <img src={editIcon} alt="edit" />
+                            </button>
+
+                            <button
+                                className="cart-remove"
+                                onClick={() => removeItem(item.code)}
+                                title="Hapus item"
+                            >
+                                <img src={trashIcon} alt="hapus" />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+
+                {!cart.length && (
+                    <div className="cart-empty">
+                        Belum ada barang
+                    </div>
+                )}
+            </div>
+
+            <div className="cart-discount" onClick={handleOpenDiscount}>
+                {discount
+                    ? `Diskon: ${discount.name} (-${discount.value}%)`
+                    : "Lihat Diskon"}
             </div>
 
             <button className="btn-pay" onClick={handlePay}>
                 Rp {finalTotal.toLocaleString("id-ID")} — Bayar
             </button>
+
+            {editItem && (
+                <EditCartModal
+                    item={editItem}
+                    onClose={() => setEditItem(null)}
+                    onSave={(updated) => {
+                        setCart(prev =>
+                            prev.map(i =>
+                                i.code === updated.code ? updated : i
+                            )
+                        );
+                        setEditItem(null);
+                    }}
+                />
+            )}
+
+            {showDiscount && (
+                <DiscountModal
+                    onClose={() => setShowDiscount(false)}
+                    onSelect={(d) => {
+                        setDiscount(d);
+                        setShowDiscount(false);
+                    }}
+                />
+            )}
         </div>
     );
 };

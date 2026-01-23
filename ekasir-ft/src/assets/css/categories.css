@@ -358,3 +358,57 @@
 .btn-confirm-orange:hover {
   opacity: 0.95;
 }
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .categories-wrapper {
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .categories-left,
+  .categories-right {
+    min-height: auto;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .categories-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .categories-left,
+  .categories-right {
+    width: 100%;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .categories-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .categories-left,
+  .categories-right {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .category-list {
+    max-height: 420px;
+  }
+
+  .btn-add-category {
+    width: 100%;
+  }
+}

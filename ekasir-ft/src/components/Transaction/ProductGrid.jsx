@@ -1,33 +1,24 @@
+import { getProductKey } from "../../utils/product";
+
 const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
-    const safeSearch = search.toLowerCase();
+    const safeSearch = (search || "").toLowerCase();
 
     const filteredProducts = products.filter((product) => {
-        const name =
-            product?.name ||
-            product?.nama ||
-            "";
+        const name = product.name || "";
+        const cat = product.category || "";
 
-        const cat =
-            product?.category ||
-            product?.kategori ||
-            "";
-
-        const matchSearch = name.toLowerCase().includes(safeSearch);
-        const matchCategory =
-            category === "Semua" || cat === category;
-
-        return matchSearch && matchCategory;
+        return (
+            name.toLowerCase().includes(safeSearch) &&
+            (category === "Semua" || cat === category)
+        );
     });
 
     return (
         <div className="product-grid">
-            {filteredProducts.map((product) => {
-                const code = product.code;
-                const name = product.name || product.nama;
-                const price =
-                    product.sellPrice ??
-                    product.harga_jual ??
-                    0;
+            {filteredProducts.map((product, index) => {
+                const code = getProductKey(product, index);
+                const name = product.name || "Tanpa Nama";
+                const price = Number(product.priceMax ?? 0);
 
                 const inCart = cart.find((i) => i.code === code);
 
@@ -37,9 +28,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                         className={`product-card ${inCart ? "active" : ""}`}
                         onClick={() => {
                             setCart((prev) => {
-                                const exist = prev.find(
-                                    (i) => i.code === code
-                                );
+                                const exist = prev.find((i) => i.code === code);
 
                                 if (exist) {
                                     return prev.map((i) =>
@@ -52,32 +41,25 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                                 return [
                                     ...prev,
                                     {
-                                        ...product,
+                                        code,
                                         name,
                                         sellPrice: price,
+                                        image: product.image,
                                         qty: 1,
                                     },
                                 ];
                             });
                         }}
                     >
-                        <img
-                            src={product.image}
-                            alt={name}
-                        />
-
-                        <div className="product-name">
-                            {name || "Tanpa Nama"}
-                        </div>
-
+                        <img src={product.image} alt={name} />
+                        <div className="product-name">{name}</div>
                         <div className="product-price">
-                            Rp {price.toLocaleString("id-ID")}
+                            {price > 0
+                                ? `Rp ${price.toLocaleString("id-ID")}`
+                                : "Rp -"}
                         </div>
-
                         {inCart && (
-                            <div className="product-qty">
-                                {inCart.qty}
-                            </div>
+                            <div className="product-qty">{inCart.qty}</div>
                         )}
                     </div>
                 );

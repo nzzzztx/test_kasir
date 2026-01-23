@@ -449,3 +449,76 @@
 .delete-discount-actions .btn-submit-discount {
   flex: 1;
 }
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .discount-page {
+    padding: 24px;
+    margin: 24px;
+    max-width: 100%;
+  }
+
+  .discount-toolbar {
+    gap: 12px;
+  }
+
+  .discount-search {
+    width: 220px;
+  }
+
+  .discount-list-wrapper {
+    max-height: 380px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .discount-page {
+    padding: 20px;
+    margin: 20px;
+    max-width: 100%;
+  }
+
+  .discount-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .discount-search {
+    width: 100%;
+  }
+
+  .discount-list-wrapper {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 767px) {
+  .discount-page {
+    padding: 16px;
+    margin: 16px;
+    border-radius: 18px;
+  }
+
+  .discount-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .discount-search {
+    width: 100%;
+  }
+
+  .discount-list-wrapper {
+    max-height: 320px;
+  }
+
+  .discount-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .discount-actions {
+    align-self: flex-end;
+  }
+}

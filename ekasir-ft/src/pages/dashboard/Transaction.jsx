@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { getProductKey } from "../../utils/product";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/transaction.css";
@@ -26,29 +27,42 @@ const Transaction = () => {
     const [scanMode, setScanMode] = useState(false);
     const [scannerOpen, setScannerOpen] = useState(false);
 
-
     useEffect(() => {
         const saved = localStorage.getItem("products");
         if (saved) setProducts(JSON.parse(saved));
     }, []);
 
-    const handleScanOnce = (code) => {
-        if (!code) return;
+    const handleScanOnce = (scannedCode) => {
+        const product = products.find(
+            (p, idx) => getProductKey(p, idx) === scannedCode
+        );
 
-        const product = products.find((p) => p.code === code);
         if (!product) {
             alert("Produk tidak ditemukan");
             return;
         }
 
+        const code = getProductKey(product);
+
         setCart((prev) => {
-            const exist = prev.find((i) => i.code === product.code);
+            const exist = prev.find((i) => i.code === code);
+
             if (exist) {
                 return prev.map((i) =>
-                    i.code === product.code ? { ...i, qty: i.qty + 1 } : i
+                    i.code === code ? { ...i, qty: i.qty + 1 } : i
                 );
             }
-            return [...prev, { ...product, qty: 1 }];
+
+            return [
+                ...prev,
+                {
+                    code,
+                    name: product.name,
+                    sellPrice: product.priceMax ?? 0,
+                    image: product.image,
+                    qty: 1,
+                },
+            ];
         });
 
         setSearch("");
@@ -86,7 +100,6 @@ const Transaction = () => {
 
                 <div className="transaction-layout">
                     <div className="transaction-left">
-
                         <div className="transaction-search-card">
                             <ScanInput
                                 search={search}
@@ -96,9 +109,7 @@ const Transaction = () => {
                                     setScanMode(val);
                                     if (val) setScannerOpen(true);
                                 }}
-                                onScanOnce={() => {
-                                    handleScanOnce(search);
-                                }}
+                                onScanOnce={() => handleScanOnce(search)}
                             />
                         </div>
 
@@ -128,6 +139,7 @@ const Transaction = () => {
                         userEmail={authData.email}
                     />
                 </div>
+
                 {scannerOpen && (
                     <BarcodeScannerModal
                         onClose={() => {

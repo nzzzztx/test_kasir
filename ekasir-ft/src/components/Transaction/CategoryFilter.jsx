@@ -9,7 +9,8 @@ const CategoryFilter = ({ products = [], active, setActive }) => {
             {categories.map((cat) => (
                 <button
                     key={cat}
-                    className={cat === active ? "active" : ""}
+                    type="button"
+                    className={`category-chip ${cat === active ? "active" : ""}`}
                     onClick={() => setActive(cat)}
                 >
                     {cat}
