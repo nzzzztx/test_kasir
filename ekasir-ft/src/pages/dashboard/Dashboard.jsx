@@ -3,19 +3,17 @@ import Sidebar from '../../components/Sidebar';
 import '../../assets/css/dashboard.css';
 import { useNavigate } from 'react-router-dom';
 
-
 import produkIcon from '../../assets/icons/produk.png';
 import kategoriIcon from '../../assets/icons/category.png';
 import customerIcon from '../../assets/icons/customer.png';
 import supplierIcon from '../../assets/icons/user.png';
 import diskonIcon from '../../assets/icons/discount.png';
+import marketIcon from '../../assets/icons/market.png';
 import stokIcon from '../../assets/icons/stock.png';
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import cameraIcon from '../../assets/icons/camera.png';
 import userDummy from '../../assets/img/user1.png';
-
-
 
 
 const Dashboard = () => {
@@ -48,6 +46,12 @@ const Dashboard = () => {
             desc: "Simpan data supplier anda secara teratur, untuk memastikan alur pasokan tetap lancar.",
             icon: supplierIcon,
             path: "/dashboard/suppliers",
+        },
+        {
+            title: "Pembelian Barang",
+            desc: "Catat pembelian barang dari supplier dan otomatis menambah stok.",
+            icon: marketIcon,
+            path: "/dashboard/pembelian",
         },
         {
             title: "Diskon Barang",

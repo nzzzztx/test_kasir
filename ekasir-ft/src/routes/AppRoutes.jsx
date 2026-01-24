@@ -16,6 +16,7 @@ import Customers from "../pages/dashboard/Customers";
 import Suppliers from "../pages/dashboard/Suppliers";
 import Discount from "../pages/dashboard/Discount";
 import Stock from "../pages/dashboard/Stock";
+import Pembelian from "../pages/dashboard/Pembelian";
 import Logistic from "../pages/dashboard/Logistic";
 import Payment from "../pages/dashboard/Payment";
 import Laporan from "../pages/dashboard/Laporan";
@@ -80,6 +81,10 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/transaction/payment"
                 element={<ProtectRoute><Payment /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/pembelian"
+                element={<ProtectRoute><Pembelian /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan"
