@@ -52,12 +52,8 @@ const Payment = () => {
             }
 
             const paid = Number(paidAmount || 0);
-            if (paid < finalTotal) {
-                alert("Uang pembayaran kurang");
-                return;
-            }
-
-            const change = paid - finalTotal;
+            const isPaid = paid >= finalTotal;
+            const change = isPaid ? paid - finalTotal : 0;
 
             const updatedTransaction = {
                 ...transaction,
@@ -65,7 +61,9 @@ const Payment = () => {
                 change,
                 paymentMethod: method,
                 paymentSubMethod: subMethod,
-                paidAt: new Date().toISOString(),
+                createdAt: transaction.createdAt ?? new Date().toISOString(),
+                paidAt: isPaid ? new Date().toISOString() : null,
+                status: isPaid ? "paid" : "unpaid",
             };
 
             localStorage.setItem(
@@ -79,12 +77,13 @@ const Payment = () => {
 
             history.push({
                 nomor: updatedTransaction.invoiceNumber ?? updatedTransaction.nomor,
-                createdAt: updatedTransaction.createdAt ?? new Date().toISOString(),
-                paidAt: updatedTransaction.paidAt,
+                createdAt: updatedTransaction.createdAt,
+                paidAt: updatedTransaction.paidAt, // null kalau belum lunas
                 outlet: "Toko Maju Jaya",
                 jenis_order: "Lainnya",
                 total: updatedTransaction.finalTotal,
                 metode: method,
+                status: updatedTransaction.status,
             });
 
             localStorage.setItem(
@@ -100,7 +99,6 @@ const Payment = () => {
             setShowValidasi(true);
             return;
         }
-
 
         setPaidAmount(prev => prev + key);
     };

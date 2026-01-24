@@ -12,6 +12,8 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         change = 0,
     } = transaction;
 
+    const isUnpaid = paidAmount < finalTotal;
+
     return (
         <div
             className="receipt-overlay"
@@ -23,6 +25,10 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                     <p className="receipt-sub">
                         Jl. Maju Terus Tanpa Batas. 173 Cilacap Tenggara
                     </p>
+
+                    <div className={`receipt-status ${isUnpaid ? "unpaid" : "paid"}`}>
+                        {isUnpaid ? "BELUM LUNAS" : "LUNAS"}
+                    </div>
 
                     <div className="receipt-line" />
 
@@ -65,10 +71,17 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         <span>Rp {paidAmount.toLocaleString("id-ID")}</span>
                     </div>
 
-                    {paidAmount > finalTotal && (
+                    {paidAmount >= finalTotal && change > 0 && (
                         <div className="receipt-row">
                             <span>Kembalian</span>
                             <span>Rp {change.toLocaleString("id-ID")}</span>
+                        </div>
+                    )}
+
+                    {paidAmount < finalTotal && (
+                        <div className="receipt-row unpaid">
+                            <span>Kurang Bayar</span>
+                            <span>- Rp {(finalTotal - paidAmount).toLocaleString("id-ID")}</span>
                         </div>
                     )}
 
