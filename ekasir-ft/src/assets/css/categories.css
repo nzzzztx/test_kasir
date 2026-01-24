@@ -362,8 +362,8 @@
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
   .categories-wrapper {
     grid-template-columns: 1.3fr 1fr;
-    gap: 20px;
-    padding: 20px;
+    gap: 10px;
+    padding: 10%;
     max-width: 100%;
   }
 
@@ -373,7 +373,7 @@
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
   .categories-wrapper {
     display: flex;
     flex-direction: column;

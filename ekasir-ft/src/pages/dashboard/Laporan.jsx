@@ -1,68 +1,50 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
-import '../../assets/css/dashboard.css';
+import '../../assets/css/laporan.css';
 import { useNavigate } from 'react-router-dom';
 
+import laporanTransaksiIcon from '../../assets/icons/keuangan.png';
+import laporanPembelianIcon from '../../assets/icons/market.png';
+import laporanStokIcon from '../../assets/icons/stock.png';
+import laporanCustomerIcon from '../../assets/icons/customer.png';
 
-import produkIcon from '../../assets/icons/produk.png';
-import kategoriIcon from '../../assets/icons/category.png';
-import customerIcon from '../../assets/icons/customer.png';
-import supplierIcon from '../../assets/icons/user.png';
-import diskonIcon from '../../assets/icons/discount.png';
-import stokIcon from '../../assets/icons/stock.png';
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import cameraIcon from '../../assets/icons/camera.png';
 import userDummy from '../../assets/img/user1.png';
 
-
-
-
-const Dashboard = () => {
+const Laporan = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const navigate = useNavigate();
 
-    const menuData = [
+    const laporanData = [
         {
-            title: "Data Barang / Produk",
-            desc: "Tambahkan barang atau jasa yang anda miliki untuk pengelolaan yang lebih akurat.",
-            icon: produkIcon,
-            path: "/dashboard/product",
+            title: "Laporan Transaksi",
+            desc: "Pantau dan unduh laporan transaksi harian, mingguan, atau bulanan untuk analisis penjualan.",
+            icon: laporanTransaksiIcon,
+            path: "/dashboard/laporan/laporan-transaksi",
         },
         {
-            title: "Kategori Barang",
-            desc: "Kelola barang dengan kategori tertentu untuk memudahkan manajemen produk.",
-            icon: kategoriIcon,
-            path: "/dashboard/categories",
+            title: "Laporan Pembelian Barang",
+            desc: "Lihat ringkasan pembelian dari supplier dan unduh laporan pembelian.",
+            icon: laporanPembelianIcon,
+            path: "/laporan/pembelian",
         },
         {
-            title: "Data Pelanggan",
-            desc: "Kelola informasi pelanggan atau member dengan mudah dan pantau dengan efisien.",
-            icon: customerIcon,
-            path: "/dashboard/customers",
+            title: "Laporan Persediaan Barang",
+            desc: "Pantau stok barang dan pergerakan persediaan secara real-time.",
+            icon: laporanStokIcon,
+            path: "/laporan/stok",
         },
         {
-            title: "Data Supplier",
-            desc: "Simpan data supplier anda secara teratur, untuk memastikan alur pasokan tetap lancar.",
-            icon: supplierIcon,
-            path: "/dashboard/suppliers",
-        },
-        {
-            title: "Diskon Barang",
-            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
-            icon: diskonIcon,
-            path: "/dashboard/discount",
-        },
-        {
-            title: "Stok Barang",
-            desc: "Kelola stok barang anda dengan mudah dan pantau stok secara real-time disini.",
-            icon: stokIcon,
-            path: "/dashboard/stock",
+            title: "Laporan Pelanggan",
+            desc: "Analisis pelanggan berdasarkan transaksi dan riwayat pembelian.",
+            icon: laporanCustomerIcon,
+            path: "/laporan/pelanggan",
         },
     ];
-
 
     return (
         <div className="dashboard-container">
@@ -71,13 +53,10 @@ const Dashboard = () => {
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button
-                            className="toggle-btn"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                        >
+                        <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
                             <img src={toggleIcon} alt="Toggle Sidebar" />
                         </button>
-                        <h1>Manajemen Kasir</h1>
+                        <h1>Laporan</h1>
                     </div>
 
                     <div className="header-right">
@@ -189,20 +168,21 @@ const Dashboard = () => {
                     </div>
                 </header>
 
-                <div className="card-grid">
-                    {menuData.map((item, index) => (
-                        <div className="menu-card" key={index}>
+                <div className="card-grid laporan-grid">
+                    {laporanData.map((item, index) => (
+                        <div className="menu-card laporan-card" key={index}>
                             <div className="card-top">
                                 <div className="card-text">
                                     <h3>{item.title}</h3>
                                     <p>{item.desc}</p>
                                 </div>
-                                <div className="card-icon">
+                                <div className="card-icon laporan-icon">
                                     <img src={item.icon} alt="icon" />
                                 </div>
                             </div>
+
                             <button
-                                className="btn-atur"
+                                className="btn-atur laporan-btn"
                                 onClick={() => navigate(item.path)}
                             >
                                 Atur sekarang
@@ -215,4 +195,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Laporan;

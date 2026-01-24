@@ -373,13 +373,13 @@
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
   .customers-page {
-    padding: 24px;
-    margin: 24px;
+    padding: 25px;
+    margin: 25px;
     max-width: 100%;
   }
 
   .customers-toolbar {
-    gap: 12px;
+    gap: 14px;
   }
 
   .customers-search-right {
@@ -387,15 +387,29 @@
   }
 
   .customers-table-wrapper {
-    max-height: 520px;
+    max-height: 620px;
   }
 }
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
   .customers-page {
-    padding: 20px;
-    margin: 20px;
+    padding: 16px;
+    margin: 0;
     max-width: 100%;
+  }
+
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .customers-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
   }
 
   .customers-header {
@@ -405,8 +419,13 @@
   }
 
   .customers-toolbar {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 12px;
+  }
+
+  .customers-actions {
+    flex-wrap: wrap;
   }
 
   .customers-search-right {
@@ -414,12 +433,14 @@
     margin-left: 0;
   }
 
-  .customers-actions {
-    flex-wrap: wrap;
+  .customers-table-wrapper {
+    max-height: 520px;
+    overflow-x: auto;
+    overflow-y: auto;
   }
 
-  .customers-table-wrapper {
-    max-height: 480px;
+  .customers-table {
+    min-width: 900px;
   }
 }
 

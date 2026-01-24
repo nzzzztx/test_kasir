@@ -18,6 +18,8 @@ import Discount from "../pages/dashboard/Discount";
 import Stock from "../pages/dashboard/Stock";
 import Logistic from "../pages/dashboard/Logistic";
 import Payment from "../pages/dashboard/Payment";
+import Laporan from "../pages/dashboard/Laporan";
+import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 
 import Transaction from "../pages/dashboard/Transaction";
 
@@ -78,6 +80,14 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/transaction/payment"
                 element={<ProtectRoute><Payment /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/laporan"
+                element={<ProtectRoute><Laporan /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/laporan/laporan-transaksi"
+                element={<ProtectRoute><LaporanTransaksi /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

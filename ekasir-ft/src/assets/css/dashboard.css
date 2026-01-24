@@ -485,7 +485,7 @@
 
 @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
   .main-content {
-    padding: 24px 32px;
+    padding: 100px;
     margin-top: 0;
   }
 
@@ -500,10 +500,11 @@
   }
 
   .card-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 2fr);
     max-width: 100%;
     margin: 0;
     gap: 20px;
+    padding-left: 10px;
   }
 }
 

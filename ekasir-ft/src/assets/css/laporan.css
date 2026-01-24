@@ -1,0 +1,26 @@
+/* .laporan-grid .menu-card {
+  border-left: 4px solid #ff6a00;
+} */
+
+.laporan-icon {
+  background: #fff4ed;
+}
+
+.laporan-btn {
+  background: #ff6a00;
+}
+
+.laporan-btn:hover {
+  background: #e65f00;
+  box-shadow: 0 4px 14px rgba(255, 106, 0, 0.35);
+}
+
+.laporan-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.laporan-card p {
+  font-size: 13px;
+  color: #6b7280;
+}

@@ -9,6 +9,7 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
     const [editItem, setEditItem] = useState(null);
+    const [paidAmount, setPaidAmount] = useState(0);
 
     const total = cart.reduce(
         (sum, i) => sum + i.sellPrice * i.qty,
@@ -19,15 +20,13 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
         if (!discount) return total;
 
         if (discount.type === "percent") {
-            return Math.max(
-                total - total * (discount.value / 100),
-                0
-            );
+            return Math.max(total - total * (discount.value / 100), 0);
         }
 
         return Math.max(total - discount.value, 0);
     })();
 
+    const change = Math.max(paidAmount - finalTotal, 0);
 
     const removeItem = (code) => {
         setCart((prev) => prev.filter((i) => i.code !== code));
@@ -49,11 +48,18 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
     const handlePay = () => {
         if (!cart.length) return;
 
+        // if (paidAmount < finalTotal) {
+        //     alert("Uang dibayar kurang");
+        //     return;
+        // }
+
         const payload = {
             items: [...cart],
             discount,
             total,
             finalTotal,
+            paidAmount,
+            change,
             paidAt: new Date().toISOString(),
             cashier: userEmail,
         };
@@ -65,10 +71,10 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
 
         setCart([]);
         setDiscount(null);
+        setPaidAmount(0);
 
         window.location.href = "/dashboard/transaction/payment";
     };
-
 
     return (
         <div className="cart-panel">
@@ -90,7 +96,6 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                             <button
                                 className="cart-edit"
                                 onClick={() => setEditItem(item)}
-                                title="Edit item"
                             >
                                 <img src={editIcon} alt="edit" />
                             </button>
@@ -98,7 +103,6 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                             <button
                                 className="cart-remove"
                                 onClick={() => removeItem(item.code)}
-                                title="Hapus item"
                             >
                                 <img src={trashIcon} alt="hapus" />
                             </button>
@@ -107,17 +111,25 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                 ))}
 
                 {!cart.length && (
-                    <div className="cart-empty">
-                        Belum ada barang
-                    </div>
+                    <div className="cart-empty">Belum ada barang</div>
                 )}
             </div>
 
             <div className="cart-discount" onClick={handleOpenDiscount}>
                 {discount
-                    ? `Diskon: ${discount.name} (-${discount.value}%)`
+                    ? `Diskon: ${discount.name} (-${discount.value}${discount.type === "percent" ? "%" : ""})`
                     : "Lihat Diskon"}
             </div>
+
+            {/* <div className="cart-paid">
+                <label>Uang Dibayar</label>
+                <input
+                    type="number"
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(Number(e.target.value))}
+                    placeholder="Masukkan uang"
+                />
+            </div> */}
 
             <button className="btn-pay" onClick={handlePay}>
                 Rp {finalTotal.toLocaleString("id-ID")} — Bayar

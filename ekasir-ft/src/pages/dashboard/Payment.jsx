@@ -58,9 +58,44 @@ const Payment = () => {
             }
 
             const change = paid - finalTotal;
+
+            const updatedTransaction = {
+                ...transaction,
+                paidAmount: paid,
+                change,
+                paymentMethod: method,
+                paymentSubMethod: subMethod,
+                paidAt: new Date().toISOString(),
+            };
+
+            localStorage.setItem(
+                "current_transaction",
+                JSON.stringify(updatedTransaction)
+            );
+
+            const history = JSON.parse(
+                localStorage.getItem("transaction_history") || "[]"
+            );
+
+            history.push({
+                nomor: updatedTransaction.invoiceNumber ?? updatedTransaction.nomor,
+                createdAt: updatedTransaction.createdAt ?? new Date().toISOString(),
+                paidAt: updatedTransaction.paidAt,
+                outlet: "Toko Maju Jaya",
+                jenis_order: "Lainnya",
+                total: updatedTransaction.finalTotal,
+                metode: method,
+            });
+
+            localStorage.setItem(
+                "transaction_history",
+                JSON.stringify(history)
+            );
+
+            setTransaction(updatedTransaction);
+            setReceiptData(updatedTransaction);
             setKembalian(change);
 
-            setReceiptData(transaction);
             setShowReceipt(false);
             setShowValidasi(true);
             return;
