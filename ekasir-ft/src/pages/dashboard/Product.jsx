@@ -166,6 +166,7 @@ const Product = () => {
                                             onClick={() => {
                                                 setActiveCategory(cat);
                                                 setFilterOpen(false);
+                                                // setTimeout(() => setFilterOpen(false), 0);
                                             }}
                                         >
                                             {cat}

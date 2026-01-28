@@ -1,5 +1,9 @@
 const PembelianSummary = ({ items, paidAmount }) => {
-    const total = items.reduce((sum, i) => sum + i.total, 0);
+    const total = items.reduce(
+        (sum, item) => sum + item.qty * item.price,
+        0
+    );
+
     const sisa = total - paidAmount;
 
     return (

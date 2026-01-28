@@ -112,7 +112,7 @@
   }
 }
 
-@media (max-width: 1024px) and (orientation: portrait) {
+@media (max-width: 767px), (max-width: 1024px) and (orientation: portrait) {
   .sidebar {
     width: 240px;
     transform: translateX(-100%);
@@ -127,18 +127,17 @@
   }
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) and (orientation: landscape) {
   .sidebar {
-    width: 240px;
-    transform: translateX(-100%);
-  }
-
-  .sidebar.open {
     transform: translateX(0);
   }
 
+  .sidebar.open {
+    width: 240px;
+  }
+
   .sidebar.closed {
-    transform: translateX(-100%);
+    width: 80px;
   }
 }
 

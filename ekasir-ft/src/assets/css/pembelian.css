@@ -124,15 +124,34 @@
   padding: 20px 0;
 }
 
+.pembelian-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.pembelian-summary .card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 14px;
+}
+
 .pembelian-summary .row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
   font-size: 14px;
 }
 
+.pembelian-summary .row span {
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .pembelian-summary .row strong {
   font-weight: 700;
+  color: #111827;
 }
 
 .pembelian-summary .row.unpaid strong {
@@ -143,6 +162,28 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.pembelian-actions input {
+  width: 160px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  outline: none;
+}
+
+.pembelian-actions input::placeholder {
+  color: #9ca3af;
+}
+
+.pembelian-actions input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.15);
 }
 
 .pembelian-actions .btn-outline {

@@ -16,16 +16,30 @@ const Pembelian = () => {
     const [items, setItems] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
     const [supplier, setSupplier] = useState(null);
-
     const [paidAmount, setPaidAmount] = useState(0);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navigate = useNavigate();
 
+    const total = items.reduce(
+        (sum, item) => sum + item.qty * item.price,
+        0
+    );
+
+    // load suppliers
     useEffect(() => {
         const saved = localStorage.getItem("suppliers");
-        if (saved) {
-            setSuppliers(JSON.parse(saved));
+        if (saved) setSuppliers(JSON.parse(saved));
+    }, []);
+
+    // load draft pembelian
+    useEffect(() => {
+        const draft = localStorage.getItem("pembelian_draft");
+        if (draft) {
+            const parsed = JSON.parse(draft);
+            setItems(parsed.items || []);
+            setSupplier(parsed.supplier || null);
+            setPaidAmount(parsed.paidAmount || 0);
         }
     }, []);
 
@@ -76,7 +90,14 @@ const Pembelian = () => {
                             items={items}
                             paidAmount={paidAmount}
                         />
-                        <PembelianActions />
+
+                        <PembelianActions
+                            items={items}
+                            supplier={supplier}
+                            paidAmount={paidAmount}
+                            total={total}
+                            setPaidAmount={setPaidAmount}
+                        />
                     </div>
                 </div>
             </div>
