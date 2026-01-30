@@ -32,38 +32,9 @@ const Logistics = () => {
         if (saved) {
             setLogs(JSON.parse(saved));
         } else {
-            setLogs([
-                {
-                    id: 1,
-                    code: "000001",
-                    date: "2024-10-03",
-                    in: 100,
-                    out: 0,
-                    stock: 350,
-                    basePrice: 5000,
-                    sellPrice: 8000,
-                    email: "admin@gmail.com",
-                    mode: "Manajemen Stok Barang",
-                },
-                {
-                    id: 2,
-                    code: "000001",
-                    date: "2024-10-05",
-                    in: 0,
-                    out: 45,
-                    stock: 305,
-                    basePrice: 5000,
-                    sellPrice: 8000,
-                    email: "kasir@gmail.com",
-                    mode: "Transaksi Penjualan",
-                },
-            ]);
+            setLogs([]);
         }
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem("logistics", JSON.stringify(logs));
-    }, [logs]);
 
     const isInRange = (date) => {
         const now = new Date();
@@ -96,7 +67,9 @@ const Logistics = () => {
             l.email.toLowerCase().includes(search.toLowerCase()) ||
             l.mode.toLowerCase().includes(search.toLowerCase());
 
-        const matchProduct = selectedCode ? l.code === selectedCode : true;
+        const matchProduct = selectedCode
+            ? String(l.code) === String(selectedCode)
+            : true;
         const matchDate = isInRange(l.date);
 
         return matchSearch && matchProduct && matchDate;

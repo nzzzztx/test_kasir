@@ -4,8 +4,6 @@ import { useAuth } from "../../context/AuthContext";
 const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
     const { authData } = useAuth();
 
-    if (!open || !stock) return null;
-
     const [form, setForm] = useState({
         date: "",
         basePrice: "",
@@ -14,22 +12,21 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
     });
 
     useEffect(() => {
-        if (stock) {
-            setForm({
-                date: new Date().toISOString().split("T")[0],
-                basePrice: stock.basePrice ?? "",
-                qty: 1,
-                note: "",
-            });
-        }
-    }, [stock]);
+        if (!open || !stock) return;
+
+        setForm({
+            date: new Date().toISOString().split("T")[0],
+            basePrice: stock.basePrice ?? "",
+            qty: 1,
+            note: "",
+        });
+    }, [open, stock]);
+
+    if (!open || !stock) return null;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e) => {
@@ -37,7 +34,6 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
 
         const qty = Number(form.qty);
         const basePrice = Number(form.basePrice);
-
         if (qty <= 0 || basePrice <= 0) return;
 
         const newStock = stock.stock + qty;
@@ -50,9 +46,9 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
 
         const newLog = {
             id: Date.now(),
-            code: stock.code,
+            code: String(stock.code),
             productName: stock.name,
-            date: form.date,
+            date: new Date().toISOString().split("T")[0],
             in: qty,
             out: 0,
             stock: newStock,

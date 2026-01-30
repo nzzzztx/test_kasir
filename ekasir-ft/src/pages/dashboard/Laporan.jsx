@@ -36,13 +36,13 @@ const Laporan = () => {
             title: "Laporan Persediaan Barang",
             desc: "Pantau stok barang dan pergerakan persediaan secara real-time.",
             icon: laporanStokIcon,
-            path: "/laporan/stok",
+            path: "/dashboard/laporan/laporan-ketersediaan",
         },
         {
             title: "Laporan Pelanggan",
             desc: "Analisis pelanggan berdasarkan transaksi dan riwayat pembelian.",
             icon: laporanCustomerIcon,
-            path: "/laporan/pelanggan",
+            path: "/dashboard/laporan/laporan-pelanggan",
         },
     ];
 

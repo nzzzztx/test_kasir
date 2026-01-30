@@ -11,14 +11,46 @@ const PaymentContent = ({
 }) => {
     const {
         items = [],
-        total = 0,
-        finalTotal = 0,
+        subtotal = 0,
         discount = null,
+        discountAmount = 0,
+        tax = null,
+        taxAmount = 0,
+        finalTotal = 0,
     } = transaction;
+
+    const customer = transaction.customer || {};
 
     return (
         <div className="payment-layout">
             <div className="payment-card-list">
+                <div className="payment-customer">
+                    <h4 className="card-title">Pelanggan</h4>
+
+                    <div className="customer-row">
+                        <span className="label">Nama</span>
+                        <span className="value">
+                            {customer.name || "Umum"}
+                        </span>
+                    </div>
+
+                    <div className="customer-row">
+                        <span className="label">No. Telepon</span>
+                        <span className="value">
+                            {customer.phone || "-"}
+                        </span>
+                    </div>
+
+                    {customer.address && customer.address !== "-" && (
+                        <div className="customer-row">
+                            <span className="label">Alamat</span>
+                            <span className="value">
+                                {customer.address}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
                 <h4 className="card-title">List Barang</h4>
 
                 <div className="payment-receipt-list">
@@ -42,14 +74,31 @@ const PaymentContent = ({
 
                 <div className="payment-receipt-summary">
                     <div className="row">
-                        <span>Total</span>
-                        <span>Rp {total.toLocaleString("id-ID")}</span>
+                        <span>Subtotal</span>
+                        <span>Rp {subtotal.toLocaleString("id-ID")}</span>
                     </div>
 
-                    {discount && (
+                    {discount && discountAmount > 0 && (
                         <div className="row discount">
-                            <span>Diskon</span>
-                            <span>- Rp {discount.value.toLocaleString("id-ID")}</span>
+                            <span>
+                                Diskon
+                                {discount?.name ? ` (${discount.name}` : ""}
+                                {discount?.type === "percent" ? ` ${discount.value}%` : ""}
+                                {discount?.name ? ")" : ""}
+                            </span>
+                            <span>Rp -{discountAmount.toLocaleString("id-ID")}</span>
+                        </div>
+                    )}
+
+                    {tax && taxAmount > 0 && (
+                        <div className="row">
+                            <span>
+                                Pajak
+                                {tax?.name ? ` (${tax.name}` : ""}
+                                {tax?.type === "percent" ? ` ${tax.value}%` : ""}
+                                {tax?.name ? ")" : ""}
+                            </span>
+                            <span>Rp {taxAmount.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 

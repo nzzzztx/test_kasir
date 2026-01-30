@@ -1,0 +1,40 @@
+@import "./laporanpembelian.css";
+
+.laporan-ketersediaan-page {
+  max-width: 1480px;
+  margin: 32px auto;
+  padding: 32px 36px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.kategori-select {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.kategori-select:hover {
+  border-color: #ff6a00;
+}
+
+.kategori-select:focus {
+  outline: none;
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.15);
+}
+
+.laporan-table td:nth-child(4) {
+  font-weight: 700;
+}
+
+.laporan-table tr:hover td:nth-child(4) {
+  color: #ff6a00;
+}

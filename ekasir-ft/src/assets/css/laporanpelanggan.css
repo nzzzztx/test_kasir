@@ -1,0 +1,73 @@
+@import "./laporanpembelian.css";
+@import "./laporantransaksi.css";
+
+.laporan-pelanggan-page {
+  max-width: 1480px;
+  margin: 32px auto;
+  padding: 32px 36px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.laporan-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.laporan-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.laporan-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.laporan-search input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  width: 220px;
+}
+
+.laporan-pelanggan-page {
+  max-width: 1480px;
+  margin: 32px auto;
+  padding: 32px 36px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.laporan-table td:nth-child(4),
+.laporan-table td:nth-child(5) {
+  font-weight: 700;
+}
+
+.laporan-table tbody tr:hover td:nth-child(5) {
+  color: #ff6a00;
+}
+
+.laporan-calendar:hover {
+  border-color: #ff6a00;
+}
+
+.laporan-table td:nth-child(4),
+.laporan-table td:nth-child(5) {
+  font-weight: 700;
+}
+
+.laporan-table tr:hover td:nth-child(5) {
+  color: #ff6a00;
+}

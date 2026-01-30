@@ -4,29 +4,48 @@ import editIcon from "../../assets/icons/edit.png";
 
 import EditCartModal from "./EditCartModal";
 import DiscountModal from "./DiscountModal";
+import TaxModal from "./TaxModal";
 
 const CartPanel = ({ cart, setCart, userEmail }) => {
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
+    const [tax, setTax] = useState(null);
+    const [showTax, setShowTax] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [paidAmount, setPaidAmount] = useState(0);
 
-    const total = cart.reduce(
+    const subtotal = cart.reduce(
         (sum, i) => sum + i.sellPrice * i.qty,
         0
     );
 
-    const finalTotal = (() => {
-        if (!discount) return total;
+    const [customer, setCustomer] = useState({
+        name: "",
+        phone: "",
+        address: "",
+    });
+
+    const afterDiscount = (() => {
+        if (!discount) return subtotal;
 
         if (discount.type === "percent") {
-            return Math.max(total - total * (discount.value / 100), 0);
+            return subtotal - subtotal * (discount.value / 100);
         }
 
-        return Math.max(total - discount.value, 0);
+        return subtotal - discount.value;
     })();
 
-    const change = Math.max(paidAmount - finalTotal, 0);
+    const taxAmount = (() => {
+        if (!tax) return 0;
+
+        if (tax.type === "percent") {
+            return afterDiscount * (tax.value / 100);
+        }
+
+        return tax.value;
+    })();
+
+    const finalTotal = Math.max(afterDiscount + taxAmount, 0);
 
     const removeItem = (code) => {
         setCart((prev) => prev.filter((i) => i.code !== code));
@@ -48,18 +67,23 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
     const handlePay = () => {
         if (!cart.length) return;
 
-        // if (paidAmount < finalTotal) {
-        //     alert("Uang dibayar kurang");
-        //     return;
-        // }
-
         const payload = {
             items: [...cart],
+            customer: {
+                name: customer.name?.trim() || "Umum",
+                phone: customer.phone?.trim() || "-",
+                address: customer.address?.trim() || "-",
+            },
+            subtotal,
             discount,
-            total,
+            discountAmount: Math.max(subtotal - afterDiscount, 0),
+            tax,
+            taxAmount,
             finalTotal,
             paidAmount,
-            change,
+            change: Math.max(paidAmount - finalTotal, 0),
+
+            createdAt: new Date().toISOString(),
             paidAt: new Date().toISOString(),
             cashier: userEmail,
         };
@@ -71,10 +95,12 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
 
         setCart([]);
         setDiscount(null);
+        setTax(null);
         setPaidAmount(0);
 
         window.location.href = "/dashboard/transaction/payment";
     };
+
 
     return (
         <div className="cart-panel">
@@ -115,10 +141,35 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                 )}
             </div>
 
-            <div className="cart-discount" onClick={handleOpenDiscount}>
-                {discount
-                    ? `Diskon: ${discount.name} (-${discount.value}${discount.type === "percent" ? "%" : ""})`
-                    : "Lihat Diskon"}
+            <div className="cart-adjustment">
+                <div
+                    className="cart-discount"
+                    onClick={handleOpenDiscount}
+                >
+                    {discount
+                        ? `Diskon: ${discount.name}`
+                        : "Diskon"}
+                </div>
+
+                <div
+                    className="cart-tax"
+                    onClick={() => {
+                        const taxes = JSON.parse(
+                            localStorage.getItem("taxes") || "[]"
+                        );
+
+                        if (!taxes.length) {
+                            alert("Tidak ada pajak tersedia");
+                            return;
+                        }
+
+                        setShowTax(true);
+                    }}
+                >
+                    {tax
+                        ? `Pajak: ${tax.name}`
+                        : "Pajak"}
+                </div>
             </div>
 
             {/* <div className="cart-paid">
@@ -130,6 +181,34 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                     placeholder="Masukkan uang"
                 />
             </div> */}
+
+            <div className="cart-customer">
+                <h4>Pelanggan</h4>
+
+                <input
+                    placeholder="Nama pelanggan (opsional)"
+                    value={customer.name}
+                    onChange={(e) =>
+                        setCustomer({ ...customer, name: e.target.value })
+                    }
+                />
+
+                <input
+                    placeholder="No telepon"
+                    value={customer.phone}
+                    onChange={(e) =>
+                        setCustomer({ ...customer, phone: e.target.value })
+                    }
+                />
+
+                <textarea
+                    placeholder="Alamat (opsional)"
+                    value={customer.address}
+                    onChange={(e) =>
+                        setCustomer({ ...customer, address: e.target.value })
+                    }
+                />
+            </div>
 
             <button className="btn-pay" onClick={handlePay}>
                 Rp {finalTotal.toLocaleString("id-ID")} — Bayar
@@ -156,6 +235,19 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                     onSelect={(d) => {
                         setDiscount(d);
                         setShowDiscount(false);
+                    }}
+                />
+            )}
+
+
+            {showTax && (
+                <TaxModal
+                    title="Pilih Pajak"
+                    storageKey="taxes"
+                    onClose={() => setShowTax(false)}
+                    onSelect={(t) => {
+                        setTax(t);
+                        setShowTax(false);
                     }}
                 />
             )}

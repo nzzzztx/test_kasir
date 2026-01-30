@@ -78,12 +78,18 @@ const Payment = () => {
             history.push({
                 nomor: updatedTransaction.invoiceNumber ?? updatedTransaction.nomor,
                 createdAt: updatedTransaction.createdAt,
-                paidAt: updatedTransaction.paidAt, // null kalau belum lunas
+                paidAt: updatedTransaction.paidAt,
                 outlet: "Toko Maju Jaya",
                 jenis_order: "Lainnya",
                 total: updatedTransaction.finalTotal,
                 metode: method,
                 status: updatedTransaction.status,
+
+                customer: updatedTransaction.customer || {
+                    name: "Umum",
+                    phone: "-",
+                    address: "-",
+                },
             });
 
             localStorage.setItem(

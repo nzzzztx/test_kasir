@@ -24,6 +24,8 @@ import Pajak from "../pages/dashboard/Pajak";
 import Transaction from "../pages/dashboard/Transaction";
 import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 import LaporanPembelian from "../components/Laporan/LaporanPembelian";
+import LaporanKetersediaan from "../components/Laporan/LaporanKetersediaan";
+import LaporanPelanggan from "../components/Laporan/LaporanPelanggan";
 
 export default function AppRoutes() {
     return (
@@ -102,6 +104,14 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/laporan/laporan-pembelian"
                 element={<ProtectRoute><LaporanPembelian /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/laporan/laporan-ketersediaan"
+                element={<ProtectRoute><LaporanKetersediaan /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/laporan/laporan-pelanggan"
+                element={<ProtectRoute><LaporanPelanggan /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

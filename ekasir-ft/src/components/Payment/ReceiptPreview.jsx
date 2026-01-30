@@ -5,14 +5,18 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
 
     const {
         items = [],
-        total = 0,
+        subtotal = 0,
         discount = null,
+        discountAmount = 0,
+        tax = null,
+        taxAmount = 0,
         finalTotal = 0,
         paidAmount = 0,
         change = 0,
     } = transaction;
 
     const isUnpaid = paidAmount < finalTotal;
+    const customer = transaction.customer || {};
 
     return (
         <div
@@ -30,6 +34,33 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         {isUnpaid ? "BELUM LUNAS" : "LUNAS"}
                     </div>
 
+                    {(customer.name || customer.phone || customer.address) && (
+                        <>
+                            <div className="receipt-customer">
+                                <div className="receipt-row">
+                                    <span>Pelanggan</span>
+                                    <span>{customer.name || "Umum"}</span>
+                                </div>
+
+                                {customer.phone && customer.phone !== "-" && (
+                                    <div className="receipt-row">
+                                        <span>No. HP</span>
+                                        <span>{customer.phone}</span>
+                                    </div>
+                                )}
+
+                                {customer.address && customer.address !== "-" && (
+                                    <div className="receipt-row">
+                                        <span>Alamat</span>
+                                        <span className="align-right">{customer.address}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="receipt-line" />
+                        </>
+                    )}
+
                     <div className="receipt-line" />
 
                     {items.map((item) => (
@@ -46,18 +77,31 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                     <div className="receipt-line" />
 
                     <div className="receipt-row">
-                        <strong>Total</strong>
-                        <strong>Rp {total.toLocaleString("id-ID")}</strong>
+                        <strong>Subtotal</strong>
+                        <strong>Rp {subtotal.toLocaleString("id-ID")}</strong>
                     </div>
 
-                    {discount && (
+                    {discount && discountAmount > 0 && (
                         <div className="receipt-row">
-                            <span>Diskon</span>
                             <span>
-                                {discount.type === "percent"
-                                    ? `${discount.value}%`
-                                    : `Rp ${discount.value.toLocaleString("id-ID")}`}
+                                Diskon
+                                {discount?.name ? ` (${discount.name}` : ""}
+                                {discount?.type === "percent" ? ` ${discount.value}%` : ""}
+                                {discount?.name ? ")" : ""}
                             </span>
+                            <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                        </div>
+                    )}
+
+                    {tax && taxAmount > 0 && (
+                        <div className="receipt-row">
+                            <span>
+                                Pajak
+                                {tax?.name ? ` (${tax.name}` : ""}
+                                {tax?.type === "percent" ? ` ${tax.value}%` : ""}
+                                {tax?.name ? ")" : ""}
+                            </span>
+                            <span>Rp {taxAmount.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 
