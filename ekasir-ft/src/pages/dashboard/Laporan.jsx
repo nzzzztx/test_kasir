@@ -30,7 +30,7 @@ const Laporan = () => {
             title: "Laporan Pembelian Barang",
             desc: "Lihat ringkasan pembelian dari supplier dan unduh laporan pembelian.",
             icon: laporanPembelianIcon,
-            path: "/laporan/pembelian",
+            path: "/dashboard/laporan/laporan-pembelian",
         },
         {
             title: "Laporan Persediaan Barang",

@@ -1,11 +1,16 @@
+import html2pdf from "html2pdf.js";
+
 const PembelianActions = ({
     items,
     supplier,
     paidAmount,
     total,
-    setPaidAmount
+    setPaidAmount,
+    paymentStatus,
+    onSaved
 }) => {
-    const handleSaveDraft = () => {
+    const sisa = Math.max(total - paidAmount, 0);
+    const handleExportDraftPDF = () => {
         const draft = {
             supplier,
             items,
@@ -16,32 +21,39 @@ const PembelianActions = ({
         };
 
         localStorage.setItem("pembelian_draft", JSON.stringify(draft));
+
+        const element = document.getElementById("pembelian-pdf");
+        if (!element) {
+            alert("Data belum siap");
+            return;
+        }
+
+        html2pdf().from(element).set({
+            margin: 10,
+            filename: `Draft_Pembelian_${Date.now()}.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { format: "a4", orientation: "portrait" }
+        }).save();
+
         alert("Draft pembelian disimpan");
     };
 
     const handleSavePembelian = () => {
-        if (!supplier) {
-            alert("Pilih supplier terlebih dahulu");
-            return;
-        }
+        if (!supplier) return alert("Pilih supplier");
+        if (items.length === 0) return alert("Tambahkan barang");
 
-        if (items.length === 0) {
-            alert("Tambahkan barang terlebih dahulu");
-            return;
-        }
-
-        if (paidAmount < total) {
-            alert("Pembayaran belum lunas");
-            return;
+        if (paymentStatus === "lunas" && paidAmount < total) {
+            return alert("Pembayaran belum lunas");
         }
 
         const pembelian = {
             id: Date.now(),
+            invoiceNumber: `INV-PB-${Date.now()}`,
             supplier,
             items,
             total,
             paidAmount,
-            status: "SELESAI",
+            status: paymentStatus === "lunas" ? "SELESAI" : "BELUM_LUNAS",
             createdAt: new Date().toISOString()
         };
 
@@ -55,13 +67,17 @@ const PembelianActions = ({
 
         localStorage.removeItem("pembelian_draft");
 
+        onSaved(pembelian);
+
         alert("Pembelian berhasil disimpan ✅");
     };
+
+
 
     return (
         <div className="pembelian-actions">
             <input
-                type="number"
+                // type="number"
                 placeholder="Nominal Dibayar"
                 value={paidAmount}
                 onChange={(e) => setPaidAmount(Number(e.target.value))}
@@ -69,7 +85,7 @@ const PembelianActions = ({
 
             <button
                 className="btn-outline"
-                onClick={handleSaveDraft}
+                onClick={handleExportDraftPDF}
             >
                 Simpan Draft
             </button>

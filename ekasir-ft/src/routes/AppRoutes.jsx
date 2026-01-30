@@ -20,9 +20,10 @@ import Pembelian from "../pages/dashboard/Pembelian";
 import Logistic from "../pages/dashboard/Logistic";
 import Payment from "../pages/dashboard/Payment";
 import Laporan from "../pages/dashboard/Laporan";
-import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
-
+import Pajak from "../pages/dashboard/Pajak";
 import Transaction from "../pages/dashboard/Transaction";
+import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
+import LaporanPembelian from "../components/Laporan/LaporanPembelian";
 
 export default function AppRoutes() {
     return (
@@ -91,8 +92,16 @@ export default function AppRoutes() {
                 element={<ProtectRoute><Laporan /></ProtectRoute>}
             />
             <Route
+                path="/dashboard/pajak"
+                element={<ProtectRoute><Pajak /></ProtectRoute>}
+            />
+            <Route
                 path="/dashboard/laporan/laporan-transaksi"
                 element={<ProtectRoute><LaporanTransaksi /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/laporan/laporan-pembelian"
+                element={<ProtectRoute><LaporanPembelian /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

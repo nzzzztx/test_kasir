@@ -12,6 +12,7 @@ import marketIcon from '../../assets/icons/market.png';
 import stokIcon from '../../assets/icons/stock.png';
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
+import taxIcon from '../../assets/icons/tax.png';
 import cameraIcon from '../../assets/icons/camera.png';
 import userDummy from '../../assets/img/user1.png';
 
@@ -58,6 +59,12 @@ const Dashboard = () => {
             desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
             icon: diskonIcon,
             path: "/dashboard/discount",
+        },
+        {
+            title: "Pajak Barang",
+            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
+            icon: taxIcon,
+            path: "/dashboard/pajak",
         },
         {
             title: "Stok Barang",
