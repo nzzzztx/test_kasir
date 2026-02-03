@@ -217,6 +217,7 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
             {editItem && (
                 <EditCartModal
                     item={editItem}
+                    maxQty={editItem.stock ?? editItem.qty}
                     onClose={() => setEditItem(null)}
                     onSave={(updated) => {
                         setCart(prev =>

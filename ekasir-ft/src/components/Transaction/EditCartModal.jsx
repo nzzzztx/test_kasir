@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const EditCartModal = ({ item, onClose, onSave }) => {
+const EditCartModal = ({ item, maxQty = item.qty, onClose, onSave }) => {
     const [qty, setQty] = useState(item.qty);
     // const [discountType, setDiscountType] = useState("%");
     // const [discountValue, setDiscountValue] = useState(0);
@@ -50,7 +50,12 @@ const EditCartModal = ({ item, onClose, onSave }) => {
                 <div className="qty-control">
                     <button onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
                     <span>{qty}</span>
-                    <button onClick={() => setQty(q => q + 1)}>+</button>
+                    <button
+                        onClick={() => setQty(q => Math.min(maxQty, q + 1))}
+                        disabled={qty >= maxQty}
+                    >
+                        +
+                    </button>
                 </div>
 
                 {/* <div className="discount-box">
@@ -84,15 +89,15 @@ const EditCartModal = ({ item, onClose, onSave }) => {
                     </button>
                     <button
                         className="btn-save"
-                        onClick={() =>
+                        onClick={() => {
+                            const safeQty = Math.min(qty, maxQty);
+
                             onSave({
                                 ...item,
-                                qty,
-                                discountType,
-                                discountValue,
+                                qty: safeQty,
                                 finalPrice: getFinalPrice(),
-                            })
-                        }
+                            });
+                        }}
                     >
                         Simpan
                     </button>

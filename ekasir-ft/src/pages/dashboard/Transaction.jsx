@@ -18,7 +18,6 @@ import userDummy from "../../assets/img/user1.png";
 
 const Transaction = () => {
     const { authData } = useAuth();
-
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
@@ -42,12 +41,21 @@ const Transaction = () => {
             return;
         }
 
+        const stock = Number(product.stock) || 0;
+
+        if (stock <= 0) {
+            alert("Stok produk habis");
+            return;
+        }
+
         const code = getProductKey(product);
 
         setCart((prev) => {
             const exist = prev.find((i) => i.code === code);
 
             if (exist) {
+                if (exist.qty >= stock) return prev;
+
                 return prev.map((i) =>
                     i.code === code ? { ...i, qty: i.qty + 1 } : i
                 );
@@ -67,6 +75,7 @@ const Transaction = () => {
 
         setSearch("");
     };
+
 
     return (
         <div className="dashboard-container">

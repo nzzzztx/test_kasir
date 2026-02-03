@@ -175,20 +175,22 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         className="btn-confirm"
                         onClick={() => {
                             onSave({
+                                productKey: code || Date.now().toString(),
                                 name,
                                 type,
                                 category,
-                                stock: Number(stock),
-                                minStock,
+                                stock: Number(stock) || 0,
+                                minStock: Number(minStock) || 0,
                                 code,
-                                priceMin: Number(priceBase),
-                                priceMax: Number(priceSell),
+                                priceMin: Number(priceBase) || 0,
+                                priceMax: Number(priceSell) || 0,
                                 rack,
-                                weight,
+                                weight: Number(weight) || 0,
                                 unit,
-                                discount,
+                                discount: Number(discount) || 0,
                                 description: note,
                                 image: imagePreview,
+                                showInTransaction,
                             });
                         }}
                     >

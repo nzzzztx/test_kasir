@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isStockEnough, reduceStock } from "../../utils/stock";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
 import Sidebar from "../../components/Sidebar";
@@ -41,6 +42,13 @@ const Payment = () => {
         if (key === "⌫") return setPaidAmount(prev => prev.slice(0, -1));
 
         if (key === "✓") {
+            const activeShift = JSON.parse(localStorage.getItem("active_shift"));
+
+            if (!activeShift) {
+                alert("Shift belum dimulai");
+                return;
+            }
+
             if (method === "TRANSFER" && !subMethod) {
                 alert("Pilih bank terlebih dahulu");
                 return;
@@ -55,6 +63,26 @@ const Payment = () => {
             const isPaid = paid >= finalTotal;
             const change = isPaid ? paid - finalTotal : 0;
 
+            if (!isPaid) {
+                alert("Pembayaran belum lunas");
+                return;
+            }
+
+            const products = JSON.parse(localStorage.getItem("products") || "[]");
+
+            const cartItems = transaction.items.map(item => ({
+                productKey: item.code,
+                qty: item.qty,
+            }));
+
+            if (!isStockEnough(products, cartItems)) {
+                alert("Stok berubah / tidak mencukupi");
+                return;
+            }
+
+            const updatedProducts = reduceStock(products, cartItems);
+            localStorage.setItem("products", JSON.stringify(updatedProducts));
+
             const updatedTransaction = {
                 ...transaction,
                 paidAmount: paid,
@@ -62,8 +90,10 @@ const Payment = () => {
                 paymentMethod: method,
                 paymentSubMethod: subMethod,
                 createdAt: transaction.createdAt ?? new Date().toISOString(),
-                paidAt: isPaid ? new Date().toISOString() : null,
-                status: isPaid ? "paid" : "unpaid",
+                paidAt: new Date().toISOString(),
+                status: "paid",
+
+                shiftStartedAt: activeShift.startedAt,
             };
 
             localStorage.setItem(
@@ -79,17 +109,13 @@ const Payment = () => {
                 nomor: updatedTransaction.invoiceNumber ?? updatedTransaction.nomor,
                 createdAt: updatedTransaction.createdAt,
                 paidAt: updatedTransaction.paidAt,
-                outlet: "Toko Maju Jaya",
+                outlet: "Toko Masuk Pak Eko",
                 jenis_order: "Lainnya",
                 total: updatedTransaction.finalTotal,
                 metode: method,
                 status: updatedTransaction.status,
 
-                customer: updatedTransaction.customer || {
-                    name: "Umum",
-                    phone: "-",
-                    address: "-",
-                },
+                shiftStartedAt: activeShift.startedAt,
             });
 
             localStorage.setItem(

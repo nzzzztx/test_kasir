@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <img src={laporanIcon} alt="icon" />
                     {isOpen && <span>Laporan</span>}
                 </Link>
-                <Link to="/shift" className="menu-item">
+                <Link to="/dashboard/shift" className="menu-item">
                     <img src={shiftIcon} alt="icon" />
                     {isOpen && <span>Shift</span>}
                 </Link>

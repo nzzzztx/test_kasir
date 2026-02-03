@@ -19,22 +19,28 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                 const code = getProductKey(product, index);
                 const name = product.name || "Tanpa Nama";
                 const price = Number(product.priceMax ?? 0);
+                const stock = Number(product.stock) || 0;
+                const outOfStock = stock <= 0;
 
                 const inCart = cart.find((i) => i.code === code);
 
                 return (
                     <div
                         key={code}
-                        className={`product-card ${inCart ? "active" : ""}`}
+                        className={`product-card 
+                            ${inCart ? "active" : ""} 
+                            ${outOfStock ? "disabled" : ""}
+                        `}
                         onClick={() => {
+                            if (outOfStock) return;
+
                             setCart((prev) => {
                                 const exist = prev.find((i) => i.code === code);
 
                                 if (exist) {
+                                    if (exist.qty >= stock) return prev;
                                     return prev.map((i) =>
-                                        i.code === code
-                                            ? { ...i, qty: i.qty + 1 }
-                                            : i
+                                        i.code === code ? { ...i, qty: i.qty + 1 } : i
                                     );
                                 }
 
@@ -51,6 +57,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                             });
                         }}
                     >
+                        {outOfStock && <div className="stock-badge">Stok Habis</div>}
                         <img src={product.image} alt={name} />
                         <div className="product-name">{name}</div>
                         <div className="product-price">

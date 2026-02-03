@@ -26,6 +26,7 @@ import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 import LaporanPembelian from "../components/Laporan/LaporanPembelian";
 import LaporanKetersediaan from "../components/Laporan/LaporanKetersediaan";
 import LaporanPelanggan from "../components/Laporan/LaporanPelanggan";
+import Shift from "../pages/dashboard/Shift";
 
 export default function AppRoutes() {
     return (
@@ -112,6 +113,11 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/laporan/laporan-pelanggan"
                 element={<ProtectRoute><LaporanPelanggan /></ProtectRoute>}
+            />
+
+            <Route
+                path="/dashboard/Shift"
+                element={<ProtectRoute><Shift /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />
