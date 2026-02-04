@@ -25,6 +25,7 @@ import Shift from "../pages/dashboard/Shift";
 import Opname from "../pages/dashboard/Opname";
 import Transaction from "../pages/dashboard/Transaction";
 import Akun from "../pages/dashboard/Akun";
+import Setting from "../pages/dashboard/Setting";
 
 import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 import LaporanPembelian from "../components/Laporan/LaporanPembelian";
@@ -129,6 +130,10 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/akun"
                 element={<ProtectRoute><Akun /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/setting"
+                element={<ProtectRoute><Setting /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

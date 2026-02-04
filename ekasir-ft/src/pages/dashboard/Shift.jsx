@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import hitungSaldoSistem from "../../utils/shiftcalculator";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
@@ -16,13 +16,19 @@ import cameraIcon from "../../assets/icons/camera.png";
 import userDummy from "../../assets/img/user1.png";
 
 const Shift = () => {
+    const today = new Date();
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [openCalendar, setOpenCalendar] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
 
-    const [range, setRange] = useState(null);
+    const [range, setRange] = useState({
+        startDate: today,
+        endDate: today,
+    });
+
     const [showMulai, setShowMulai] = useState(false);
     const [showAkhiri, setShowAkhiri] = useState(false);
 
@@ -32,12 +38,21 @@ const Shift = () => {
     const [selectedShift, setSelectedShift] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
 
-    const [activeShift, setActiveShift] = useState(
+    const [activeShift, setActiveShift] = useState(() =>
         JSON.parse(localStorage.getItem("active_shift"))
     );
 
+    const [history, setHistory] = useState(() =>
+        JSON.parse(localStorage.getItem("shift_history")) || []
+    );
+
+    // 🔁 sync history kalau localStorage berubah
+    useEffect(() => {
+        setHistory(JSON.parse(localStorage.getItem("shift_history")) || []);
+    }, [showAkhiri]);
+
     const isInRange = (date, range) => {
-        if (!range) return true;
+        if (!range || !date) return false;
 
         const d = new Date(date);
         const start = new Date(range.startDate);
@@ -49,13 +64,9 @@ const Shift = () => {
         return d >= start && d <= end;
     };
 
-    const history =
-        JSON.parse(localStorage.getItem("shift_history")) || [];
-
     const filteredHistory = history.filter((h) => {
-        if (h.drawer !== drawer) return false;
         if (!h.startedAt) return false;
-
+        if (drawer && h.drawer !== drawer) return false;
         return isInRange(h.startedAt, range);
     });
 
@@ -101,7 +112,6 @@ const Shift = () => {
                     : drawer === "Cash Drawer 2"
                         ? "Siang"
                         : "Malam",
-
             saldoAwal: Number(saldoAwal),
             startedAt: new Date().toISOString(),
             status: "ACTIVE",
@@ -126,14 +136,15 @@ const Shift = () => {
             status: "DONE",
         };
 
-        const history =
+        const prevHistory =
             JSON.parse(localStorage.getItem("shift_history")) || [];
 
-        history.push(finishedShift);
+        const newHistory = [...prevHistory, finishedShift];
 
-        localStorage.setItem("shift_history", JSON.stringify(history));
+        localStorage.setItem("shift_history", JSON.stringify(newHistory));
         localStorage.removeItem("active_shift");
 
+        setHistory(newHistory);
         setActiveShift(null);
         setShowAkhiri(false);
 
@@ -158,10 +169,11 @@ const Shift = () => {
         );
 
         localStorage.setItem("shift_history", JSON.stringify(newHistory));
+        setHistory(newHistory);
         setSelectedShift(updatedShift);
     };
 
-    const [user, setUser] = useState(() => {
+    const [user] = useState(() => {
         const saved = localStorage.getItem("user_profile");
         return saved
             ? JSON.parse(saved)
@@ -468,7 +480,22 @@ const Shift = () => {
                                 ×
                             </button>
 
-                            <RekapShift shift={selectedShift} />
+                            <RekapShift
+                                shift={selectedShift}
+                                onUpdate={(updatedShift) => {
+                                    const newHistory = history.map((h) =>
+                                        h.startedAt === updatedShift.startedAt ? updatedShift : h
+                                    );
+
+                                    setHistory(newHistory);
+                                    setSelectedShift(updatedShift);
+
+                                    localStorage.setItem(
+                                        "shift_history",
+                                        JSON.stringify(newHistory)
+                                    );
+                                }}
+                            />
                             {/* <button
                                 className="btn-primary full"
                                 onClick={() => setShowAddNote(true)}

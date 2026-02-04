@@ -48,7 +48,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <img src={userIcon} alt="icon" />
                     {isOpen && <span>Akun Saya</span>}
                 </Link>
-                <Link to="/pengaturan" className="menu-item">
+                <Link to="/dashboard/setting" className="menu-item">
                     <img src={settingIcon} alt="icon" />
                     {isOpen && <span>Pengaturan</span>}
                 </Link>

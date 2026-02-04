@@ -26,9 +26,13 @@ const Akun = () => {
     });
 
     const handleSaveProfile = (updated) => {
-        const newUser = { ...user, ...updated };
-        setUser(newUser);
+        const newUser = {
+            ...updated,
+            avatar: updated.avatar || user.avatar || userDummy,
+        };
+
         localStorage.setItem("user_profile", JSON.stringify(newUser));
+        setUser(newUser);
         setShowEdit(false);
     };
 
@@ -40,7 +44,10 @@ const Akun = () => {
                 <div className="akun-page">
                     <div className="akun-card">
                         <div className="akun-avatar">
-                            <img src={user.avatar} alt="avatar" />
+                            <img
+                                src={user.avatar || userDummy}
+                                alt="avatar"
+                            />
                         </div>
 
                         <div className="akun-info">

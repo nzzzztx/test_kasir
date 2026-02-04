@@ -41,12 +41,29 @@ const LaporanPelanggan = () => {
 
     const [customers, setCustomers] = useState([]);
 
+    const normalizeDateRange = (start, end) => {
+        if (!start || !end) return null;
+
+        const s = new Date(start);
+        const e = new Date(end);
+
+        s.setHours(0, 0, 0, 0);
+        e.setHours(23, 59, 59, 999);
+
+        return { start: s, end: e };
+    };
+
     useEffect(() => {
         const transactions = JSON.parse(
             localStorage.getItem("transaction_history") || "[]"
         );
 
         const grouped = {};
+
+        const normalizedRange = normalizeDateRange(
+            dateRange.start,
+            dateRange.end
+        );
 
         transactions.forEach((trx) => {
             const customerName =
@@ -68,18 +85,20 @@ const LaporanPelanggan = () => {
                 ? `phone:${customerPhone}`
                 : `name:${customerName}`;
 
-            const trxDate =
+            const trxDateRaw =
                 trx.createdAt ||
                 trx.paidAt ||
                 trx.created_at ||
                 trx.time;
 
-            if (!trxDate) return;
+            if (!trxDateRaw) return;
 
-            const date = new Date(trxDate);
+            const trxDate = new Date(trxDateRaw);
 
-            if (dateRange.start && date < new Date(dateRange.start)) return;
-            if (dateRange.end && date > new Date(dateRange.end)) return;
+            if (normalizedRange) {
+                if (trxDate < normalizedRange.start) return;
+                if (trxDate > normalizedRange.end) return;
+            }
 
             if (!grouped[customerKey]) {
                 grouped[customerKey] = {
@@ -88,22 +107,38 @@ const LaporanPelanggan = () => {
                     phone: customerPhone || "-",
                     totalTransaksi: 0,
                     totalPenjualan: 0,
-                    lastVisit: trxDate,
+                    lastVisit: trxDateRaw,
+                    _trxIds: new Set(),
                 };
             }
 
-            grouped[customerKey].totalTransaksi += 1;
-            grouped[customerKey].totalPenjualan += Number(
-                trx.finalTotal ?? trx.total ?? 0
-            );
+            const trxId =
+                trx.id ||
+                trx.invoice ||
+                trx.createdAt ||
+                trx.paidAt;
 
-            if (new Date(trxDate) > new Date(grouped[customerKey].lastVisit)) {
-                grouped[customerKey].lastVisit = trxDate;
+            if (!grouped[customerKey]._trxIds.has(trxId)) {
+                grouped[customerKey]._trxIds.add(trxId);
+
+                grouped[customerKey].totalTransaksi += 1;
+                grouped[customerKey].totalPenjualan += Number(
+                    trx.finalTotal ?? trx.total ?? 0
+                );
+            }
+
+            if (trxDate > new Date(grouped[customerKey].lastVisit)) {
+                grouped[customerKey].lastVisit = trxDateRaw;
             }
         });
 
-        setCustomers(Object.values(grouped));
+        const result = Object.values(grouped).map(
+            ({ _trxIds, ...rest }) => rest
+        );
+
+        setCustomers(result);
     }, [dateRange]);
+
 
     const filtered = customers.filter((c) => {
         const keyword = search.toLowerCase();

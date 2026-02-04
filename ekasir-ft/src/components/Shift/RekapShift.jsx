@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import TambahCatatanModal from "../Shift/TambahCatatanModal";
 import "../../assets/css/shift-modal.css";
 
-const RekapShift = ({ shift }) => {
+const RekapShift = ({ shift, onUpdate }) => {
     const [showCatatan, setShowCatatan] = useState(false);
     const [notes, setNotes] = useState([]);
 
@@ -25,14 +25,10 @@ const RekapShift = ({ shift }) => {
             s.startedAt === shift.startedAt ? updatedShift : s
         );
 
-        localStorage.setItem(
-            "shift_history",
-            JSON.stringify(newHistory)
-        );
+        localStorage.setItem("shift_history", JSON.stringify(newHistory));
 
-        setNotes(updatedNotes);
+        onUpdate(updatedShift);
     };
-
 
     const allTransactions =
         JSON.parse(localStorage.getItem("transaction_history")) || [];
