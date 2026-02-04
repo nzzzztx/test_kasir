@@ -74,7 +74,7 @@ const Setting = () => {
                             className="toggle-btn"
                             onClick={() => setSidebarOpen(!sidebarOpen)}
                         >
-                            <img src={toggleIcon} alt="" />
+                            <img src={toggleIcon} alt="Toggle Sidebar" />
                         </button>
                         <h1>Pengaturan</h1>
                     </div>
@@ -82,9 +82,7 @@ const Setting = () => {
                     <div className="header-right">
                         <div
                             className="notif"
-                            onClick={() =>
-                                setNotificationOpen(!notificationOpen)
-                            }
+                            onClick={() => setNotificationOpen(!notificationOpen)}
                         >
                             <img src={notificationIcon} alt="notif" />
                             <span>Notifikasi</span>
@@ -94,14 +92,27 @@ const Setting = () => {
                                     <div className="notif-header">
                                         <span>Notifikasi (0)</span>
                                     </div>
+
                                     <div className="notif-body empty">
-                                        <p>Tidak Ada Notifikasi</p>
+                                        <div className="notif-icon">
+                                            <img
+                                                src={notificationIcon}
+                                                alt="no notification"
+                                                className="notif-icon-img"
+                                            />
+                                        </div>
+                                        <p className="notif-title">Tidak Ada Notifikasi</p>
+                                        <p className="notif-desc">
+                                            Informasi terkait layanan darurat akan muncul disini.
+                                        </p>
                                     </div>
+
                                     <div
                                         className="notif-footer"
-                                        onClick={() =>
-                                            setNotificationOpen(false)
-                                        }
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setNotificationOpen(false);
+                                        }}
                                     >
                                         Tutup
                                     </div>
@@ -140,34 +151,38 @@ const Setting = () => {
                                             <label className="profile-avatar-edit">
                                                 <img
                                                     src={cameraIcon}
-                                                    alt=""
+                                                    alt="edit avatar"
+                                                    className="profile-avatar-edit-icon"
                                                 />
+
                                                 <input
                                                     type="file"
+                                                    accept="image/*"
                                                     hidden
+                                                    onChange={(e) => {
+                                                        console.log(e.target.files[0]);
+                                                    }}
                                                 />
                                             </label>
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">
-                                                {user.name}
-                                            </div>
-                                            <div className="profile-email">
-                                                {user.email}
-                                            </div>
+                                            <div className="profile-fullname">{user.name}</div>
+                                            <div className="profile-email">{user.email}</div>
                                         </div>
                                     </div>
 
                                     <div className="profile-menu">
                                         <button
                                             className="profile-menu-item"
-                                            onClick={() =>
-                                                navigate("/dashboard/akun")
-                                            }
+                                            onClick={() => {
+                                                setProfileOpen(false);
+                                                navigate("/dashboard/akun");
+                                            }}
                                         >
                                             Edit Profile
                                         </button>
+
                                         <button className="profile-menu-item">
                                             Ganti Password
                                         </button>
@@ -175,6 +190,7 @@ const Setting = () => {
                                 </div>
                             )}
                         </div>
+
                     </div>
                 </header>
 
@@ -193,7 +209,7 @@ const Setting = () => {
                     ))}
                 </div>
 
-                <div className="setting-logout">
+                {/* <div className="setting-logout">
                     <button
                         className="btn-logout"
                         onClick={() => {
@@ -203,7 +219,7 @@ const Setting = () => {
                     >
                         Logout Aplikasi
                     </button>
-                </div>
+                </div> */}
             </div>
         </div>
     );
