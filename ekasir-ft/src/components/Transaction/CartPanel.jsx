@@ -68,12 +68,15 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
         if (!cart.length) return;
 
         const payload = {
+            id: Date.now(),
             items: [...cart],
+
             customer: {
                 name: customer.name?.trim() || "Umum",
                 phone: customer.phone?.trim() || "-",
                 address: customer.address?.trim() || "-",
             },
+
             subtotal,
             discount,
             discountAmount: Math.max(subtotal - afterDiscount, 0),
@@ -86,7 +89,19 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
             createdAt: new Date().toISOString(),
             paidAt: new Date().toISOString(),
             cashier: userEmail,
+            metode: "TUNAI",
         };
+
+        const history = JSON.parse(
+            localStorage.getItem("transaction_history") || "[]"
+        );
+
+        history.push(payload);
+
+        localStorage.setItem(
+            "transaction_history",
+            JSON.stringify(history)
+        );
 
         localStorage.setItem(
             "current_transaction",
@@ -100,6 +115,7 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
 
         window.location.href = "/dashboard/transaction/payment";
     };
+
 
 
     return (

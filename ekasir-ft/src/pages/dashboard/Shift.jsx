@@ -36,8 +36,28 @@ const Shift = () => {
         JSON.parse(localStorage.getItem("active_shift"))
     );
 
+    const isInRange = (date, range) => {
+        if (!range) return true;
+
+        const d = new Date(date);
+        const start = new Date(range.startDate);
+        const end = new Date(range.endDate);
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        return d >= start && d <= end;
+    };
+
     const history =
         JSON.parse(localStorage.getItem("shift_history")) || [];
+
+    const filteredHistory = history.filter((h) => {
+        if (h.drawer !== drawer) return false;
+        if (!h.startedAt) return false;
+
+        return isInRange(h.startedAt, range);
+    });
 
     const currentUser = {
         name: "Suroyono",
@@ -75,6 +95,13 @@ const Shift = () => {
         const shiftData = {
             cashier: currentUser.name,
             drawer,
+            drawerLabel:
+                drawer === "Cash Drawer 1"
+                    ? "Pagi"
+                    : drawer === "Cash Drawer 2"
+                        ? "Siang"
+                        : "Malam",
+
             saldoAwal: Number(saldoAwal),
             startedAt: new Date().toISOString(),
             status: "ACTIVE",
@@ -134,6 +161,17 @@ const Shift = () => {
         setSelectedShift(updatedShift);
     };
 
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "Toko Maju Mundur",
+                email: "tokomajumundur@market.com",
+                avatar: userDummy,
+            };
+    });
+
     return (
         <div className="dashboard-container">
             <Sidebar
@@ -190,7 +228,7 @@ const Shift = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={userDummy}
+                                src={user.avatar}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -208,7 +246,7 @@ const Shift = () => {
                                     <div className="profile-header profile-header-center">
                                         <div className="profile-avatar-wrapper profile-avatar-large">
                                             <img
-                                                src={userDummy}
+                                                src={user.avatar}
                                                 alt="avatar"
                                                 className="profile-avatar-img"
                                             />
@@ -232,13 +270,19 @@ const Shift = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">XML</div>
-                                            <div className="profile-email">xmltronik@market.com</div>
+                                            <div className="profile-fullname">{user.name}</div>
+                                            <div className="profile-email">{user.email}</div>
                                         </div>
                                     </div>
 
                                     <div className="profile-menu">
-                                        <button className="profile-menu-item">
+                                        <button
+                                            className="profile-menu-item"
+                                            onClick={() => {
+                                                setProfileOpen(false);
+                                                navigate("/dashboard/akun");
+                                            }}
+                                        >
                                             Edit Profile
                                         </button>
 
@@ -333,29 +377,41 @@ const Shift = () => {
                                 <thead>
                                     <tr>
                                         <th>Kasir</th>
+                                        <th>Drawer</th>
                                         <th>Status</th>
                                         <th>Jam</th>
                                         <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {history.map((item, i) => (
+                                    {filteredHistory.length === 0 && (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                style={{ textAlign: "center", color: "#9ca3af" }}
+                                            >
+                                                Belum ada riwayat untuk drawer ini
+                                            </td>
+                                        </tr>
+                                    )}
+
+                                    {filteredHistory.map((item, i) => (
                                         <tr key={i}>
                                             <td>{item.cashier}</td>
                                             <td>
-                                                <span
-                                                    className={`status-dot ${item.status === "ACTIVE" ? "active" : ""
-                                                        }`}
-                                                />
-                                                {item.status === "DONE"
-                                                    ? "Selesai"
-                                                    : "Berjalan"}
-                                            </td>
-                                            <td>
-                                                {new Date(item.startedAt).toLocaleTimeString(
-                                                    "id-ID",
-                                                    { hour: "2-digit", minute: "2-digit" }
+                                                {item.drawer}
+                                                {item.drawerLabel && (
+                                                    <small style={{ display: "block", color: "#888" }}>
+                                                        ({item.drawerLabel})
+                                                    </small>
                                                 )}
+                                            </td>
+                                            <td>{item.status === "DONE" ? "Selesai" : "Berjalan"}</td>
+                                            <td>
+                                                {new Date(item.startedAt).toLocaleTimeString("id-ID", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
                                             </td>
                                             <td>
                                                 <button

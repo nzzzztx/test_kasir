@@ -49,43 +49,56 @@ const LaporanPelanggan = () => {
         const grouped = {};
 
         transactions.forEach((trx) => {
-            const name =
+            const customerName =
                 trx.customerName ||
                 trx.customer?.name ||
-                trx.customer ||
                 "Umum";
 
-            const phone =
+            const customerPhone =
                 trx.customerPhone ||
                 trx.customer?.phone ||
-                "-";
+                "";
 
-            const address =
+            const customerAddress =
                 trx.customerAddress ||
                 trx.customer?.address ||
                 "-";
 
-            const date = new Date(trx.createdAt);
+            const customerKey = customerPhone
+                ? `phone:${customerPhone}`
+                : `name:${customerName}`;
+
+            const trxDate =
+                trx.createdAt ||
+                trx.paidAt ||
+                trx.created_at ||
+                trx.time;
+
+            if (!trxDate) return;
+
+            const date = new Date(trxDate);
 
             if (dateRange.start && date < new Date(dateRange.start)) return;
             if (dateRange.end && date > new Date(dateRange.end)) return;
 
-            if (!grouped[phone]) {
-                grouped[phone] = {
-                    nama: name,
-                    alamat: address,
-                    phone,
+            if (!grouped[customerKey]) {
+                grouped[customerKey] = {
+                    nama: customerName,
+                    alamat: customerAddress,
+                    phone: customerPhone || "-",
                     totalTransaksi: 0,
                     totalPenjualan: 0,
-                    lastVisit: trx.createdAt,
+                    lastVisit: trxDate,
                 };
             }
 
-            grouped[phone].totalTransaksi += 1;
-            grouped[phone].totalPenjualan += trx.total || trx.finalTotal || 0;
+            grouped[customerKey].totalTransaksi += 1;
+            grouped[customerKey].totalPenjualan += Number(
+                trx.finalTotal ?? trx.total ?? 0
+            );
 
-            if (new Date(trx.createdAt) > new Date(grouped[phone].lastVisit)) {
-                grouped[phone].lastVisit = trx.createdAt;
+            if (new Date(trxDate) > new Date(grouped[customerKey].lastVisit)) {
+                grouped[customerKey].lastVisit = trxDate;
             }
         });
 

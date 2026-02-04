@@ -83,16 +83,25 @@ const Payment = () => {
             const updatedProducts = reduceStock(products, cartItems);
             localStorage.setItem("products", JSON.stringify(updatedProducts));
 
+            const rawCurrent = JSON.parse(
+                localStorage.getItem("current_transaction") || "null"
+            );
+
+            const safeCustomer = rawCurrent?.customer ?? {
+                name: "Umum",
+                phone: "-",
+                address: "-",
+            };
+
             const updatedTransaction = {
                 ...transaction,
+                customer: safeCustomer,
                 paidAmount: paid,
                 change,
                 paymentMethod: method,
                 paymentSubMethod: subMethod,
-                createdAt: transaction.createdAt ?? new Date().toISOString(),
                 paidAt: new Date().toISOString(),
                 status: "paid",
-
                 shiftStartedAt: activeShift.startedAt,
             };
 
@@ -105,18 +114,26 @@ const Payment = () => {
                 localStorage.getItem("transaction_history") || "[]"
             );
 
-            history.push({
-                nomor: updatedTransaction.invoiceNumber ?? updatedTransaction.nomor,
-                createdAt: updatedTransaction.createdAt,
+            const historyItem = {
+                id: updatedTransaction.id,
+                createdAt:
+                    updatedTransaction.createdAt ??
+                    transaction.createdAt ??
+                    new Date().toISOString(),
+
                 paidAt: updatedTransaction.paidAt,
                 outlet: "Toko Masuk Pak Eko",
                 jenis_order: "Lainnya",
-                total: updatedTransaction.finalTotal,
                 metode: method,
-                status: updatedTransaction.status,
+                status: "paid",
+                total: updatedTransaction.finalTotal,
+
+                customer: safeCustomer,
 
                 shiftStartedAt: activeShift.startedAt,
-            });
+            };
+
+            history.push(historyItem);
 
             localStorage.setItem(
                 "transaction_history",
@@ -131,6 +148,7 @@ const Payment = () => {
             setShowValidasi(true);
             return;
         }
+
 
         setPaidAmount(prev => prev + key);
     };

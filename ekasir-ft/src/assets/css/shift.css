@@ -100,7 +100,7 @@
   color: var(--primary);
 }
 
-.btn-primary {
+.shift-page .btn-primary {
   height: 48px;
   width: 100%;
 
@@ -209,7 +209,7 @@
   background: var(--primary);
 }
 
-.btn-outline {
+.shift-page .btn-outline {
   border: 1px solid var(--primary);
   background: #ffffff;
   color: var(--primary);

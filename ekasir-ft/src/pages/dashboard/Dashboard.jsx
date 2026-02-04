@@ -74,6 +74,16 @@ const Dashboard = () => {
         },
     ];
 
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "Toko Maju Mundur",
+                email: "tokomajumundur@market.com",
+                avatar: userDummy,
+            };
+    });
 
     return (
         <div className="dashboard-container">
@@ -137,7 +147,7 @@ const Dashboard = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={userDummy}
+                                src={user.avatar}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -155,7 +165,7 @@ const Dashboard = () => {
                                     <div className="profile-header profile-header-center">
                                         <div className="profile-avatar-wrapper profile-avatar-large">
                                             <img
-                                                src={userDummy}
+                                                src={user.avatar}
                                                 alt="avatar"
                                                 className="profile-avatar-img"
                                             />
@@ -179,13 +189,19 @@ const Dashboard = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">XML</div>
-                                            <div className="profile-email">xmltronik@market.com</div>
+                                            <div className="profile-fullname">{user.name}</div>
+                                            <div className="profile-email">{user.email}</div>
                                         </div>
                                     </div>
 
                                     <div className="profile-menu">
-                                        <button className="profile-menu-item">
+                                        <button
+                                            className="profile-menu-item"
+                                            onClick={() => {
+                                                setProfileOpen(false);
+                                                navigate("/dashboard/akun");
+                                            }}
+                                        >
                                             Edit Profile
                                         </button>
 

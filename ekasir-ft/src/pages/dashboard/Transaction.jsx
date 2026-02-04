@@ -76,6 +76,17 @@ const Transaction = () => {
         setSearch("");
     };
 
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "Toko Maju Mundur",
+                email: "tokomajumundur@market.com",
+                avatar: userDummy,
+            };
+    });
+
 
     return (
         <div className="dashboard-container">
@@ -102,7 +113,7 @@ const Transaction = () => {
                             <span>Notifikasi (0)</span>
                         </div>
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

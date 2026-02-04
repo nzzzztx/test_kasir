@@ -38,13 +38,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <img src={shiftIcon} alt="icon" />
                     {isOpen && <span>Shift</span>}
                 </Link>
-                <Link to="/stok" className="menu-item">
+                <Link to="/dashboard/stok-opname" className="menu-item">
                     <img src={stokIcon} alt="icon" />
                     {isOpen && <span>Stok Opname</span>}
                 </Link>
 
                 <p className="menu-label" style={{ marginTop: '20px' }}>{isOpen ? 'MORE' : '...'}</p>
-                <Link to="/akun" className="menu-item">
+                <Link to="/dashboard/akun" className="menu-item">
                     <img src={userIcon} alt="icon" />
                     {isOpen && <span>Akun Saya</span>}
                 </Link>

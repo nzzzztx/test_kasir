@@ -21,12 +21,16 @@ import Logistic from "../pages/dashboard/Logistic";
 import Payment from "../pages/dashboard/Payment";
 import Laporan from "../pages/dashboard/Laporan";
 import Pajak from "../pages/dashboard/Pajak";
+import Shift from "../pages/dashboard/Shift";
+import Opname from "../pages/dashboard/Opname";
 import Transaction from "../pages/dashboard/Transaction";
+import Akun from "../pages/dashboard/Akun";
+
 import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 import LaporanPembelian from "../components/Laporan/LaporanPembelian";
 import LaporanKetersediaan from "../components/Laporan/LaporanKetersediaan";
 import LaporanPelanggan from "../components/Laporan/LaporanPelanggan";
-import Shift from "../pages/dashboard/Shift";
+
 
 export default function AppRoutes() {
     return (
@@ -114,10 +118,17 @@ export default function AppRoutes() {
                 path="/dashboard/laporan/laporan-pelanggan"
                 element={<ProtectRoute><LaporanPelanggan /></ProtectRoute>}
             />
-
             <Route
-                path="/dashboard/Shift"
+                path="/dashboard/shift"
                 element={<ProtectRoute><Shift /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/stok-opname"
+                element={<ProtectRoute><Opname /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/akun"
+                element={<ProtectRoute><Akun /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

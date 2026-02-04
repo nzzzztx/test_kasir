@@ -25,9 +25,9 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         >
             <div className="receipt-card">
                 <div id="receipt-print">
-                    <h3 className="receipt-title">TOKO XML</h3>
+                    <h3 className="receipt-title">Toko Maju Pak Ekoww</h3>
                     <p className="receipt-sub">
-                        Jl. Maju Terus Tanpa Batas. 173 Cilacap Tenggara
+                        Jl. Maju Terus Tanpa Batas. 173 Purwokerto Tenggara
                     </p>
 
                     <div className={`receipt-status ${isUnpaid ? "unpaid" : "paid"}`}>
