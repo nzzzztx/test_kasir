@@ -36,7 +36,11 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
                 const barcodes = await detector.detect(videoRef.current);
                 if (barcodes.length > 0) {
                     stopRef.current = true;
+
+                    playBeep();
                     onDetected(barcodes[0].rawValue);
+
+                    setTimeout(onClose, 500);
                     return;
                 }
             } catch (e) {
@@ -56,12 +60,28 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
 
     return (
         <div className="scanner-overlay">
-            <video ref={videoRef} playsInline />
-            <button className="scanner-close" onClick={onClose}>
-                Tutup
-            </button>
+            <div className="scanner-card">
+                <video ref={videoRef} playsInline />
+
+                <div className="scanner-laser" />
+
+                <div className="scanner-hint">
+                    Arahkan barcode ke tengah
+                </div>
+
+                <button className="scanner-close" onClick={onClose}>
+                    Tutup
+                </button>
+            </div>
         </div>
     );
 };
 
 export default BarcodeScannerModal;
+
+const playBeep = () => {
+    const audio = new Audio(
+        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="
+    );
+    audio.play().catch(() => { });
+};

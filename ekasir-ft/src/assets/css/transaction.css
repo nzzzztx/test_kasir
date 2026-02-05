@@ -139,18 +139,19 @@
 
 .scanner-card {
   width: 360px;
-  max-width: 90vw;
+  max-width: 92vw;
 
   background: #ffffff;
-  border-radius: 20px;
-  padding: 16px;
+  border-radius: 22px;
+  padding: 18px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.28);
+  position: relative;
 }
 
 .scanner-card video {
@@ -163,17 +164,49 @@
   background: #000;
 }
 
+.scanner-laser {
+  position: absolute;
+  top: 26px;
+  left: 18px;
+  right: 18px;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 0, 0, 0.8),
+    transparent
+  );
+
+  animation: scanMove 1.6s infinite ease-in-out;
+}
+
+@keyframes scanMove {
+  0% {
+    top: 26px;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 120px);
+    opacity: 0.2;
+  }
+}
+
 .scanner-hint {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+  text-align: center;
 }
 
 .scanner-close {
-  width: 100%;
-  height: 44px;
+  width: 140px;
+  height: 42px;
 
-  border-radius: 14px;
+  border-radius: 999px;
   border: none;
   cursor: pointer;
 
@@ -182,6 +215,15 @@
 
   font-size: 14px;
   font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-close:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .transaction-card {
