@@ -9,7 +9,7 @@ import EditProduct from '../../components/Product/EditProduct';
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import searchIcon from '../../assets/icons/search.png';
-import userDummy from '../../assets/img/user1.png';
+import userDummy from '../../assets/img/profile.png';
 import productDummy from '../../assets/img/product.png';
 import trashIcon from '../../assets/icons/trash.png';
 
@@ -68,6 +68,17 @@ const Product = () => {
         const parsed = saved ? JSON.parse(saved) : [];
         setCategories(['Semua', ...parsed.map((c) => c.name)]);
     }, []);
+
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
+    });
 
     return (
         <div className="dashboard-container">
@@ -130,7 +141,7 @@ const Product = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

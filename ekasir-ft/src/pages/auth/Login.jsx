@@ -11,12 +11,27 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogin = () => {
-        login("admin@gmail.com", "123456");
-        navigate("/dashboard");
-    };
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+    });
 
     const [showPassword, setShowPassword] = useState(false);
+
+    const handleLogin = () => {
+        if (!form.email || !form.password) {
+            alert("Email dan password wajib diisi");
+            return;
+        }
+
+        const success = login(form.email, form.password);
+
+        if (success) {
+            navigate("/dashboard");
+        } else {
+            alert("Login gagal");
+        }
+    };
 
     return (
         <div className="auth-wrapper">
@@ -33,7 +48,14 @@ export default function Login() {
 
                     <div className="auth-group">
                         <label>Email</label>
-                        <input type="email" placeholder="Email" />
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={form.email}
+                            onChange={(e) =>
+                                setForm({ ...form, email: e.target.value })
+                            }
+                        />
                     </div>
 
                     <div className="auth-group">
@@ -42,6 +64,10 @@ export default function Login() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan kata sandi"
+                                value={form.password}
+                                onChange={(e) =>
+                                    setForm({ ...form, password: e.target.value })
+                                }
                             />
                             <img
                                 src={showPassword ? eyeOpen : eyeClose}
@@ -61,10 +87,6 @@ export default function Login() {
                     <button className="auth-btn" onClick={handleLogin}>
                         Masuk
                     </button>
-
-                    {/* <button className="auth-btn" onClick={() => navigate("/dashboard")}>
-                        Masuk
-                    </button> */}
 
                     <div className="auth-link">
                         Belum punya akun?{" "}

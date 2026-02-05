@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import '../../assets/css/dashboard.css';
 import { useNavigate } from 'react-router-dom';
+import { getInfoToko } from "../../utils/toko";
 
 import produkIcon from '../../assets/icons/produk.png';
 import kategoriIcon from '../../assets/icons/category.png';
@@ -14,7 +15,7 @@ import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import taxIcon from '../../assets/icons/tax.png';
 import cameraIcon from '../../assets/icons/camera.png';
-import userDummy from '../../assets/img/user1.png';
+import userDummy from '../../assets/img/profile.png';
 
 
 const Dashboard = () => {
@@ -22,6 +23,7 @@ const Dashboard = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const navigate = useNavigate();
+    const { namaToko, lokasi } = getInfoToko();
 
     const menuData = [
         {
@@ -79,8 +81,8 @@ const Dashboard = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Toko Maju Mundur",
-                email: "tokomajumundur@market.com",
+                name: "",
+                email: "",
                 avatar: userDummy,
             };
     });

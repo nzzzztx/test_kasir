@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function ResetPwSucces() {
     const navigate = useNavigate();
+    const handleContinue = () => {
+        localStorage.removeItem("reset_email");
+        navigate("/login");
+    };
 
     return (
         <div className="auth-wrapper">
@@ -23,10 +27,7 @@ export default function ResetPwSucces() {
                         Klik di bawah untuk melihat.
                     </p>
 
-                    <button
-                        className="auth-btn"
-                        onClick={() => navigate("/login")}
-                    >
+                    <button className="auth-btn" onClick={handleContinue}>
                         Lanjutkan
                     </button>
 

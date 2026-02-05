@@ -10,7 +10,7 @@ import DeleteCustomersModal from "../../components/Customers/DeleteCustomersModa
 
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/profile.png";
 import searchIcon from "../../assets/icons/search.png";
 
 const Customers = () => {
@@ -27,15 +27,26 @@ const Customers = () => {
         const saved = localStorage.getItem("customers");
         return saved
             ? JSON.parse(saved)
-            : Array.from({ length: 17 }, (_, i) => ({
+            : Array.from({ length: 0 }, (_, i) => ({
                 id: i + 1,
-                name: "Surono Surr",
-                email: "suronosurr@gmail.com",
-                phone: "081328639415",
-                address: "Jl. Deket Sawah No. 19999, Adipala",
+                name: "",
+                email: "",
+                phone: "",
+                address: "",
                 point: 0,
-                code: "069751",
+                code: "",
             }));
+    });
+
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
     });
 
     const filtered = customers.filter((c) =>
@@ -155,7 +166,7 @@ const Customers = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

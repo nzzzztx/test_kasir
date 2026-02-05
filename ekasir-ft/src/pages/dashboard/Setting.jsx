@@ -7,7 +7,7 @@ import "../../assets/css/setting.css";
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
 import cameraIcon from "../../assets/icons/camera.png";
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/profile.png";
 
 import infoTokoIcon from "../../assets/icons/store.png";
 import metodeBayarIcon from "../../assets/icons/keuangan.png";
@@ -54,8 +54,8 @@ const Setting = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Toko Maju Mundur",
-                email: "tokomajumundur@market.com",
+                name: "",
+                email: "",
                 avatar: userDummy,
             };
     });

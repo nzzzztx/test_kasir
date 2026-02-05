@@ -31,6 +31,7 @@ import LaporanTransaksi from "../components/Laporan/LaporanTransaksi";
 import LaporanPembelian from "../components/Laporan/LaporanPembelian";
 import LaporanKetersediaan from "../components/Laporan/LaporanKetersediaan";
 import LaporanPelanggan from "../components/Laporan/LaporanPelanggan";
+import InformasiToko from "../components/Setting/InformasiToko";
 
 
 export default function AppRoutes() {
@@ -134,6 +135,10 @@ export default function AppRoutes() {
             <Route
                 path="/dashboard/setting"
                 element={<ProtectRoute><Setting /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/setting/informasi-toko"
+                element={<ProtectRoute><InformasiToko /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

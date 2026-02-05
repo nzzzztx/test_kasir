@@ -2,9 +2,22 @@ import "../../assets/css/auth.css";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/img/logo.png";
 import illustration from "../../assets/img/password.png";
+import { useState } from "react";
 
 export default function ForgotPw() {
     const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+
+    const handleReset = () => {
+        if (!email) {
+            alert("Email wajib diisi");
+            return;
+        }
+
+        localStorage.setItem("reset_email", email);
+
+        navigate("/password-notification");
+    };
 
     return (
         <div className="auth-wrapper">
@@ -27,13 +40,12 @@ export default function ForgotPw() {
                         <input
                             type="email"
                             placeholder="Masukkan email anda"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
 
-                    <button
-                        className="auth-btn"
-                        onClick={() => navigate("/password-notification")}
-                    >
+                    <button className="auth-btn" onClick={handleReset}>
                         Reset kata sandi
                     </button>
 

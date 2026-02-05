@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import hitungSaldoSistem from "../../utils/shiftcalculator";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
 
@@ -17,12 +19,14 @@ import userDummy from "../../assets/img/user1.png";
 
 const Shift = () => {
     const today = new Date();
+    const { authData } = useAuth();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [openCalendar, setOpenCalendar] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
+    const navigate = useNavigate();
 
     const [range, setRange] = useState({
         startDate: today,
@@ -46,10 +50,15 @@ const Shift = () => {
         JSON.parse(localStorage.getItem("shift_history")) || []
     );
 
-    // 🔁 sync history kalau localStorage berubah
     useEffect(() => {
         setHistory(JSON.parse(localStorage.getItem("shift_history")) || []);
     }, [showAkhiri]);
+
+    useEffect(() => {
+        if (!authData?.isLoggedIn) {
+            navigate("/login");
+        }
+    }, [authData]);
 
     const isInRange = (date, range) => {
         if (!range || !date) return false;
@@ -70,9 +79,11 @@ const Shift = () => {
         return isInRange(h.startedAt, range);
     });
 
+    const savedProfile = JSON.parse(localStorage.getItem("user_profile") || "{}");
+
     const currentUser = {
-        name: "Suroyono",
-        role: "Kasir",
+        name: savedProfile.name || authData?.email || "Kasir",
+        role: authData?.role || "Kasir",
     };
 
     const allTransactions =
@@ -178,8 +189,6 @@ const Shift = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Toko Maju Mundur",
-                email: "tokomajumundur@market.com",
                 avatar: userDummy,
             };
     });
@@ -282,8 +291,8 @@ const Shift = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user.name}</div>
-                                            <div className="profile-email">{user.email}</div>
+                                            <div className="profile-fullname">{authData?.name || "Kasir"}</div>
+                                            <div className="profile-email">{authData?.email || "-"}</div>
                                         </div>
                                     </div>
 

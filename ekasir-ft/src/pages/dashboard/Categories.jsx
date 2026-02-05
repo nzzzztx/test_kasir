@@ -8,7 +8,7 @@ import DeleteCategoryModal from '../../components/Categories/DeleteCategoryModal
 
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
-import userDummy from '../../assets/img/user1.png';
+import userDummy from '../../assets/img/profile.png';
 import trashIcon from '../../assets/icons/trash.png';
 import productDummy from '../../assets/img/product.png';
 import searchIcon from '../../assets/icons/search.png';
@@ -51,7 +51,6 @@ const Categories = () => {
     const [showAdd, setShowAdd] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
-
     useEffect(() => {
         const savedCategories = localStorage.getItem('categories');
         const savedProducts = localStorage.getItem('products');
@@ -82,6 +81,17 @@ const Categories = () => {
 
         setShowAdd(false);
     };
+
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
+    });
 
     return (
         <div className="dashboard-container">
@@ -137,7 +147,7 @@ const Categories = () => {
                             )}
                         </div>
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

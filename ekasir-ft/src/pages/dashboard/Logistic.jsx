@@ -9,7 +9,7 @@ import Sidebar from "../../components/Sidebar";
 
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/profile.png";
 import searchIcon from "../../assets/icons/search.png";
 
 const PAGE_SIZE = 10;
@@ -89,6 +89,17 @@ const Logistics = () => {
         XLSX.writeFile(workbook, "logistik-barang.xlsx");
     };
 
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
+    });
+
     return (
         <div className="dashboard-container">
             <Sidebar
@@ -114,7 +125,7 @@ const Logistics = () => {
                             <span>Notifikasi (0)</span>
                         </div>
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

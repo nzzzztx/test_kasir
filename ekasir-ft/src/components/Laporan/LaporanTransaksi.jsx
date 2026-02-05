@@ -12,13 +12,22 @@ import backIcon from "../../assets/icons/back.png"
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import downIcon from "../../assets/icons/down.png";
 
-const summaryData = [
-    { label: "Total Penjualan", value: "Rp 2.900.000,00" },
-    { label: "Total Transaksi", value: "17" },
-    { label: "Penjualan Bersih", value: "Rp 2.400.000,00" },
-    { label: "Total Pembayaran", value: "Rp 1.500.000,00" },
-    { label: "Total Piutang", value: "Rp 300.000,00" },
-];
+const getInfoToko = () => {
+    const saved = localStorage.getItem("informasi_toko");
+    if (!saved) {
+        return { namaToko: "Nama Toko", lokasi: "-" };
+    }
+
+    try {
+        const parsed = JSON.parse(saved);
+        return {
+            namaToko: parsed.namaToko || "Nama Toko",
+            lokasi: parsed.lokasi || "-",
+        };
+    } catch {
+        return { namaToko: "Nama Toko", lokasi: "-" };
+    }
+};
 
 const LaporanTransaksi = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,29 +41,30 @@ const LaporanTransaksi = () => {
     const [openExport, setOpenExport] = useState(false);
     const [search, setSearch] = useState("");
     const [transactions, setTransactions] = useState([]);
+    const { namaToko, lokasi } = getInfoToko();
 
-    const dummyTransaksi = [
-        {
-            nomor: "CS/01/241001/0001",
-            waktu_order: new Date("2024-10-01T09:21:00"),
-            waktu_bayar: new Date("2024-10-01T09:30:00"),
-            outlet: "Toko Maju Pak Ekoww",
-            jenis_order: "Lainnya",
-            penjualan: 125000,
-            metode: "Tunai",
-            status: "paid",
-        },
-        {
-            nomor: "CS/01/241001/0002",
-            waktu_order: new Date("2024-10-02T10:10:00"),
-            waktu_bayar: null,
-            outlet: "Toko Maju Pak Ekoww",
-            jenis_order: "Lainnya",
-            penjualan: 98000,
-            metode: "QRIS",
-            status: "unpaid",
-        },
-    ];
+    // const dummyTransaksi = [
+    //     {
+    //         nomor: "CS/01/241001/0001",
+    //         waktu_order: new Date("2024-10-01T09:21:00"),
+    //         waktu_bayar: new Date("2024-10-01T09:30:00"),
+    //         outlet: namaToko,
+    //         jenis_order: "Lainnya",
+    //         penjualan: 125000,
+    //         metode: "Tunai",
+    //         status: "paid",
+    //     },
+    //     {
+    //         nomor: "CS/01/241001/0002",
+    //         waktu_order: new Date("2024-10-02T10:10:00"),
+    //         waktu_bayar: null,
+    //         outlet: namaToko,
+    //         jenis_order: "Lainnya",
+    //         penjualan: 98000,
+    //         metode: "QRIS",
+    //         status: "unpaid",
+    //     },
+    // ];
 
     useEffect(() => {
         const history = JSON.parse(
@@ -62,19 +72,19 @@ const LaporanTransaksi = () => {
         );
 
         if (!history.length) {
-            setTransactions(dummyTransaksi);
+            setTransactions([]);
             return;
         }
 
         const parsed = history.map((t, i) => ({
-            nomor: t.nomor || `TRX-${i + 1}`,
+            nomor: `TRX/${new Date(t.createdAt).toISOString().slice(0, 10).replace(/-/g, "")}/${i + 1}`,
             waktu_order: t.createdAt ? new Date(t.createdAt) : null,
             waktu_bayar: t.paidAt ? new Date(t.paidAt) : null,
-            outlet: t.outlet || "Toko Maju Jaya",
+            outlet: namaToko,
             jenis_order: t.jenis_order || "Lainnya",
-            penjualan: Number(t.total || 0),
+            penjualan: Number(t.finalTotal || 0),
             metode: t.metode || "-",
-            status: t.paidAt ? "paid" : "unpaid",
+            status: t.paidAmount >= t.finalTotal ? "paid" : "unpaid",
         }));
 
         setTransactions(parsed);
@@ -110,7 +120,8 @@ const LaporanTransaksi = () => {
             "Waktu Bayar": t.waktu_bayar
                 ? t.waktu_bayar.toLocaleString("id-ID")
                 : "-",
-            Outlet: t.outlet,
+            Outlet: namaToko,
+            "Alamat Toko": lokasi,
             "Jenis Order": t.jenis_order,
             "Penjualan (Rp)": t.penjualan,
             "Metode Pembayaran": t.metode,

@@ -1,6 +1,7 @@
 import "../../assets/css/auth.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 import illustration from "../../assets/img/depan.png";
 import logo from "../../assets/img/logo.png";
@@ -9,9 +10,29 @@ import eyeClose from "../../assets/icons/hidden.png";
 
 export default function RegisterPassword() {
     const navigate = useNavigate();
+    const { authData, login } = useAuth();
+
+    const [password, setPassword] = useState("");
+    const [confirm, setConfirm] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+
+    const handleSubmit = () => {
+        if (!password || !confirm) {
+            alert("Password wajib diisi");
+            return;
+        }
+
+        if (password !== confirm) {
+            alert("Konfirmasi password tidak sama");
+            return;
+        }
+
+        login(authData.email, password);
+
+        navigate("/dashboard");
+    };
 
     return (
         <div className="auth-wrapper">
@@ -28,61 +49,51 @@ export default function RegisterPassword() {
 
                     <div className="auth-group">
                         <label>Email</label>
-                        <input type="email" value="skyp00king@gmail.com" disabled />
+                        <input type="email" value={authData.email} disabled />
                     </div>
 
                     <div className="auth-group">
                         <label>Nomor Telepon</label>
-                        <input type="text" value="08123456789" disabled />
+                        <input type="text" value={authData.phone} disabled />
                     </div>
 
-                    {/* PASSWORD */}
                     <div className="auth-group">
                         <label>Kata Sandi</label>
                         <div className="auth-password">
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan kata sandi"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                             <img
                                 src={showPassword ? eyeOpen : eyeClose}
-                                alt="toggle"
                                 className="password-icon"
                                 onClick={() => setShowPassword(!showPassword)}
                             />
                         </div>
                     </div>
 
-                    {/* KONFIRMASI */}
                     <div className="auth-group">
                         <label>Konfirmasi Kata Sandi</label>
                         <div className="auth-password">
                             <input
                                 type={showConfirm ? "text" : "password"}
                                 placeholder="Ulangi kata sandi"
+                                value={confirm}
+                                onChange={(e) => setConfirm(e.target.value)}
                             />
                             <img
                                 src={showConfirm ? eyeOpen : eyeClose}
-                                alt="toggle"
                                 className="password-icon"
                                 onClick={() => setShowConfirm(!showConfirm)}
                             />
                         </div>
                     </div>
 
-                    <div className="auth-checkbox">
-                        <input type="checkbox" id="agree2" defaultChecked />
-                        <label htmlFor="agree2">
-                            Dengan mendaftar, saya menyetujui{" "}
-                            <span>Ketentuan Layanan</span> &{" "}
-                            <span>Kebijakan Privasi</span>
-                        </label>
-                    </div>
-
-                    <button
-                        className="auth-btn"
-                        onClick={() => navigate("/dashboard")}
-                    >Daftar</button>
+                    <button className="auth-btn" onClick={handleSubmit}>
+                        Daftar
+                    </button>
 
                     <div className="auth-link">
                         Sudah punya akun?{" "}

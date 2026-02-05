@@ -4,11 +4,17 @@ import illustration from "../../assets/img/depan.png";
 import logo from "../../assets/img/logo.png";
 import { useState } from "react";
 import OtpModal from "../../components/Otp";
-
+import { useAuth } from "../../context/AuthContext";
 
 export default function Register() {
     const navigate = useNavigate();
     const [showOtp, setShowOtp] = useState(false);
+    const { register } = useAuth();
+
+    const [form, setForm] = useState({
+        email: "",
+        phone: "",
+    });
 
     return (
         <div className="auth-wrapper">
@@ -24,17 +30,44 @@ export default function Register() {
 
                     <div className="auth-group">
                         <label>Email</label>
-                        <input type="email" placeholder="Email" />
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={form.email}
+                            onChange={(e) =>
+                                setForm({ ...form, email: e.target.value })
+                            }
+                        />
                     </div>
 
                     <div className="auth-group">
                         <label>Nomor Telepon</label>
 
                         <div className="auth-otp-row">
-                            <input type="text" placeholder="Nomor Telepon" />
+                            <input
+                                type="text"
+                                placeholder="Nomor Telepon"
+                                value={form.phone}
+                                onChange={(e) =>
+                                    setForm({ ...form, phone: e.target.value })
+                                }
+                            />
                             <button
                                 className="auth-otp-btn"
-                                onClick={() => setShowOtp(true)}
+                                onClick={() => {
+                                    if (!form.email || !form.phone) {
+                                        alert("Email dan nomor telepon wajib diisi");
+                                        return;
+                                    }
+
+                                    register({
+                                        email: form.email,
+                                        phone: form.phone,
+                                        name: "Kasir",
+                                    });
+
+                                    setShowOtp(true);
+                                }}
                             >
                                 Kirim OTP
                             </button>
@@ -52,7 +85,9 @@ export default function Register() {
 
                     <button
                         className="auth-btn"
-                        onClick={() => navigate("/register-password")}
+                        onClick={() => {
+                            alert("Silakan verifikasi OTP terlebih dahulu");
+                        }}
                     >
                         Daftar
                     </button>

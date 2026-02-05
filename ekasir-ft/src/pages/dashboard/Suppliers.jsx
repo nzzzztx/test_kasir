@@ -27,13 +27,13 @@ const Suppliers = () => {
         const saved = localStorage.getItem("suppliers");
         return saved
             ? JSON.parse(saved)
-            : Array.from({ length: 17 }, (_, i) => ({
+            : Array.from({ length: 0 }, (_, i) => ({
                 id: i + 1,
-                name: "PT Mitra Sejati",
-                address: "Jl. Dl. Pandjaitan No. 128, Purwokerto",
-                email: "mitrasejati@gmail.com",
-                phone: "081328639415",
-                code: "069751",
+                name: "",
+                address: "",
+                email: "",
+                phone: "",
+                code: "",
             }));
     });
 
@@ -87,6 +87,17 @@ const Suppliers = () => {
 
         reader.readAsArrayBuffer(file);
     };
+
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
+    });
 
     return (
         <div className="dashboard-container">
@@ -149,7 +160,7 @@ const Suppliers = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

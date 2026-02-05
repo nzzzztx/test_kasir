@@ -5,7 +5,7 @@ import ProfileEditModal from "../../components/Akun/ProfileEditModal";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/akun.css";
 
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/Profile.png";
 
 const Akun = () => {
     const [showEdit, setShowEdit] = useState(false);
@@ -15,11 +15,11 @@ const Akun = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Suryono Sukamto",
+                name: "",
                 role: "Admin",
-                email: "sukamtosur@gmail.com",
-                phone: "+62 878 3464 2544",
-                address: "Ujung Kulon, Purwokerto Tenggara",
+                email: "",
+                phone: "",
+                address: "",
                 referral: "AH7KA891",
                 avatar: userDummy,
             };

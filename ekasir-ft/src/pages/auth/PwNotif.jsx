@@ -6,6 +6,9 @@ import { useNavigate } from "react-router-dom";
 export default function PwNotif() {
     const navigate = useNavigate();
 
+    const email =
+        localStorage.getItem("reset_email") || "email@example.com";
+
     return (
         <div className="auth-wrapper">
             <div className="auth-left">
@@ -20,7 +23,7 @@ export default function PwNotif() {
                     <p>
                         Kami mengirim tautan pengaturan ulang kata sandi ke
                         <br />
-                        <strong>skyp00king@gmail.com</strong>
+                        <strong>{email}</strong>
                     </p>
 
                     <button
@@ -32,13 +35,18 @@ export default function PwNotif() {
 
                     <p style={{ fontSize: 13, textAlign: "center", marginTop: 12 }}>
                         Belum menerima email?{" "}
-                        <span style={{ color: "var(--orange)", cursor: "pointer" }}>
+                        <span
+                            style={{ color: "var(--orange)", cursor: "pointer" }}
+                            onClick={() => alert("Email dikirim ulang 📧")}
+                        >
                             kirim ulang
                         </span>
                     </p>
 
                     <div className="auth-link">
-                        <span onClick={() => navigate("/login")}>← Kembali ke login</span>
+                        <span onClick={() => navigate("/login")}>
+                            ← Kembali ke login
+                        </span>
                     </div>
                 </div>
             </div>

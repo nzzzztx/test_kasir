@@ -11,7 +11,7 @@ import laporanCustomerIcon from '../../assets/icons/customer.png';
 import toggleIcon from '../../assets/icons/togglebutton.png';
 import notificationIcon from '../../assets/icons/notification.png';
 import cameraIcon from '../../assets/icons/camera.png';
-import userDummy from '../../assets/img/user1.png';
+import userDummy from '../../assets/img/profile.png';
 
 const Laporan = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,8 +51,8 @@ const Laporan = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Toko Maju Mundur",
-                email: "tokomajumundur@market.com",
+                name: "",
+                email: "",
                 avatar: userDummy,
             };
     });

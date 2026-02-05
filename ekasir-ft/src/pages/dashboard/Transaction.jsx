@@ -14,7 +14,7 @@ import BarcodeScannerModal from "../../components/Transaction/BarcodeScannerModa
 
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/profile.png";
 
 const Transaction = () => {
     const { authData } = useAuth();
@@ -81,8 +81,8 @@ const Transaction = () => {
         return saved
             ? JSON.parse(saved)
             : {
-                name: "Toko Maju Mundur",
-                email: "tokomajumundur@market.com",
+                name: "",
+                email: "",
                 avatar: userDummy,
             };
     });

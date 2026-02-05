@@ -1,11 +1,61 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function OtpModal({ onClose }) {
     const navigate = useNavigate();
+    const { verifyOtp, authData } = useAuth();
+
+    const [otp, setOtp] = useState(["", "", "", ""]);
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            setCanResend(true);
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft((t) => t - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft]);
+
+    const handleChange = (value, index) => {
+        if (!/^\d?$/.test(value)) return;
+
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+    };
 
     const handleVerify = () => {
+        const code = otp.join("");
+
+        if (code !== "1234") {
+            alert("Kode OTP salah");
+            return;
+        }
+
+        verifyOtp();
         onClose();
         navigate("/register-password");
+    };
+
+    const handleResend = () => {
+        setOtp(["", "", "", ""]);
+        setTimeLeft(60);
+        setCanResend(false);
+
+        alert("OTP dikirim ulang (dummy: 1234)");
+    };
+
+    const formatTime = (s) => {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
     };
 
     return (
@@ -14,19 +64,34 @@ export default function OtpModal({ onClose }) {
                 <h3>Verifikasi Nomor</h3>
 
                 <p className="otp-desc">
-                    Masukkan 4 digit kode verifikasi yang telah dikirimkan
-                    melalui SMS ke 081******891
+                    Masukkan 4 digit kode verifikasi yang dikirim ke{" "}
+                    <b>{authData.phone || "-"}</b>
                 </p>
 
                 <div className="otp-inputs">
-                    <input maxLength="1" />
-                    <input maxLength="1" />
-                    <input maxLength="1" />
-                    <input maxLength="1" />
+                    {otp.map((v, i) => (
+                        <input
+                            key={i}
+                            maxLength="1"
+                            value={v}
+                            onChange={(e) =>
+                                handleChange(e.target.value, i)
+                            }
+                        />
+                    ))}
                 </div>
 
                 <p className="otp-resend">
-                    Belum menerima kode? <span>Kirim ulang</span> (01:00)
+                    {canResend ? (
+                        <>
+                            Belum menerima kode?{" "}
+                            <span onClick={handleResend}>Kirim ulang</span>
+                        </>
+                    ) : (
+                        <>
+                            Belum menerima kode? Kirim ulang ({formatTime(timeLeft)})
+                        </>
+                    )}
                 </p>
 
                 <div className="otp-actions">

@@ -1,8 +1,9 @@
 import logoIcon from "../../assets/img/logo.png";
+import { getInfoToko } from "../../utils/toko";
 
 const PembelianPelunasanPDF = ({ data }) => {
     if (!data) return null;
-
+    const toko = getInfoToko();
     const lastPayment =
         data.payments?.slice().reverse().find(p => p.type === "PELUNASAN");
 
@@ -48,11 +49,23 @@ const PembelianPelunasanPDF = ({ data }) => {
             >
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                     <img src={logoIcon} alt="Logo" style={{ width: 64 }} />
+
                     <div>
-                        <h2 style={{ margin: 0 }}>KASIR-APP XML</h2>
+                        <h2 style={{ margin: 0 }}>
+                            {toko.namaToko || "Nama Toko"}
+                        </h2>
+
                         <p style={{ margin: 0, fontSize: 11 }}>
-                            Jl. Belakang Rawa No. 1999 Cilacap Panas<br />
-                            Telp: 0812-7788-9999
+                            {toko.lokasi && toko.lokasi !== "-" && (
+                                <>
+                                    {toko.lokasi}
+                                    <br />
+                                </>
+                            )}
+
+                            {toko.telepon && toko.telepon !== "-" && (
+                                <>Telp: {toko.telepon}</>
+                            )}
                         </p>
                     </div>
                 </div>

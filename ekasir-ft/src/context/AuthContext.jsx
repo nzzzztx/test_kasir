@@ -8,9 +8,11 @@ export const AuthProvider = ({ children }) => {
         return saved
             ? JSON.parse(saved)
             : {
+                name: "",
                 email: "",
                 password: "",
                 phone: "",
+                role: "Kasir",
                 otpVerified: false,
                 isLoggedIn: false,
             };
@@ -22,6 +24,8 @@ export const AuthProvider = ({ children }) => {
 
     const register = (data) => {
         setAuthData({
+            name: data.name || "Kasir",
+            role: "Kasir",
             email: data.email,
             phone: data.phone,
             password: "",
@@ -53,9 +57,11 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem("auth");
         setAuthData({
+            name: "",
             email: "",
             password: "",
             phone: "",
+            role: "Kasir",
             otpVerified: false,
             isLoggedIn: false,
         });

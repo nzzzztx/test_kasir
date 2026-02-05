@@ -6,7 +6,7 @@ import EditCartModal from "./EditCartModal";
 import DiscountModal from "./DiscountModal";
 import TaxModal from "./TaxModal";
 
-const CartPanel = ({ cart, setCart, userEmail }) => {
+const CartPanel = ({ cart, setCart, cashierName }) => {
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
     const [tax, setTax] = useState(null);
@@ -67,6 +67,12 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
     const handlePay = () => {
         if (!cart.length) return;
 
+        const activeShift = JSON.parse(localStorage.getItem("active_shift"));
+        if (!activeShift) {
+            alert("Belum ada shift aktif");
+            return;
+        }
+
         const payload = {
             id: Date.now(),
             items: [...cart],
@@ -83,40 +89,33 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
             tax,
             taxAmount,
             finalTotal,
-            paidAmount,
-            change: Math.max(paidAmount - finalTotal, 0),
 
+            cashier:
+                cashierName ||
+                activeShift.cashier ||
+                activeShift.user ||
+                "Kasir",
+            shiftStartedAt: activeShift.startedAt,
+
+            status: "pending",
             createdAt: new Date().toISOString(),
-            paidAt: new Date().toISOString(),
-            cashier: userEmail,
-            metode: "TUNAI",
         };
 
-        const history = JSON.parse(
-            localStorage.getItem("transaction_history") || "[]"
-        );
-
-        history.push(payload);
-
-        localStorage.setItem(
-            "transaction_history",
-            JSON.stringify(history)
-        );
-
-        localStorage.setItem(
-            "current_transaction",
-            JSON.stringify(payload)
-        );
+        localStorage.setItem("current_transaction", JSON.stringify(payload));
 
         setCart([]);
         setDiscount(null);
         setTax(null);
-        setPaidAmount(0);
 
         window.location.href = "/dashboard/transaction/payment";
+        console.log("ACTIVE SHIFT:", activeShift);
+        console.log("CASHIER SAVED:",
+            cashierName ||
+            activeShift.cashier ||
+            activeShift.user ||
+            "Kasir"
+        );
     };
-
-
 
     return (
         <div className="cart-panel">
@@ -209,7 +208,7 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                     }
                 />
 
-                <input
+                {/* <input
                     placeholder="No telepon"
                     value={customer.phone}
                     onChange={(e) =>
@@ -223,7 +222,7 @@ const CartPanel = ({ cart, setCart, userEmail }) => {
                     onChange={(e) =>
                         setCustomer({ ...customer, address: e.target.value })
                     }
-                />
+                /> */}
             </div>
 
             <button className="btn-pay" onClick={handlePay}>

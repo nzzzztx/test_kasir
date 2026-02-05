@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { isStockEnough, reduceStock } from "../../utils/stock";
+import { getInfoToko } from "../../utils/toko";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
 import Sidebar from "../../components/Sidebar";
@@ -20,6 +21,7 @@ const Payment = () => {
     const [showValidasi, setShowValidasi] = useState(false);
     const [kembalian, setKembalian] = useState(0);
     const [receiptData, setReceiptData] = useState(null);
+    const store = getInfoToko();
 
     useEffect(() => {
         const saved = localStorage.getItem("current_transaction");
@@ -95,6 +97,13 @@ const Payment = () => {
 
             const updatedTransaction = {
                 ...transaction,
+
+                cashier:
+                    transaction.cashier ||
+                    activeShift.cashier ||
+                    activeShift.user ||
+                    "Kasir",
+
                 customer: safeCustomer,
                 paidAmount: paid,
                 change,
@@ -116,22 +125,36 @@ const Payment = () => {
 
             const historyItem = {
                 id: updatedTransaction.id,
+
                 createdAt:
                     updatedTransaction.createdAt ??
                     transaction.createdAt ??
                     new Date().toISOString(),
 
                 paidAt: updatedTransaction.paidAt,
-                outlet: "Toko Masuk Pak Eko",
+
+                outlet: store.namaToko,
+                outletPhone: store.telepon,
+                outletLocation: store.lokasi,
+
                 jenis_order: "Lainnya",
                 metode: method,
                 status: "paid",
-                total: updatedTransaction.finalTotal,
 
+                subtotal: updatedTransaction.subtotal || 0,
+                discountAmount: updatedTransaction.discountAmount || 0,
+                taxAmount: updatedTransaction.taxAmount || 0,
+
+                finalTotal: updatedTransaction.finalTotal,   // 🔥 PENTING
+                paidAmount: updatedTransaction.paidAmount,
+                change: updatedTransaction.change,
+
+                cashier: updatedTransaction.cashier,
                 customer: safeCustomer,
-
                 shiftStartedAt: activeShift.startedAt,
             };
+
+            console.log("HISTORY ITEM:", historyItem);
 
             history.push(historyItem);
 

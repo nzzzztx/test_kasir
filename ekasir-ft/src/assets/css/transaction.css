@@ -18,16 +18,17 @@
 .transaction-left {
   background: #ffffff;
   border-radius: 18px;
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
   height: 840px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   min-width: 0;
+  min-height: 0;
 }
 
 .transaction-search-card {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .scan-wrapper {
@@ -124,8 +125,10 @@
 }
 
 .transaction-card {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
@@ -136,6 +139,7 @@
 }
 
 .category-filter {
+  position: relative;
   display: flex;
   gap: 10px;
 
@@ -150,7 +154,7 @@
 
   box-sizing: border-box;
 
-  padding: 6px 2px 10px;
+  padding: 4px 2px 10px;
   margin-bottom: 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--primary) transparent;
@@ -186,6 +190,8 @@
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+  position: relative;
+  z-index: 2;
 
   cursor: pointer;
   flex-shrink: 0;
@@ -219,13 +225,13 @@
 .category-filter::after {
   content: "";
   position: absolute;
-  top: 32px;
+  top: 0px;
 
   width: 28px;
-  height: 36px;
+  height: 100%;
 
   pointer-events: none;
-  z-index: 3;
+  z-index: 1;
 }
 
 .category-filter::before {
@@ -240,21 +246,22 @@
 
 .product-grid {
   flex: 1;
+  min-height: 0;
+
   overflow-y: auto;
 
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 10px;
 
-  padding: 6px;
+  padding: 6px 6px 6px 0;
 }
 
 .product-grid::-webkit-scrollbar {
   width: 6px;
 }
-
 .product-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 106, 0, 0.35);
+  background: rgba(255, 106, 0, 0.45);
   border-radius: 999px;
 }
 

@@ -39,6 +39,16 @@ const Discount = () => {
         d.name.toLowerCase().includes(search.toLowerCase())
     );
 
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("user_profile");
+        return saved
+            ? JSON.parse(saved)
+            : {
+                name: "",
+                email: "",
+                avatar: userDummy,
+            };
+    });
 
     return (
         <div className="dashboard-container">
@@ -65,7 +75,7 @@ const Discount = () => {
                             <span>Notifikasi (0)</span>
                         </div>
                         <div className="profile-box">
-                            <img src={userDummy} alt="profile" />
+                            <img src={user.avatar} alt="profile" />
                         </div>
                     </div>
                 </header>

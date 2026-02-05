@@ -1,4 +1,5 @@
 import "../../assets/css/receipt.css";
+import { getInfoToko } from "../../utils/toko";
 
 const ReceiptPreview = ({ transaction, visible, onClose }) => {
     if (!transaction) return null;
@@ -15,6 +16,8 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         change = 0,
     } = transaction;
 
+    const { namaToko, lokasi, telepon } = getInfoToko();
+    const cashier = transaction.cashier;
     const isUnpaid = paidAmount < finalTotal;
     const customer = transaction.customer || {};
 
@@ -25,11 +28,22 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         >
             <div className="receipt-card">
                 <div id="receipt-print">
-                    <h3 className="receipt-title">Toko Maju Pak Ekoww</h3>
-                    <p className="receipt-sub">
-                        Jl. Maju Terus Tanpa Batas. 173 Purwokerto Tenggara
-                    </p>
-
+                    <h3 className="receipt-title">{namaToko}</h3>
+                    {lokasi && lokasi !== "-" && (
+                        <p className="receipt-sub">{lokasi}</p>
+                    )}
+                    {/* {telepon && telepon !== "-" && (
+                        <p className="receipt-sub">Telp: {telepon}</p>
+                    )} */}
+                    {cashier && (
+                        <>
+                            <div className="receipt-row">
+                                <span>Kasir</span>
+                                <span>{cashier}</span>
+                            </div>
+                            <div className="receipt-line" />
+                        </>
+                    )}
                     <div className={`receipt-status ${isUnpaid ? "unpaid" : "paid"}`}>
                         {isUnpaid ? "BELUM LUNAS" : "LUNAS"}
                     </div>
