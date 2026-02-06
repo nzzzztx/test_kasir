@@ -226,6 +226,49 @@
   transform: translateY(-1px);
 }
 
+.scanner-actions {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.scanner-start {
+  flex: 1;
+  height: 42px;
+
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #ff6a00, #ff4500);
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 10px 20px rgba(255, 106, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.scanner-start:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(255, 106, 0, 0.45);
+}
+
+.scanner-start:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(255, 106, 0, 0.35);
+}
+
+.scanner-close {
+  flex: 1;
+}
+
 .transaction-card {
   margin-bottom: 20px;
   overflow: hidden;

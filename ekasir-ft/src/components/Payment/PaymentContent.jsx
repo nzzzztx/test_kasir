@@ -11,6 +11,7 @@ const PaymentContent = ({
     subMethod,
     setSubMethod,
     setPaidAmount,
+    onConfirm,
 }) => {
     const {
         items = [],
@@ -268,6 +269,14 @@ const PaymentContent = ({
                         </button>
                     ))}
                 </div>
+                {!isCash && (
+                    <button
+                        className="btn-confirm-noncash"
+                        onClick={() => onConfirm()}
+                    >
+                        Konfirmasi Pembayaran
+                    </button>
+                )}
             </div>
         </div>
     );

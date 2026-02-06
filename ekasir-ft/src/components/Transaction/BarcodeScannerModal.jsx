@@ -1,77 +1,94 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const BarcodeScannerModal = ({ onClose, onDetected }) => {
     const videoRef = useRef(null);
-    const stopRef = useRef(false);
+    const readerRef = useRef(null);
+    const streamRef = useRef(null);
+    const stoppedRef = useRef(false);
 
-    useEffect(() => {
-        let stream = null;
-        let detector = null;
+    const startScan = async () => {
+        try {
+            stoppedRef.current = false;
+            readerRef.current = new BrowserMultiFormatReader();
 
-        const startCamera = async () => {
-            if (!("BarcodeDetector" in window)) {
-                alert("Browser tidak mendukung Barcode Scanner");
-                onClose();
-                return;
-            }
-
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" },
+            streamRef.current = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" } },
             });
 
-            videoRef.current.srcObject = stream;
+            videoRef.current.srcObject = streamRef.current;
             await videoRef.current.play();
 
-            detector = new BarcodeDetector({
-                formats: ["ean_13", "code_128", "qr_code"],
-            });
+            const devices =
+                await BrowserMultiFormatReader.listVideoInputDevices();
 
-            scanLoop();
-        };
+            const deviceId = devices[0]?.deviceId;
+            if (!deviceId) throw new Error("Camera not found");
 
-        const scanLoop = async () => {
-            if (stopRef.current) return;
+            readerRef.current.decodeFromVideoDevice(
+                deviceId,
+                videoRef.current,
+                (result) => {
+                    if (result && !stoppedRef.current) {
+                        stoppedRef.current = true;
 
-            try {
-                const barcodes = await detector.detect(videoRef.current);
-                if (barcodes.length > 0) {
-                    stopRef.current = true;
+                        playBeep();
+                        onDetected(result.text);
 
-                    playBeep();
-                    onDetected(barcodes[0].rawValue);
-
-                    setTimeout(onClose, 500);
-                    return;
+                        stopScan();
+                        setTimeout(onClose, 300);
+                    }
                 }
-            } catch (e) {
-                console.error("Scan error", e);
-            }
+            );
+        } catch (err) {
+            console.error(err);
+            alert("Kamera tidak dapat digunakan");
+            stopScan();
+            onClose();
+        }
+    };
 
-            requestAnimationFrame(scanLoop);
-        };
+    const stopScan = () => {
+        stoppedRef.current = true;
 
-        startCamera();
+        try {
+            readerRef.current?.reset();
+        } catch (_) { }
 
-        return () => {
-            stopRef.current = true;
-            stream?.getTracks().forEach((t) => t.stop());
-        };
-    }, [onClose, onDetected]);
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+
+        readerRef.current = null;
+        streamRef.current = null;
+    };
 
     return (
         <div className="scanner-overlay">
             <div className="scanner-card">
-                <video ref={videoRef} playsInline />
+                <video ref={videoRef} playsInline muted />
 
                 <div className="scanner-laser" />
-
                 <div className="scanner-hint">
                     Arahkan barcode ke tengah
                 </div>
 
-                <button className="scanner-close" onClick={onClose}>
-                    Tutup
-                </button>
+                <div style={{ display: "flex", gap: 12 }}>
+                    <button
+                        className="scanner-start"
+                        onClick={startScan}
+                    >
+                        Mulai Scan
+                    </button>
+
+                    <button
+                        className="scanner-close"
+                        onClick={() => {
+                            stopScan();
+                            onClose();
+                        }}
+                    >
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     );

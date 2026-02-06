@@ -81,9 +81,9 @@ const LaporanPelanggan = () => {
                 trx.customer?.address ||
                 "-";
 
-            const customerKey = customerPhone
-                ? `phone:${customerPhone}`
-                : `name:${customerName}`;
+            const customerKey =
+                trx.customer?.id ||
+                `fallback:${customerName}-${customerPhone}`;
 
             const trxDateRaw =
                 trx.createdAt ||
@@ -112,11 +112,8 @@ const LaporanPelanggan = () => {
                 };
             }
 
-            const trxId =
-                trx.id ||
-                trx.invoice ||
-                trx.createdAt ||
-                trx.paidAt;
+            const trxId = trx.id;
+            if (!trxId) return;
 
             if (!grouped[customerKey]._trxIds.has(trxId)) {
                 grouped[customerKey]._trxIds.add(trxId);

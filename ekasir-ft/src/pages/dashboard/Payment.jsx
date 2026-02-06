@@ -67,9 +67,9 @@ const Payment = () => {
             }
 
             const paid =
-                method === "EDC"
-                    ? finalTotal
-                    : Number(paidAmount || 0);
+                method === "TUNAI"
+                    ? Number(paidAmount || 0)
+                    : finalTotal;
 
             const isPaid = paid >= finalTotal;
             const change = method === "EDC" ? 0 : paid - finalTotal;
@@ -99,12 +99,14 @@ const Payment = () => {
             );
 
             const safeCustomer = rawCurrent?.customer ?? {
+                id: crypto.randomUUID(),
                 name: "Umum",
                 phone: "-",
                 address: "-",
             };
 
             const updatedTransaction = {
+                id: transaction.id ?? crypto.randomUUID(),
                 ...transaction,
 
                 cashier:
@@ -212,6 +214,7 @@ const Payment = () => {
                         setMethod={setMethod}
                         subMethod={subMethod}
                         setSubMethod={setSubMethod}
+                        onConfirm={() => handleKeyPress("✓")}
                     />
                 )}
 
