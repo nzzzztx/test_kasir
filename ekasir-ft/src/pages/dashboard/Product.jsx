@@ -80,6 +80,34 @@ const Product = () => {
             };
     });
 
+    const handleSaveProduct = (data) => {
+        const exists = products.some((p) => p.code === data.code);
+        if (exists) {
+            alert("Barcode sudah terdaftar!");
+            return;
+        }
+
+        const newProduct = {
+            id: Date.now(),
+            ...data,
+        };
+
+        const next = [...products, newProduct];
+        setProducts(next);
+        setSelectedProduct(newProduct);
+        setShowAddModal(false);
+    };
+
+    const handleUpdateProduct = (updated) => {
+        const next = products.map((p) =>
+            p.id === updated.id ? updated : p
+        );
+
+        setProducts(next);
+        setSelectedProduct(updated);
+        setShowEditModal(false);
+    };
+
     return (
         <div className="dashboard-container">
             <Sidebar
@@ -335,41 +363,17 @@ const Product = () => {
                     <AddProduct
                         categories={categories.filter(c => c !== 'Semua')}
                         onClose={() => setShowAddModal(false)}
-                        onSave={(data) => {
-
-                            const exists = products.some(
-                                (p) => p.code === data.code
-                            );
-
-                            if (exists) {
-                                alert("Barcode sudah terdaftar!");
-                                return;
-                            }
-
-                            const newProduct = {
-                                id: Date.now(),
-                                ...data,
-                            };
-
-                            setProducts((prev) => [...prev, newProduct]);
-                            setSelectedProduct(newProduct);
-                            setShowAddModal(false);
-                        }}
+                        onSave={handleSaveProduct}
                     />
                 )}
+
 
                 {showEditModal && selectedProduct && (
                     <EditProduct
                         product={selectedProduct}
                         categories={categories.filter(c => c !== 'Semua')}
                         onClose={() => setShowEditModal(false)}
-                        onSave={(updated) => {
-                            setProducts((prev) =>
-                                prev.map((p) => (p.id === updated.id ? updated : p))
-                            );
-                            setSelectedProduct(updated);
-                            setShowEditModal(false);
-                        }}
+                        onSave={handleUpdateProduct}
                     />
                 )}
 

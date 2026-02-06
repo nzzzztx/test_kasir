@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getProductKey } from "../../utils/product";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/transaction.css";
@@ -32,39 +31,46 @@ const Transaction = () => {
     }, []);
 
     const handleScanOnce = (scannedCode) => {
+        if (!scannedCode) return;
+
         const product = products.find(
-            (p, idx) => getProductKey(p, idx) === scannedCode
+            (p) => String(p.code) === String(scannedCode)
         );
 
         if (!product) {
-            alert("Produk tidak ditemukan");
+            alert("Produk dengan barcode ini belum terdaftar");
             return;
         }
 
         const stock = Number(product.stock) || 0;
 
-        if (stock <= 0) {
+        if (product.showInTransaction === false) {
+            alert("Produk tidak ditampilkan di transaksi");
+            return;
+        }
+
+        if (product.useStock !== false && stock <= 0) {
             alert("Stok produk habis");
             return;
         }
 
-        const code = getProductKey(product);
-
         setCart((prev) => {
-            const exist = prev.find((i) => i.code === code);
+            const exist = prev.find((i) => i.code === product.code);
 
             if (exist) {
-                if (exist.qty >= stock) return prev;
+                if (product.useStock !== false && exist.qty >= stock) {
+                    return prev;
+                }
 
                 return prev.map((i) =>
-                    i.code === code ? { ...i, qty: i.qty + 1 } : i
+                    i.code === product.code ? { ...i, qty: i.qty + 1 } : i
                 );
             }
 
             return [
                 ...prev,
                 {
-                    code,
+                    code: product.code,
                     name: product.name,
                     sellPrice: product.priceMax ?? 0,
                     image: product.image,
@@ -127,9 +133,12 @@ const Transaction = () => {
                                 scanMode={scanMode}
                                 setScanMode={(val) => {
                                     setScanMode(val);
-                                    if (val) setScannerOpen(true);
+                                    setScannerOpen(val);
                                 }}
-                                onScanOnce={() => handleScanOnce(search)}
+                                onScanOnce={() => {
+                                    if (!search) return;
+                                    handleScanOnce(search);
+                                }}
                             />
                         </div>
 
@@ -171,6 +180,10 @@ const Transaction = () => {
                             handleScanOnce(code);
                             setScannerOpen(false);
                             setScanMode(false);
+
+                            setTimeout(() => {
+                                document.querySelector(".scan-wrapper input")?.focus();
+                            }, 100);
                         }}
                     />
                 )}

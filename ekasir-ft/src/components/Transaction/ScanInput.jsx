@@ -33,6 +33,12 @@ const ScanInput = ({
                 }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        onScanOnce();
+                    }
+                }}
             />
 
             <button
