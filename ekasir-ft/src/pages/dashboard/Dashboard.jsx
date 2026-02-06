@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import '../../assets/css/dashboard.css';
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
 import { getInfoToko } from "../../utils/toko";
 
@@ -22,6 +23,8 @@ const Dashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const { changePassword, authData } = useAuth();
     const navigate = useNavigate();
     const { namaToko, lokasi } = getInfoToko();
 
@@ -192,7 +195,7 @@ const Dashboard = () => {
 
                                         <div className="profile-info profile-info-center">
                                             <div className="profile-fullname">{user.name}</div>
-                                            <div className="profile-email">{user.email}</div>
+                                            <div className="profile-email">{authData.email}</div>
                                         </div>
                                     </div>
 
@@ -207,7 +210,13 @@ const Dashboard = () => {
                                             Edit Profile
                                         </button>
 
-                                        <button className="profile-menu-item">
+                                        <button
+                                            className="profile-menu-item"
+                                            onClick={() => {
+                                                setProfileOpen(false);
+                                                setShowPasswordModal(true);
+                                            }}
+                                        >
                                             Ganti Password
                                         </button>
                                     </div>
@@ -239,6 +248,82 @@ const Dashboard = () => {
                         </div>
                     ))}
                 </div>
+                {showPasswordModal && (
+                    <div className="password-modal-overlay">
+                        <div className="password-modal">
+                            <div className="password-modal-header">
+                                <h3>Ganti Password</h3>
+                                <button
+                                    className="password-close"
+                                    onClick={() => setShowPasswordModal(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <form
+                                className="password-modal-body"
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+
+                                    const oldPass = e.target.old_password.value;
+                                    const newPass = e.target.new_password.value;
+                                    const confirm = e.target.confirm_password.value;
+
+                                    if (newPass !== confirm) {
+                                        alert("Konfirmasi password tidak sama");
+                                        return;
+                                    }
+
+                                    const result = changePassword(oldPass, newPass);
+
+                                    if (!result.success) {
+                                        alert(result.message);
+                                        return;
+                                    }
+
+                                    alert("Password berhasil diganti");
+                                    setShowPasswordModal(false);
+                                    e.target.reset();
+                                }}
+                            >
+                                <div className="form-group">
+                                    <label>Password Lama</label>
+                                    <input
+                                        type="password"
+                                        name="old_password"
+                                        placeholder="Masukkan password lama"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Password Baru</label>
+                                    <input
+                                        type="password"
+                                        name="new_password"
+                                        placeholder="Minimal 8 karakter"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Konfirmasi Password Baru</label>
+                                    <input
+                                        type="password"
+                                        name="confirm_password"
+                                        placeholder="Ulangi password baru"
+                                        required
+                                    />
+                                </div>
+
+                                <button type="submit" className="btn-primary full">
+                                    Simpan Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

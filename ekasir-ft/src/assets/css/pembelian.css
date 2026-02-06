@@ -368,8 +368,53 @@
   font-weight: 500;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 1200px) {
   .pembelian-layout {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 24px;
+
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 24px 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+  .pembelian-layout {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 20px;
+
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
+  .pembelian-layout {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .pembelian-layout {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }

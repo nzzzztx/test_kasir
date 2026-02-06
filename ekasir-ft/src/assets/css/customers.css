@@ -1,6 +1,6 @@
 .customers-page {
-  max-width: 1480px;
-  margin: 32px auto;
+  max-width: 1320px;
+  margin: 0 auto;
   padding: 32px 36px;
 
   background: #ffffff;
@@ -371,11 +371,13 @@
   opacity: 0.95;
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
   .customers-page {
-    padding: 25px;
-    margin: 25px;
+    width: 100%;
     max-width: 100%;
+    margin: 0;
+    padding: 20px;
+    border-radius: 20px;
   }
 
   .customers-toolbar {
@@ -387,29 +389,17 @@
   }
 
   .customers-table-wrapper {
-    max-height: 620px;
+    max-height: 600px;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  .customers-page {
-    padding: 16px;
-    margin: 0;
-    max-width: 100%;
-  }
-
-  .main-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
   .customers-page {
     width: 100%;
     max-width: 100%;
     margin: 0;
+    padding: 20px;
+    border-radius: 18px;
   }
 
   .customers-header {
@@ -436,7 +426,6 @@
   .customers-table-wrapper {
     max-height: 520px;
     overflow-x: auto;
-    overflow-y: auto;
   }
 
   .customers-table {
@@ -446,8 +435,9 @@
 
 @media (max-width: 767px) {
   .customers-page {
+    width: 100%;
+    margin: 0;
     padding: 16px;
-    margin: 16px;
     border-radius: 18px;
   }
 
@@ -459,13 +449,11 @@
 
   .customers-toolbar {
     flex-direction: column;
-    align-items: stretch;
     gap: 12px;
   }
 
   .customers-actions {
     width: 100%;
-    justify-content: flex-start;
     flex-wrap: wrap;
   }
 
@@ -476,6 +464,7 @@
 
   .customers-table-wrapper {
     max-height: 420px;
+    overflow-x: auto;
   }
 
   .customers-footer {

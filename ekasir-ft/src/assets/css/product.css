@@ -858,26 +858,11 @@
   color: #fff;
 }
 
-@media (max-width: 1024px) {
-  .main-content.shifted .product-wrapper {
-    margin-left: 0;
-    max-width: 100%;
-  }
-}
-
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  .main-content {
-    margin-left: 80px;
-    width: calc(100vw - 80px);
-    box-sizing: border-box;
-    transition:
-      margin-left 0.25s ease,
-      width 0.25s ease;
-  }
-
+  .main-content,
   .main-content.shifted {
-    margin-left: 240px;
-    width: calc(100vw - 240px);
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .product-wrapper {
@@ -889,8 +874,6 @@
     display: grid;
     grid-template-columns: 1.4fr 1fr;
     gap: 24px;
-
-    box-sizing: border-box;
   }
 }
 

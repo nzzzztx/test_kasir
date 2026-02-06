@@ -67,9 +67,30 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    const changePassword = (oldPassword, newPassword) => {
+        if (!authData.isLoggedIn) {
+            return { success: false, message: "Belum login" };
+        }
+
+        if (authData.password !== oldPassword) {
+            return { success: false, message: "Password lama salah" };
+        }
+
+        if (newPassword.length < 8) {
+            return { success: false, message: "Password minimal 8 karakter" };
+        }
+
+        setAuthData((prev) => ({
+            ...prev,
+            password: newPassword,
+        }));
+
+        return { success: true };
+    };
+
     return (
         <AuthContext.Provider
-            value={{ authData, register, verifyOtp, login, logout }}
+            value={{ authData, register, verifyOtp, login, logout, changePassword, }}
         >
             {children}
         </AuthContext.Provider>

@@ -71,3 +71,127 @@
 .laporan-table tr:hover td:nth-child(5) {
   color: #ff6a00;
 }
+
+.laporan-table td.total-belanja {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.laporan-table tr:hover td.total-belanja {
+  color: #15803d;
+}
+
+@media (min-width: 1200px) {
+  .laporan-pelanggan-page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 32px 36px;
+    border-radius: 22px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+  .main-content,
+  .main-content.shifted {
+    padding: 20px 24px !important;
+    margin-left: 0 !important;
+    max-width: 100%;
+  }
+
+  .laporan-pelanggan-page {
+    max-width: 100%;
+    margin: 0;
+    padding: 24px;
+    border-radius: 18px;
+  }
+
+  .laporan-search input {
+    width: 180px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
+  .main-content,
+  .main-content.shifted {
+    padding: 0 !important;
+    margin-left: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    background: #f5f7fb;
+  }
+
+  .content-header {
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 16px;
+  }
+
+  .laporan-pelanggan-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 16px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .laporan-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .laporan-left {
+    width: 100%;
+  }
+
+  .laporan-search {
+    width: 100%;
+  }
+
+  .laporan-search input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-content,
+  .main-content.shifted {
+    padding: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  .content-header {
+    padding: 10px 14px;
+  }
+
+  .laporan-pelanggan-page {
+    padding: 14px;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .laporan-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .laporan-search {
+    width: 100%;
+  }
+
+  .laporan-search input {
+    width: 100%;
+  }
+
+  .laporan-table-wrapper {
+    overflow-x: auto;
+    max-height: none;
+  }
+
+  .laporan-table {
+    min-width: 720px;
+  }
+}

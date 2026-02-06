@@ -371,6 +371,11 @@
   font-weight: 700;
   background: #ffffff;
   color: #111827;
+  transition: all 0.15s ease;
+}
+
+.key:active {
+  transform: scale(0.95);
 }
 
 .key:hover {
@@ -392,73 +397,101 @@
   border: none;
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1200px) {
+  .payment-page {
+    background: #f5f7fb;
+    min-height: 100vh;
+  }
+
   .payment-layout {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .payment-card-list,
-  .payment-card {
-    padding: 18px;
-  }
-
-  .key {
-    height: 52px;
-    font-size: 16px;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 24px 0;
+    grid-template-columns: 1.1fr 1.3fr;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  .payment-layout {
-    grid-template-columns: 1fr;
-    gap: 18px;
-    padding: 20px;
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+  .main-content,
+  .main-content.shifted {
+    padding: 0 !important;
+    margin-left: 0 !important;
+    max-width: 100%;
+    background: #f5f7fb;
   }
 
-  .payment-card {
-    order: 2;
+  .content-header {
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 20px;
+  }
+
+  .payment-layout {
+    max-width: 100%;
+    margin: 0;
+    padding: 20px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
+  .main-content,
+  .main-content.shifted {
+    padding: 0 !important;
+    margin-left: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    background: #f5f7fb;
+  }
+
+  .content-header {
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 16px;
+  }
+
+  .payment-layout {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .payment-card-list {
     order: 1;
   }
 
-  .key {
-    height: 54px;
-    font-size: 17px;
+  .payment-card {
+    order: 2;
   }
 }
 
 @media (max-width: 767px) {
-  .payment-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+  .main-content,
+  .main-content.shifted {
+    padding: 0 !important;
+    margin-left: 0 !important;
+    background: #f5f7fb;
   }
 
-  .payment-card-list,
-  .payment-card {
-    padding: 16px;
-    border-radius: 16px;
+  .content-header {
+    padding: 10px 14px;
+  }
+
+  .payment-layout {
+    padding: 14px;
+    gap: 14px;
   }
 
   .payment-card {
     position: sticky;
     bottom: 0;
-    z-index: 20;
+    z-index: 30;
     background: #ffffff;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
-  }
-
-  .keypad {
-    gap: 10px;
-  }
-
-  .key {
-    height: 52px;
-    font-size: 16px;
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.08);
   }
 }

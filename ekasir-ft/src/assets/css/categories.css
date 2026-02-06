@@ -385,12 +385,16 @@
   opacity: 0.95;
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
   .categories-wrapper {
-    grid-template-columns: 1.3fr 1fr;
-    gap: 10px;
-    padding: 10%;
+    width: 100%;
     max-width: 100%;
+    margin: 0;
+    padding: 24px;
+
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
   }
 
   .categories-left,
