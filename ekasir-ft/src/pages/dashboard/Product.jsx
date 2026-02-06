@@ -336,10 +336,21 @@ const Product = () => {
                         categories={categories.filter(c => c !== 'Semua')}
                         onClose={() => setShowAddModal(false)}
                         onSave={(data) => {
+
+                            const exists = products.some(
+                                (p) => p.code === data.code
+                            );
+
+                            if (exists) {
+                                alert("Barcode sudah terdaftar!");
+                                return;
+                            }
+
                             const newProduct = {
                                 id: Date.now(),
                                 ...data,
                             };
+
                             setProducts((prev) => [...prev, newProduct]);
                             setSelectedProduct(newProduct);
                             setShowAddModal(false);

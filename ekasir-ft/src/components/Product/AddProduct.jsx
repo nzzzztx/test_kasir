@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../../assets/css/product.css';
+import '../../assets/css/transaction.css';
 import imageIcon from '../../assets/icons/camera.png';
 import dummyProduct from '../../assets/img/product.png';
+import BarcodeScannerModal from '../Transaction/BarcodeScannerModal';
 
 const AddProduct = ({ onClose, onSave, categories }) => {
     const [imagePreview, setImagePreview] = useState(dummyProduct);
+    const [showScanner, setShowScanner] = useState(false);
 
     const [name, setName] = useState('');
     const [type, setType] = useState('default');
@@ -20,6 +23,11 @@ const AddProduct = ({ onClose, onSave, categories }) => {
     const [discount, setDiscount] = useState('');
     const [note, setNote] = useState('');
 
+    const nameInputRef = useRef(null);
+    const priceBaseRef = useRef(null);
+    const priceSellRef = useRef(null);
+    const stockRef = useRef(null);
+
     const [useStock, setUseStock] = useState(true);
     const [showInTransaction, setShowInTransaction] = useState(true);
 
@@ -31,9 +39,14 @@ const AddProduct = ({ onClose, onSave, categories }) => {
         reader.readAsDataURL(file);
     };
 
+    useEffect(() => {
+        nameInputRef.current?.focus();
+    }, []);
+
     return (
         <div className="modal-overlay">
             <div className="modal-add-product">
+
                 <div className="modal-header">
                     <h3>Tambah Barang</h3>
                     <button className="modal-close" onClick={onClose}>×</button>
@@ -57,8 +70,19 @@ const AddProduct = ({ onClose, onSave, categories }) => {
 
                 <div className="form-group">
                     <label>Nama</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} />
+                    <input
+                        ref={nameInputRef}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                priceBaseRef.current?.focus();
+                            }
+                        }}
+                    />
                 </div>
+
                 <div className="form-group">
                     <label>Tipe Barang</label>
                     <select value={type} onChange={(e) => setType(e.target.value)}>
@@ -67,36 +91,53 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         <option value="Multisatuan">Multisatuan</option>
                     </select>
                 </div>
+
                 <div className="form-group">
-                    <label>Kategori</label>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                        <option value="">Pilih</option>
-
-                        {Array.isArray(categories) && categories.length === 0 && (
-                            <option disabled>Belum ada kategori</option>
-                        )}
-
-                        {Array.isArray(categories) &&
-                            categories.map((cat, idx) => (
-                                <option key={idx} value={cat}>
-                                    {cat}
-                                </option>
-                            ))}
-                    </select>
+                    <label>Kode Barang</label>
+                    <div className="barcode-input">
+                        <input
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            placeholder="Scan / isi barcode"
+                        />
+                        <button
+                            type="button"
+                            className="barcode-scan-btn"
+                            onClick={() => setShowScanner(true)}
+                        >
+                            Scan
+                        </button>
+                    </div>
                 </div>
 
                 <div className="form-grid-2">
                     <div className="form-group">
+                        <label>Kategori</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                            <option value="">Pilih</option>
+                            {Array.isArray(categories) && categories.length === 0 && (
+                                <option disabled>Belum ada kategori</option>
+                            )}
+                            {Array.isArray(categories) &&
+                                categories.map((cat, idx) => (
+                                    <option key={idx} value={cat}>{cat}</option>
+                                ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
                         <label>Stok *</label>
                         <input
+                            ref={stockRef}
                             value={stock}
                             readOnly={!useStock}
                             onChange={(e) => setStock(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    document.querySelector(".btn-confirm")?.click();
+                                }
+                            }}
                         />
-                    </div>
-                    <div className="form-group">
-                        <label>Kode Barang</label>
-                        <input value={code} onChange={(e) => setCode(e.target.value)} />
                     </div>
                 </div>
 
@@ -105,14 +146,35 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         <label>Harga Dasar</label>
                         <div className="input-prefix">
                             <span>Rp</span>
-                            <input value={priceBase} onChange={(e) => setPriceBase(e.target.value)} />
+                            <input
+                                ref={priceBaseRef}
+                                value={priceBase}
+                                onChange={(e) => setPriceBase(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        priceSellRef.current?.focus();
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
+
                     <div className="form-group">
                         <label>Harga Jual</label>
                         <div className="input-prefix">
                             <span>Rp</span>
-                            <input value={priceSell} onChange={(e) => setPriceSell(e.target.value)} />
+                            <input
+                                ref={priceSellRef}
+                                value={priceSell}
+                                onChange={(e) => setPriceSell(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        stockRef.current?.focus();
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
@@ -122,6 +184,7 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         <label>Batas Minimum Stok</label>
                         <input value={minStock} onChange={(e) => setMinStock(e.target.value)} />
                     </div>
+
                     <div className="form-group">
                         <label>Letak Rak</label>
                         <input value={rack} onChange={(e) => setRack(e.target.value)} />
@@ -133,6 +196,7 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         <label>Berat</label>
                         <input value={weight} onChange={(e) => setWeight(e.target.value)} />
                     </div>
+
                     <div className="form-group">
                         <label>Satuan</label>
                         <select value={unit} onChange={(e) => setUnit(e.target.value)}>
@@ -153,12 +217,21 @@ const AddProduct = ({ onClose, onSave, categories }) => {
 
                 <div className="form-switches">
                     <label className="switch-item">
-                        <input type="checkbox" checked={showInTransaction} onChange={() => setShowInTransaction(!showInTransaction)} />
+                        <input
+                            type="checkbox"
+                            checked={showInTransaction}
+                            onChange={() => setShowInTransaction(!showInTransaction)}
+                        />
                         <span className="switch-ui" />
                         <span>Tampilkan di Transaksi</span>
                     </label>
+
                     <label className="switch-item">
-                        <input type="checkbox" checked={useStock} onChange={() => setUseStock(!useStock)} />
+                        <input
+                            type="checkbox"
+                            checked={useStock}
+                            onChange={() => setUseStock(!useStock)}
+                        />
                         <span className="switch-ui" />
                         <span>Pakai Stok</span>
                     </label>
@@ -174,14 +247,31 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                     <button
                         className="btn-confirm"
                         onClick={() => {
+
+                            if (!name.trim()) {
+                                alert("Nama barang wajib diisi");
+                                nameInputRef.current?.focus();
+                                return;
+                            }
+
+                            if (
+                                priceSell &&
+                                priceBase &&
+                                Number(priceSell) < Number(priceBase)
+                            ) {
+                                alert("Harga jual tidak boleh lebih kecil dari harga dasar");
+                                priceSellRef.current?.focus();
+                                return;
+                            }
+
                             onSave({
-                                productKey: code || Date.now().toString(),
+                                id: Date.now(),
+                                code: code || Date.now().toString(),
                                 name,
                                 type,
                                 category,
                                 stock: Number(stock) || 0,
                                 minStock: Number(minStock) || 0,
-                                code,
                                 priceMin: Number(priceBase) || 0,
                                 priceMax: Number(priceSell) || 0,
                                 rack,
@@ -197,9 +287,25 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         Simpan
                     </button>
                 </div>
+
+                {showScanner && (
+                    <BarcodeScannerModal
+                        onClose={() => setShowScanner(false)}
+                        onDetected={(barcode) => {
+                            setCode(barcode);
+                            setShowScanner(false);
+
+                            setTimeout(() => {
+                                nameInputRef.current?.focus();
+                            }, 100);
+                        }}
+                    />
+                )}
+
             </div>
         </div>
     );
+
 };
 
 export default AddProduct;

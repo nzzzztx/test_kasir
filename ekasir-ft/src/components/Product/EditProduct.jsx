@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../assets/css/product.css';
 import imageIcon from '../../assets/icons/camera.png';
 import productDummy from '../../assets/img/product.png';
+import BarcodeScannerModal from "../Transaction/BarcodeScannerModal";
 
 const EditProduct = ({ product, onClose, onSave, categories }) => {
     const [form, setForm] = useState({
@@ -20,7 +21,7 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
         description: '',
         image: '',
     });
-
+    const [showScanner, setShowScanner] = useState(false);
     const [imagePreview, setImagePreview] = useState(productDummy);
 
     useEffect(() => {
@@ -116,11 +117,21 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                     </div>
 
                     <div className="form-group">
-                        <label>Kode Barang *</label>
-                        <input
-                            value={form.code || ''}
-                            onChange={(e) => handleChange('code', e.target.value)}
-                        />
+                        <label>Kode Barang</label>
+                        <div className="barcode-input">
+                            <input
+                                value={form.code || ""}
+                                onChange={(e) => handleChange("code", e.target.value)}
+                                placeholder="Scan / isi barcode"
+                            />
+                            <button
+                                type="button"
+                                className="barcode-scan-btn"
+                                onClick={() => setShowScanner(true)}
+                            >
+                                Scan
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -229,11 +240,36 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                     <button className="btn-cancel" onClick={onClose}>Batal</button>
                     <button
                         className="btn-confirm"
-                        onClick={() => onSave(form)}
+                        onClick={() => {
+                            if (!form.name?.trim()) {
+                                alert("Nama barang wajib diisi");
+                                return;
+                            }
+
+                            if (
+                                form.priceMax &&
+                                form.priceMin &&
+                                Number(form.priceMax) < Number(form.priceMin)
+                            ) {
+                                alert("Harga jual tidak boleh lebih kecil dari harga dasar");
+                                return;
+                            }
+
+                            onSave(form);
+                        }}
                     >
                         Simpan
                     </button>
                 </div>
+                {showScanner && (
+                    <BarcodeScannerModal
+                        onClose={() => setShowScanner(false)}
+                        onDetected={(barcode) => {
+                            handleChange("code", barcode);
+                            setShowScanner(false);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
