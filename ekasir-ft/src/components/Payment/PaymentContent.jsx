@@ -1,4 +1,6 @@
 import qrImage from "../../assets/img/qrcode.png";
+import { useEffect, useState } from "react";
+import { getActiveEDC } from "../../utils/edc";
 
 const PaymentContent = ({
     transaction,
@@ -8,6 +10,7 @@ const PaymentContent = ({
     setMethod,
     subMethod,
     setSubMethod,
+    setPaidAmount,
 }) => {
     const {
         items = [],
@@ -20,6 +23,13 @@ const PaymentContent = ({
     } = transaction;
 
     const customer = transaction.customer || {};
+    const [activeEDC, setActiveEDC] = useState([]);
+    const isCash = method === "TUNAI";
+
+    useEffect(() => {
+        setActiveEDC(getActiveEDC());
+    }, []);
+
 
     return (
         <div className="payment-layout">
@@ -121,11 +131,25 @@ const PaymentContent = ({
                                 onClick={() => {
                                     setMethod(m);
                                     setSubMethod(null);
+                                    setPaidAmount("");
                                 }}
                             >
                                 {m === "EWALLET" ? "E-Wallet" : m}
                             </button>
                         ))}
+
+                        {activeEDC.length > 0 && (
+                            <button
+                                className={`method ${method === "EDC" ? "active" : ""}`}
+                                onClick={() => {
+                                    setMethod("EDC");
+                                    setSubMethod(null);
+                                    setPaidAmount("");
+                                }}
+                            >
+                                EDC
+                            </button>
+                        )}
                     </div>
 
                     {method === "TRANSFER" && (
@@ -168,6 +192,23 @@ const PaymentContent = ({
                         </div>
                     )}
 
+                    {method === "EDC" && (
+                        <div className="payment-submethod">
+                            <div className="submethod-label">Pilih Perangkat EDC</div>
+                            <div className="submethod-list">
+                                {activeEDC.map((edc) => (
+                                    <button
+                                        key={edc.id}
+                                        className={`submethod ${subMethod === edc.id ? "active" : ""}`}
+                                        onClick={() => setSubMethod(edc.id)}
+                                    >
+                                        {edc.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {method === "QRIS" && (
                         <div className="payment-info">
                             <div className="qris-box">
@@ -206,10 +247,12 @@ const PaymentContent = ({
                 <h4 className="card-title">Pembayaran</h4>
 
                 <div className="payment-display big">
-                    Rp {Number(paidAmount || 0).toLocaleString("id-ID")}
+                    {method === "TUNAI"
+                        ? `Rp ${Number(paidAmount || 0).toLocaleString("id-ID")}`
+                        : `Rp ${finalTotal.toLocaleString("id-ID")}`}
                 </div>
 
-                <div className="keypad">
+                <div className={`keypad ${!isCash ? "disabled" : ""}`}>
                     {[
                         "1", "2", "3", "C",
                         "4", "5", "6", "⌫",
@@ -219,8 +262,7 @@ const PaymentContent = ({
                         <button
                             key={k}
                             onClick={() => onKeyPress(k)}
-                            className={`key ${k === "✓" ? "confirm" : ""
-                                } ${k === "⌫" ? "delete" : ""}`}
+                            className={`key ${k === "✓" ? "confirm" : ""} ${k === "⌫" ? "delete" : ""}`}
                         >
                             {k}
                         </button>

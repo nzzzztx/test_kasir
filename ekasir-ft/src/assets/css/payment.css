@@ -374,6 +374,11 @@
   transition: all 0.15s ease;
 }
 
+.keypad.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .key:active {
   transform: scale(0.95);
 }

@@ -61,9 +61,18 @@ const Payment = () => {
                 return;
             }
 
-            const paid = Number(paidAmount || 0);
+            if (method === "EDC" && !subMethod) {
+                alert("Pilih perangkat EDC terlebih dahulu");
+                return;
+            }
+
+            const paid =
+                method === "EDC"
+                    ? finalTotal
+                    : Number(paidAmount || 0);
+
             const isPaid = paid >= finalTotal;
-            const change = isPaid ? paid - finalTotal : 0;
+            const change = method === "EDC" ? 0 : paid - finalTotal;
 
             if (!isPaid) {
                 alert("Pembayaran belum lunas");
@@ -145,7 +154,7 @@ const Payment = () => {
                 discountAmount: updatedTransaction.discountAmount || 0,
                 taxAmount: updatedTransaction.taxAmount || 0,
 
-                finalTotal: updatedTransaction.finalTotal,   // 🔥 PENTING
+                finalTotal: updatedTransaction.finalTotal,
                 paidAmount: updatedTransaction.paidAmount,
                 change: updatedTransaction.change,
 
