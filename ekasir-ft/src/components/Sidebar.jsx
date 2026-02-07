@@ -17,7 +17,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
             <div className="sidebar-header">
                 <img src={logo} alt="Logo" className="logo-img" />
-                {isOpen && <h2 className="brand-name">Kasir App</h2>}
+                {isOpen && <h2 className="brand-name">Kasir Test</h2>}
             </div>
 
             <div className="sidebar-menu">

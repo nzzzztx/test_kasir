@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { useLocation } from "react-router-dom";
+import { useNotifications } from "../../context/NotificationContext";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
@@ -20,6 +21,7 @@ const Logistics = () => {
     const [range, setRange] = useState("30");
     const [page, setPage] = useState(1);
     const location = useLocation();
+    const { unreadCount } = useNotifications();
 
     const selectedCode = location.state?.code || null;
     const selectedName = location.state?.name || null;
@@ -121,8 +123,16 @@ const Logistics = () => {
 
                     <div className="header-right">
                         <div className="notif">
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
                             <img src={user.avatar} alt="profile" />

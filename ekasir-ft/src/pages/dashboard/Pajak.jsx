@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/discount.css";
+import { useNotifications } from "../../context/NotificationContext";
 
 import Sidebar from "../../components/Sidebar";
 import AddPajakModal from "../../components/Pajak/AddPajakModal";
@@ -18,7 +19,7 @@ import editIcon from "../../assets/icons/edit.png";
 const Pajak = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
-
+    const { unreadCount } = useNotifications();
     const [addOpen, setAddOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -70,8 +71,16 @@ const Pajak = () => {
 
                     <div className="header-right">
                         <div className="notif">
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
                             <img src={user.avatar} alt="profile" />

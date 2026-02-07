@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { isStockEnough, reduceStock } from "../../utils/stock";
 import { getInfoToko } from "../../utils/toko";
+import { useNotifications } from "../../context/NotificationContext";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
 import Sidebar from "../../components/Sidebar";
@@ -22,6 +23,7 @@ const Payment = () => {
     const [kembalian, setKembalian] = useState(0);
     const [receiptData, setReceiptData] = useState(null);
     const store = getInfoToko();
+    const { pushNotification } = useNotifications();
 
     useEffect(() => {
         const saved = localStorage.getItem("current_transaction");
@@ -133,6 +135,14 @@ const Payment = () => {
             const history = JSON.parse(
                 localStorage.getItem("transaction_history") || "[]"
             );
+
+            pushNotification({
+                type: "payment",
+                title: "Pembayaran Berhasil",
+                message: `Transaksi Rp ${updatedTransaction.finalTotal.toLocaleString("id-ID")} berhasil`,
+                ref: updatedTransaction.id,
+                cashier: updatedTransaction.cashier,
+            });
 
             const historyItem = {
                 id: updatedTransaction.id,

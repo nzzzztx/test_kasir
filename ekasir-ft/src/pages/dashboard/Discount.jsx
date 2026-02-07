@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/discount.css";
+import { useNotifications } from "../../context/NotificationContext";
 
 import Sidebar from "../../components/Sidebar";
 import AddDiscountModal from "../../components/Discount/AddDiscountModal";
@@ -23,7 +24,7 @@ const Discount = () => {
     const [deleteOpen, setDeleteOpen] = useState(false);
 
     const [selectedDiscount, setSelectedDiscount] = useState(null);
-
+    const { unreadCount } = useNotifications();
 
     const [discounts, setDiscounts] = useState(() => {
         const saved = localStorage.getItem("discounts");
@@ -71,8 +72,16 @@ const Discount = () => {
 
                     <div className="header-right">
                         <div className="notif">
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
                             <img src={user.avatar} alt="profile" />

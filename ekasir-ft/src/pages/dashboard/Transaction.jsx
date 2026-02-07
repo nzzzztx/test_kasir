@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/transaction.css";
@@ -29,6 +30,8 @@ const Transaction = () => {
         const saved = localStorage.getItem("products");
         if (saved) setProducts(JSON.parse(saved));
     }, []);
+
+    const { unreadCount } = useNotifications();
 
     const handleScanOnce = (scannedCode) => {
         if (!scannedCode) return;
@@ -115,8 +118,15 @@ const Transaction = () => {
 
                     <div className="header-right">
                         <div className="notif">
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
                             <img src={user.avatar} alt="profile" />

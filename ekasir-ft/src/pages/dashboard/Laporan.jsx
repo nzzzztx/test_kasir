@@ -3,6 +3,7 @@ import Sidebar from '../../components/Sidebar';
 import '../../assets/css/laporan.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 import laporanTransaksiIcon from '../../assets/icons/keuangan.png';
 import laporanPembelianIcon from '../../assets/icons/market.png';
@@ -60,6 +61,12 @@ const Laporan = () => {
             };
     });
 
+    const {
+        notifications,
+        unreadCount,
+        markAllAsRead,
+    } = useNotifications();
+
     return (
         <div className="dashboard-container">
             <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
@@ -76,29 +83,57 @@ const Laporan = () => {
                     <div className="header-right">
                         <div
                             className="notif"
-                            onClick={() => setNotificationOpen(!notificationOpen)}
+                            onClick={() => {
+                                setNotificationOpen(!notificationOpen);
+                                markAllAsRead();
+                            }}
                         >
-                            <img src={notificationIcon} alt="notif" />
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
                             <span>Notifikasi</span>
 
                             {notificationOpen && (
                                 <div className="notif-dropdown">
                                     <div className="notif-header">
-                                        <span>Notifikasi (0)</span>
+                                        <span>Notifikasi ({unreadCount})</span>
                                     </div>
 
-                                    <div className="notif-body empty">
-                                        <div className="notif-icon">
-                                            <img
-                                                src={notificationIcon}
-                                                alt="no notification"
-                                                className="notif-icon-img"
-                                            />
-                                        </div>
-                                        <p className="notif-title">Tidak Ada Notifikasi</p>
-                                        <p className="notif-desc">
-                                            Informasi terkait layanan darurat akan muncul disini.
-                                        </p>
+                                    <div className={`notif-body ${notifications.length === 0 ? "empty" : ""}`}>
+                                        {notifications.length === 0 ? (
+                                            <>
+                                                <div className="notif-icon">
+                                                    <img
+                                                        src={notificationIcon}
+                                                        alt="no notification"
+                                                        className="notif-icon-img"
+                                                    />
+                                                </div>
+                                                <p className="notif-title">Tidak Ada Notifikasi</p>
+                                                <p className="notif-desc">
+                                                    Informasi terkait layanan darurat akan muncul disini.
+                                                </p>
+                                            </>
+                                        ) : (
+                                            notifications.map((n) => (
+                                                <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`}>
+                                                    <strong>{n.title}</strong>
+                                                    <p>{n.message}</p>
+                                                    <small>
+                                                        {new Date(n.createdAt).toLocaleTimeString("id-ID", {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </small>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
 
                                     <div

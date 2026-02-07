@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
+import { useNotifications } from "../../context/NotificationContext";
 
 import Sidebar from "../../components/Sidebar";
 import EditStockModal from "../../components/Stock/EditStockModal";
@@ -23,7 +24,7 @@ const Stock = () => {
     const [selectedStock, setSelectedStock] = useState(null);
     const PAGE_SIZE = 10;
     const [page, setPage] = useState(1);
-
+    const { unreadCount } = useNotifications();
     const [stocks, setStocks] = useState([]);
     const navigate = useNavigate();
 
@@ -154,8 +155,15 @@ const Stock = () => {
 
                     <div className="header-right">
                         <div className="notif">
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi (0)</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
                         </div>
 
                         <div className="profile-box">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../../assets/css/dashboard.css';
 import '../../assets/css/categories.css';
+import { useNotifications } from '../../context/NotificationContext';
 
 import Sidebar from '../../components/Sidebar';
 import AddCategoryModal from '../../components/Categories/AddCategoryModal';
@@ -68,6 +69,11 @@ const Categories = () => {
         )
         : [];
 
+    const {
+        notifications,
+        unreadCount,
+        markAllAsRead, } = useNotifications();
+
     const handleAddCategory = (name) => {
         const newCategory = {
             id: Date.now(),
@@ -109,10 +115,21 @@ const Categories = () => {
                     <div className="header-right">
                         <div
                             className="notif"
-                            onClick={() => setNotificationOpen(!notificationOpen)}
+                            onClick={() => {
+                                setNotificationOpen(!notificationOpen);
+                                markAllAsRead();
+                            }}
                         >
-                            <img src={notificationIcon} alt="notif" />
-                            <span>Notifikasi</span>
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span>Notifikasi ({unreadCount})</span>
 
                             {notificationOpen && (
                                 <div className="notif-dropdown">
@@ -120,18 +137,35 @@ const Categories = () => {
                                         <span>Notifikasi (0)</span>
                                     </div>
 
-                                    <div className="notif-body empty">
-                                        <div className="notif-icon">
-                                            <img
-                                                src={notificationIcon}
-                                                alt="no notification"
-                                                className="notif-icon-img"
-                                            />
-                                        </div>
-                                        <p className="notif-title">Tidak Ada Notifikasi</p>
-                                        <p className="notif-desc">
-                                            Informasi terkait layanan darurat akan muncul disini.
-                                        </p>
+                                    <div className={`notif-body ${notifications.length === 0 ? "empty" : ""}`}>
+                                        {notifications.length === 0 ? (
+                                            <>
+                                                <div className="notif-icon">
+                                                    <img
+                                                        src={notificationIcon}
+                                                        alt="no notification"
+                                                        className="notif-icon-img"
+                                                    />
+                                                </div>
+                                                <p className="notif-title">Tidak Ada Notifikasi</p>
+                                                <p className="notif-desc">
+                                                    Informasi terkait layanan darurat akan muncul disini.
+                                                </p>
+                                            </>
+                                        ) : (
+                                            notifications.map((n) => (
+                                                <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`}>
+                                                    <strong>{n.title}</strong>
+                                                    <p>{n.message}</p>
+                                                    <small>
+                                                        {new Date(n.createdAt).toLocaleTimeString("id-ID", {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </small>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
 
                                     <div
