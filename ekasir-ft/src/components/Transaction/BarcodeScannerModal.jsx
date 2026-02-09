@@ -1,104 +1,115 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const BarcodeScannerModal = ({ onClose, onDetected }) => {
-    const videoRef = useRef(null);
-    const readerRef = useRef(null);
-    const streamRef = useRef(null);
-    const stoppedRef = useRef(false);
+  const videoRef = useRef(null);
+  const readerRef = useRef(null);
+  const streamRef = useRef(null);
+  const stoppedRef = useRef(false);
 
-    const startScan = async () => {
-        try {
-            stoppedRef.current = false;
-            readerRef.current = new BrowserMultiFormatReader();
+  const startScan = async () => {
+    try {
+      stoppedRef.current = false;
+      readerRef.current = new BrowserMultiFormatReader();
 
-            streamRef.current = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } },
-            });
+      streamRef.current = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
 
-            videoRef.current.srcObject = streamRef.current;
-            await videoRef.current.play();
+      videoRef.current.srcObject = streamRef.current;
+      await videoRef.current.play();
 
-            const devices =
-                await BrowserMultiFormatReader.listVideoInputDevices();
+      const devices =
+        await BrowserMultiFormatReader.listVideoInputDevices();
 
-            const deviceId = devices[0]?.deviceId;
-            if (!deviceId) throw new Error("Camera not found");
+      const deviceId = devices[0]?.deviceId;
+      if (!deviceId) throw new Error("Camera not found");
 
-            readerRef.current.decodeFromVideoDevice(
-                deviceId,
-                videoRef.current,
-                (result) => {
-                    if (result && !stoppedRef.current) {
-                        stoppedRef.current = true;
+      readerRef.current.decodeFromVideoDevice(
+        deviceId,
+        videoRef.current,
+        (result, err) => {
+          if (result && !stoppedRef.current) {
+            stoppedRef.current = true;
 
-                        playBeep();
-                        onDetected(result.text);
+            playBeep();
+            onDetected(result.text);
 
-                        stopScan();
-                        setTimeout(onClose, 300);
-                    }
-                }
-            );
-        } catch (err) {
-            console.error(err);
-            alert("Kamera tidak dapat digunakan");
             stopScan();
-            onClose();
+            setTimeout(onClose, 300);
+          }
+
+          if (err && err.name !== "NotFoundException") {
+            console.warn(err);
+          }
         }
-    };
+      );
+    } catch (err) {
+      console.error("Camera error:", err);
+      alert("Kamera tidak dapat digunakan");
+      stopScan();
+      onClose();
+    }
+  };
 
-    const stopScan = () => {
-        stoppedRef.current = true;
+  const stopScan = () => {
+    stoppedRef.current = true;
 
-        try {
-            readerRef.current?.reset();
-        } catch (_) { }
+    try {
+      readerRef.current?.reset();
+    } catch (_) {}
 
-        streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((t) => t.stop());
 
-        readerRef.current = null;
-        streamRef.current = null;
-    };
+    readerRef.current = null;
+    streamRef.current = null;
+  };
 
-    return (
-        <div className="scanner-overlay">
-            <div className="scanner-card">
-                <video ref={videoRef} playsInline muted />
+  // 🔒 cleanup kalau modal ditutup paksa
+  useEffect(() => {
+    return () => stopScan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-                <div className="scanner-laser" />
-                <div className="scanner-hint">
-                    Arahkan barcode ke tengah
-                </div>
+  return (
+    <div className="scanner-overlay">
+      <div className="scanner-card">
+        <video ref={videoRef} playsInline muted />
 
-                <div style={{ display: "flex", gap: 12 }}>
-                    <button
-                        className="scanner-start"
-                        onClick={startScan}
-                    >
-                        Mulai Scan
-                    </button>
-
-                    <button
-                        className="scanner-close"
-                        onClick={() => {
-                            stopScan();
-                            onClose();
-                        }}
-                    >
-                        Tutup
-                    </button>
-                </div>
-            </div>
+        <div className="scanner-laser" />
+        <div className="scanner-hint">
+          Arahkan barcode ke tengah
         </div>
-    );
+
+        <div style={{ display: "flex", gap: 12 }}>
+          <button className="scanner-start" onClick={startScan}>
+            Mulai Scan
+          </button>
+
+          <button
+            className="scanner-close"
+            onClick={() => {
+              stopScan();
+              onClose();
+            }}
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default BarcodeScannerModal;
 
 const playBeep = () => {
-    const audio = new Audio(
-        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="
-    );
-    audio.play().catch(() => { });
+  const audio = new Audio(
+    "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="
+  );
+  audio.play().catch(() => {});
 };
