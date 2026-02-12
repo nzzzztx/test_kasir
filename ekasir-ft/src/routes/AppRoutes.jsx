@@ -1,5 +1,6 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import ProtectRoute from "../components/ProtectRoute";
+import RoleRedirect from "../components/RoleRedirect";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -9,7 +10,10 @@ import PwNotif from "../pages/auth/PwNotif";
 import ResetPw from "../pages/auth/ResetPw";
 import ResetPwSucces from "../pages/auth/ResetPwSucces";
 
-import Dashboard from "../pages/dashboard/Dashboard";
+import Dashboard from "../pages/dashboard/role/Dashboard";
+import KasirDashboard from "../pages/dashboard/role/KasirDashboard";
+import GudangDashboard from "../pages/dashboard/role/GudangDashboard";
+
 import Product from "../pages/dashboard/Product";
 import Categories from "../pages/dashboard/Categories";
 import Customers from "../pages/dashboard/Customers";
@@ -33,6 +37,7 @@ import LaporanKetersediaan from "../components/Laporan/LaporanKetersediaan";
 import LaporanPelanggan from "../components/Laporan/LaporanPelanggan";
 import InformasiToko from "../components/Setting/InformasiToko";
 import EDC from "../pages/dashboard/Edc";
+import Manajemen from "../pages/dashboard/Manajemen";
 
 
 export default function AppRoutes() {
@@ -52,98 +57,132 @@ export default function AppRoutes() {
                 path="/dashboard"
                 element={
                     <ProtectRoute>
+                        <RoleRedirect />
+                    </ProtectRoute>
+                }
+            />
+
+            {/* ================= OWNER ================= */}
+            <Route
+                path="/owner/dashboard"
+                element={
+                    <ProtectRoute allowedRoles={["owner"]}>
                         <Dashboard />
+                    </ProtectRoute>
+                }
+            />
+
+            {/* ================= KASIR ================= */}
+            <Route
+                path="/kasir/dashboard"
+                element={
+                    <ProtectRoute allowedRoles={["kasir"]}>
+                        <KasirDashboard />
+                    </ProtectRoute>
+                }
+            />
+
+            {/* ================= GUDANG ================= */}
+            <Route
+                path="/gudang/dashboard"
+                element={
+                    <ProtectRoute allowedRoles={["gudang"]}>
+                        <GudangDashboard />
                     </ProtectRoute>
                 }
             />
 
             <Route
                 path="/dashboard/product"
-                element={<ProtectRoute><Product /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Product /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/categories"
-                element={<ProtectRoute><Categories /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Categories /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/customers"
-                element={<ProtectRoute><Customers /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><Customers /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/suppliers"
-                element={<ProtectRoute><Suppliers /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Suppliers /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/discount"
-                element={<ProtectRoute><Discount /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><Discount /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/stock"
-                element={<ProtectRoute><Stock /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Stock /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/stock/logistic"
-                element={<ProtectRoute><Logistic /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Logistic /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/transaction"
-                element={<ProtectRoute><Transaction /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><Transaction /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/transaction/payment"
-                element={<ProtectRoute><Payment /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><Payment /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/pembelian"
-                element={<ProtectRoute><Pembelian /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Pembelian /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan"
-                element={<ProtectRoute><Laporan /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><Laporan /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/pajak"
-                element={<ProtectRoute><Pajak /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><Pajak /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-transaksi"
-                element={<ProtectRoute><LaporanTransaksi /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><LaporanTransaksi /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-pembelian"
-                element={<ProtectRoute><LaporanPembelian /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><LaporanPembelian /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-ketersediaan"
-                element={<ProtectRoute><LaporanKetersediaan /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><LaporanKetersediaan /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-pelanggan"
-                element={<ProtectRoute><LaporanPelanggan /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><LaporanPelanggan /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/shift"
-                element={<ProtectRoute><Shift /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><Shift /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/stok-opname"
-                element={<ProtectRoute><Opname /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><Opname /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/akun"
-                element={<ProtectRoute><Akun /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang", "kasir"]}><Akun /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/setting"
-                element={<ProtectRoute><Setting /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><Setting /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/setting/informasi-toko"
-                element={<ProtectRoute><InformasiToko /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><InformasiToko /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/setting/edc"
-                element={<ProtectRoute><EDC /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner"]}><EDC /></ProtectRoute>}
+            />
+            <Route
+                path="/dashboard/setting/manajemen-user"
+                element={<ProtectRoute allowedRoles={["owner"]}><Manajemen /></ProtectRoute>}
             />
 
             <Route path="*" element={<Navigate to="/login" />} />

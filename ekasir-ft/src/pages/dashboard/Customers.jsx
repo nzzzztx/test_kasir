@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import "../../assets/css/customers.css";
 import "../../assets/css/dashboard.css";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/Sidebar";
 import AddCustomersModal from "../../components/Customers/AddCustomersModal";
@@ -22,6 +23,8 @@ const Customers = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [user, setUser] = useState(null);
+    const { authData } = useAuth();
 
     const [customers, setCustomers] = useState(() => {
         const saved = localStorage.getItem("customers");
@@ -38,16 +41,16 @@ const Customers = () => {
             }));
     });
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
 
     const {
         notifications,
@@ -200,7 +203,7 @@ const Customers = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { useLocation } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
@@ -22,6 +23,8 @@ const Logistics = () => {
     const [page, setPage] = useState(1);
     const location = useLocation();
     const { unreadCount } = useNotifications();
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
     const selectedCode = location.state?.code || null;
     const selectedName = location.state?.name || null;
@@ -91,16 +94,30 @@ const Logistics = () => {
         XLSX.writeFile(workbook, "logistik-barang.xlsx");
     };
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                />
+                <div className="main-content">
+                    <div style={{ padding: 24 }}>Loading...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -135,7 +152,7 @@ const Logistics = () => {
                             <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>

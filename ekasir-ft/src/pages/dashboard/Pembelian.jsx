@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getCurrentOwnerId } from "../../utils/owner";
 import Sidebar from "../../components/Sidebar";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/pembelian.css";
@@ -23,6 +24,7 @@ const Pembelian = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState("lunas");
     const [lastSavedPembelian, setLastSavedPembelian] = useState(null);
+    const ownerId = getCurrentOwnerId();
 
     const navigate = useNavigate();
     const isSupplierLocked = items.length > 0;
@@ -33,32 +35,38 @@ const Pembelian = () => {
     );
 
     useEffect(() => {
-        const saved = localStorage.getItem("suppliers");
+        if (!ownerId) return;
+
+        const saved = localStorage.getItem(`suppliers_owner_${ownerId}`);
         if (saved) setSuppliers(JSON.parse(saved));
-    }, []);
+    }, [ownerId]);
 
     useEffect(() => {
-        const draft = localStorage.getItem("pembelian_draft");
+        if (!ownerId) return;
+
+        const draft = localStorage.getItem(`pembelian_draft_owner_${ownerId}`);
         if (draft) {
             const parsed = JSON.parse(draft);
             setItems(parsed.items || []);
             setSupplier(parsed.supplier || null);
             setPaidAmount(parsed.paidAmount || 0);
         }
-    }, []);
+    }, [ownerId]);
 
     useEffect(() => {
         if (!lastSavedPembelian) return;
 
-        const el = document.getElementById("invoice-pdf");
-        if (!el) return;
+        setTimeout(() => {
+            const el = document.getElementById("invoice-pdf");
+            if (!el) return;
 
-        html2pdf().from(el).set({
-            filename: `${lastSavedPembelian.invoiceNumber}.pdf`,
-            margin: 10,
-            html2canvas: { scale: 2 },
-            jsPDF: { format: "a4" }
-        }).save();
+            html2pdf().from(el).set({
+                filename: `${lastSavedPembelian.invoiceNumber}.pdf`,
+                margin: 10,
+                html2canvas: { scale: 2 },
+                jsPDF: { format: "a4" }
+            }).save();
+        }, 300);
     }, [lastSavedPembelian]);
 
     const handleChangeSupplier = (selected) => {
@@ -72,6 +80,10 @@ const Pembelian = () => {
         setPaidAmount(0);
         setPaymentStatus("lunas");
     };
+
+    if (!ownerId) {
+        return null;
+    }
 
     return (
         <div className="dashboard-container">

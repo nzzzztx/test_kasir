@@ -3,76 +3,161 @@ import { createContext, useContext, useEffect, useState } from "react";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+
+    // ===============================
+    // USER LOGIN
+    // ===============================
     const [authData, setAuthData] = useState(() => {
         const saved = localStorage.getItem("auth");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                password: "",
-                phone: "",
-                role: "Kasir",
-                otpVerified: false,
-                isLoggedIn: false,
-            };
+        return saved ? JSON.parse(saved) : null;
     });
 
     useEffect(() => {
-        localStorage.setItem("auth", JSON.stringify(authData));
+        if (authData) {
+            localStorage.setItem("auth", JSON.stringify(authData));
+        } else {
+            localStorage.removeItem("auth");
+        }
     }, [authData]);
 
-    const register = (data) => {
-        setAuthData({
-            name: data.name || "Kasir",
-            role: "Kasir",
-            email: data.email,
-            phone: data.phone,
-            password: "",
-            otpVerified: false,
-            isLoggedIn: false,
-        });
-    };
+    // ===============================
+    // PENDING USER (SEBELUM OTP + PASSWORD)
+    // ===============================
+    const [pendingUser, setPendingUser] = useState(null);
 
-    const verifyOtp = () => {
-        setAuthData((prev) => ({
-            ...prev,
-            otpVerified: true,
-        }));
-    };
+    // ===============================
+    // STEP 1 - REGISTER (KIRIM OTP)
+    // ===============================
+    const register = ({ name, email, phone }) => {
+        const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    const login = (email, password) => {
-        if (email && password) {
-            setAuthData((prev) => ({
-                ...prev,
-                email,
-                password,
-                isLoggedIn: true,
-            }));
-            return true;
+        const emailExist = users.find(u => u.email === email);
+        if (emailExist) {
+            return { success: false, message: "Email sudah terdaftar" };
         }
-        return false;
+
+        const tempUser = {
+            id: Date.now(),
+            name: name || "Owner",
+            email,
+            username: email,
+            phone,
+            role: "owner",
+            otpVerified: false
+        };
+
+        setPendingUser(tempUser);
+
+        return { success: true };
+    };
+
+    // ===============================
+    // STEP 2 - VERIFY OTP
+    // ===============================
+    const verifyOtp = (otpInput) => {
+        if (!pendingUser) {
+            return { success: false, message: "Tidak ada proses registrasi" };
+        }
+
+        if (otpInput !== "1234") {
+            return { success: false, message: "OTP salah" };
+        }
+
+        setPendingUser(prev => ({
+            ...prev,
+            otpVerified: true
+        }));
+
+        return { success: true };
+    };
+
+    // ===============================
+    // STEP 3 - SET PASSWORD & SIMPAN USER
+    // ===============================
+    const setPasswordAfterOtp = (password) => {
+        if (!pendingUser || !pendingUser.otpVerified) {
+            return { success: false, message: "OTP belum diverifikasi" };
+        }
+
+        if (password.length < 8) {
+            return { success: false, message: "Password minimal 8 karakter" };
+        }
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+
+        const newUser = {
+            ...pendingUser,
+            password,
+            otpVerified: true
+        };
+
+        users.push(newUser);
+        localStorage.setItem("users", JSON.stringify(users));
+
+        setAuthData({
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            phone: newUser.phone,
+            role: newUser.role,
+            otpVerified: true,
+            isLoggedIn: true
+        });
+
+        setPendingUser(null);
+
+        return { success: true };
+    };
+
+    // ===============================
+    // LOGIN
+    // ===============================
+    const login = (identifier, password) => {
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+
+        const user = users.find(
+            (u) =>
+                (u.email === identifier || u.username === identifier) &&
+                u.password === password
+        );
+
+        if (!user) {
+            return { success: false, message: "Email atau password salah" };
+        }
+
+        setAuthData({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            otpVerified: user.otpVerified,
+            isLoggedIn: true
+        });
+
+        return { success: true, user };
     };
 
     const logout = () => {
-        localStorage.removeItem("auth");
-        setAuthData({
-            name: "",
-            email: "",
-            password: "",
-            phone: "",
-            role: "Kasir",
-            otpVerified: false,
-            isLoggedIn: false,
-        });
+        setAuthData(null);
     };
 
+    // ===============================
+    // CHANGE PASSWORD
+    // ===============================
     const changePassword = (oldPassword, newPassword) => {
-        if (!authData.isLoggedIn) {
+        if (!authData || !authData.isLoggedIn) {
             return { success: false, message: "Belum login" };
         }
 
-        if (authData.password !== oldPassword) {
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const userIndex = users.findIndex(u => u.id === authData.id);
+
+        if (userIndex === -1) {
+            return { success: false, message: "User tidak ditemukan" };
+        }
+
+        if (users[userIndex].password !== oldPassword) {
             return { success: false, message: "Password lama salah" };
         }
 
@@ -80,17 +165,24 @@ export const AuthProvider = ({ children }) => {
             return { success: false, message: "Password minimal 8 karakter" };
         }
 
-        setAuthData((prev) => ({
-            ...prev,
-            password: newPassword,
-        }));
+        users[userIndex].password = newPassword;
+        localStorage.setItem("users", JSON.stringify(users));
 
         return { success: true };
     };
 
     return (
         <AuthContext.Provider
-            value={{ authData, register, verifyOtp, login, logout, changePassword, }}
+            value={{
+                authData,
+                pendingUser,
+                register,
+                verifyOtp,
+                setPasswordAfterOtp,
+                login,
+                logout,
+                changePassword
+            }}
         >
             {children}
         </AuthContext.Provider>

@@ -10,13 +10,13 @@ import eyeClose from "../../assets/icons/hidden.png";
 
 export default function RegisterPassword() {
     const navigate = useNavigate();
-    const { authData, login } = useAuth();
 
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const { pendingUser, setPasswordAfterOtp } = useAuth();
 
     const handleSubmit = () => {
         if (!password || !confirm) {
@@ -29,7 +29,12 @@ export default function RegisterPassword() {
             return;
         }
 
-        login(authData.email, password);
+        const result = setPasswordAfterOtp(password);
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
 
         navigate("/dashboard");
     };
@@ -49,12 +54,12 @@ export default function RegisterPassword() {
 
                     <div className="auth-group">
                         <label>Email</label>
-                        <input type="email" value={authData.email} disabled />
+                        <input type="email" value={pendingUser?.email || ""} disabled />
                     </div>
 
                     <div className="auth-group">
                         <label>Nomor Telepon</label>
-                        <input type="text" value={authData.phone} disabled />
+                        <input type="text" value={pendingUser?.phone || ""} disabled />
                     </div>
 
                     <div className="auth-group">

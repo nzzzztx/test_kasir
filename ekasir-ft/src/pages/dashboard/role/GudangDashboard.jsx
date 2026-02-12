@@ -1,57 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
-import '../../assets/css/laporan.css';
+import React, { useState } from 'react';
+import Sidebar from '../../../components/Sidebar';
+import '../../../assets/css/dashboard.css';
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
+import { useNotifications } from '../../../context/NotificationContext';
 
-import laporanTransaksiIcon from '../../assets/icons/keuangan.png';
-import laporanPembelianIcon from '../../assets/icons/market.png';
-import laporanStokIcon from '../../assets/icons/stock.png';
-import laporanCustomerIcon from '../../assets/icons/customer.png';
+import produkIcon from '../../../assets/icons/produk.png';
+import kategoriIcon from '../../../assets/icons/category.png';
+import supplierIcon from '../../../assets/icons/user.png';
+import marketIcon from '../../../assets/icons/market.png';
+import stokIcon from '../../../assets/icons/stock.png';
+import toggleIcon from '../../../assets/icons/togglebutton.png';
+import notificationIcon from '../../../assets/icons/notification.png';
+import cameraIcon from '../../../assets/icons/camera.png';
+import userDummy from '../../../assets/img/profile.png';
 
-import toggleIcon from '../../assets/icons/togglebutton.png';
-import notificationIcon from '../../assets/icons/notification.png';
-import cameraIcon from '../../assets/icons/camera.png';
-import userDummy from '../../assets/img/profile.png';
-
-const Laporan = () => {
+const GudangDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const { changePassword } = useAuth();
-    const navigate = useNavigate();
-    const [user, setUser] = useState(null);
-    const { authData } = useAuth();
-    const role = authData?.role;
 
-    const laporanData = [
-        {
-            title: "Laporan Transaksi",
-            desc: "Pantau dan unduh laporan transaksi harian, mingguan, atau bulanan untuk analisis penjualan.",
-            icon: laporanTransaksiIcon,
-            path: "/dashboard/laporan/laporan-transaksi",
-        },
-        {
-            title: "Laporan Pembelian Barang",
-            desc: "Lihat ringkasan pembelian dari supplier dan unduh laporan pembelian.",
-            icon: laporanPembelianIcon,
-            path: "/dashboard/laporan/laporan-pembelian",
-        },
-        {
-            title: "Laporan Persediaan Barang",
-            desc: "Pantau stok barang dan pergerakan persediaan secara real-time.",
-            icon: laporanStokIcon,
-            path: "/dashboard/laporan/laporan-ketersediaan",
-        },
-        {
-            title: "Laporan Pelanggan",
-            desc: "Analisis pelanggan berdasarkan transaksi dan riwayat pembelian.",
-            icon: laporanCustomerIcon,
-            path: "/dashboard/laporan/laporan-pelanggan",
-        },
-    ];
+    const { changePassword, authData } = useAuth();
+    const navigate = useNavigate();
+    const role = authData?.role;
+    const [user, setUser] = useState(null);
+
+    const {
+        notifications,
+        unreadCount,
+        markAllAsRead,
+    } = useNotifications();
 
     useEffect(() => {
         if (!authData) return;
@@ -64,11 +43,38 @@ const Laporan = () => {
         }
     }, [authData]);
 
-    const {
-        notifications,
-        unreadCount,
-        markAllAsRead,
-    } = useNotifications();
+    const menuData = [
+        {
+            title: "Data Produk",
+            desc: "Kelola dan tambahkan produk baru.",
+            icon: produkIcon,
+            path: "/dashboard/product",
+        },
+        {
+            title: "Kategori Produk",
+            desc: "Kelompokkan produk berdasarkan kategori.",
+            icon: kategoriIcon,
+            path: "/dashboard/categories",
+        },
+        {
+            title: "Data Supplier",
+            desc: "Kelola supplier untuk pasokan barang.",
+            icon: supplierIcon,
+            path: "/dashboard/suppliers",
+        },
+        {
+            title: "Pembelian Barang",
+            desc: "Catat pembelian barang dari supplier.",
+            icon: marketIcon,
+            path: "/dashboard/pembelian",
+        },
+        {
+            title: "Stok Barang",
+            desc: "Pantau dan kelola stok barang.",
+            icon: stokIcon,
+            path: "/dashboard/stock",
+        },
+    ];
 
     if (!user) {
         return (
@@ -83,15 +89,18 @@ const Laporan = () => {
 
     return (
         <div className="dashboard-container">
-            <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <Sidebar isOpen={sidebarOpen} />
 
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        <button
+                            className="toggle-btn"
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                        >
                             <img src={toggleIcon} alt="Toggle Sidebar" />
                         </button>
-                        <h1>Laporan</h1>
+                        <h1>Dashboard Gudang</h1>
                     </div>
 
                     <div className="header-right">
@@ -242,110 +251,34 @@ const Laporan = () => {
                                 </div>
                             )}
                         </div>
+
                     </div>
                 </header>
 
-                <div className="card-grid laporan-grid">
-                    {laporanData.map((item, index) => (
-                        <div className="menu-card laporan-card" key={index}>
+                <div className="card-grid">
+                    {menuData.map((item, index) => (
+                        <div className="menu-card" key={index}>
                             <div className="card-top">
                                 <div className="card-text">
                                     <h3>{item.title}</h3>
                                     <p>{item.desc}</p>
                                 </div>
-                                <div className="card-icon laporan-icon">
+                                <div className="card-icon">
                                     <img src={item.icon} alt="icon" />
                                 </div>
                             </div>
-
                             <button
-                                className="btn-atur laporan-btn"
+                                className="btn-atur"
                                 onClick={() => navigate(item.path)}
                             >
-                                Atur sekarang
+                                Buka
                             </button>
                         </div>
                     ))}
                 </div>
-                {showPasswordModal && (
-                    <div className="password-modal-overlay">
-                        <div className="password-modal">
-                            <div className="password-modal-header">
-                                <h3>Ganti Password</h3>
-                                <button
-                                    className="password-close"
-                                    onClick={() => setShowPasswordModal(false)}
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <form
-                                className="password-modal-body"
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-
-                                    const oldPass = e.target.old_password.value;
-                                    const newPass = e.target.new_password.value;
-                                    const confirm = e.target.confirm_password.value;
-
-                                    if (newPass !== confirm) {
-                                        alert("Konfirmasi password tidak sama");
-                                        return;
-                                    }
-
-                                    const result = changePassword(oldPass, newPass);
-
-                                    if (!result.success) {
-                                        alert(result.message);
-                                        return;
-                                    }
-
-                                    alert("Password berhasil diganti");
-                                    setShowPasswordModal(false);
-                                    e.target.reset();
-                                }}
-                            >
-                                <div className="form-group">
-                                    <label>Password Lama</label>
-                                    <input
-                                        type="password"
-                                        name="old_password"
-                                        placeholder="Masukkan password lama"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Password Baru</label>
-                                    <input
-                                        type="password"
-                                        name="new_password"
-                                        placeholder="Minimal 8 karakter"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Konfirmasi Password Baru</label>
-                                    <input
-                                        type="password"
-                                        name="confirm_password"
-                                        placeholder="Ulangi password baru"
-                                        required
-                                    />
-                                </div>
-
-                                <button type="submit" className="btn-primary full">
-                                    Simpan Password
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
 };
 
-export default Laporan;
+export default GudangDashboard;

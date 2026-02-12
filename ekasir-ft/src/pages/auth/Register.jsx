@@ -60,17 +60,23 @@ export default function Register() {
                                         return;
                                     }
 
-                                    register({
+                                    const result = register({
                                         email: form.email,
                                         phone: form.phone,
-                                        name: "Kasir",
+                                        name: "Owner",
                                     });
+
+                                    if (!result.success) {
+                                        alert(result.message);
+                                        return;
+                                    }
 
                                     setShowOtp(true);
                                 }}
                             >
                                 Kirim OTP
                             </button>
+
                         </div>
                     </div>
 

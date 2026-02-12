@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../assets/css/dashboard.css';
 import '../../assets/css/product.css';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 import Sidebar from '../../components/Sidebar';
 import AddProduct from '../../components/Product/AddProduct';
@@ -32,20 +33,18 @@ const Product = () => {
         return saved ? JSON.parse(saved) : initialProducts;
     });
 
-    const [selectedProduct, setSelectedProduct] = useState(initialProducts[0]);
-
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
-
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('Semua');
-
     const [categories, setCategories] = useState([]);
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
     const {
         notifications,
@@ -76,16 +75,16 @@ const Product = () => {
         setCategories(['Semua', ...parsed.map((c) => c.name)]);
     }, []);
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
 
     const handleSaveProduct = (data) => {
         const exists = products.some((p) => p.code === data.code);
@@ -114,6 +113,20 @@ const Product = () => {
         setSelectedProduct(updated);
         setShowEditModal(false);
     };
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                />
+                <div className="main-content">
+                    <div style={{ padding: 24 }}>Loading...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -203,7 +216,7 @@ const Product = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>
@@ -429,10 +442,10 @@ const Product = () => {
                                 <button
                                     className="btn-confirm-delete"
                                     onClick={() => {
+                                        if (!selectedProduct) return;
+
                                         setProducts((prev) =>
-                                            prev.filter(
-                                                (p) => p.id !== selectedProduct.id
-                                            )
+                                            prev.filter((p) => p.id !== selectedProduct.id)
                                         );
                                         setSelectedProduct(null);
                                         setShowDeleteModal(false);

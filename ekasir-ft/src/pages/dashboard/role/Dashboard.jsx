@@ -1,57 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
-import '../../assets/css/laporan.css';
+import Sidebar from '../../../components/Sidebar';
+import '../../../assets/css/dashboard.css';
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
+import { getInfoToko } from "../../../utils/toko";
+import { useNotifications } from '../../../context/NotificationContext';
 
-import laporanTransaksiIcon from '../../assets/icons/keuangan.png';
-import laporanPembelianIcon from '../../assets/icons/market.png';
-import laporanStokIcon from '../../assets/icons/stock.png';
-import laporanCustomerIcon from '../../assets/icons/customer.png';
+import produkIcon from '../../../assets/icons/produk.png';
+import kategoriIcon from '../../../assets/icons/category.png';
+import customerIcon from '../../../assets/icons/customer.png';
+import supplierIcon from '../../../assets/icons/user.png';
+import diskonIcon from '../../../assets/icons/discount.png';
+import marketIcon from '../../../assets/icons/market.png';
+import stokIcon from '../../../assets/icons/stock.png';
+import toggleIcon from '../../../assets/icons/togglebutton.png';
+import notificationIcon from '../../../assets/icons/notification.png';
+import taxIcon from '../../../assets/icons/tax.png';
+import keuanganIcon from '../../../assets/icons/keuangan.png';
+import cameraIcon from '../../../assets/icons/camera.png';
+import userDummy from '../../../assets/img/profile.png';
 
-import toggleIcon from '../../assets/icons/togglebutton.png';
-import notificationIcon from '../../assets/icons/notification.png';
-import cameraIcon from '../../assets/icons/camera.png';
-import userDummy from '../../assets/img/profile.png';
-
-const Laporan = () => {
+const Dashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const { changePassword } = useAuth();
+    const { changePassword, authData } = useAuth();
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
-    const { authData } = useAuth();
+    const { namaToko, lokasi } = getInfoToko();
     const role = authData?.role;
+    const [user, setUser] = useState(null);
 
-    const laporanData = [
+    const menuData = [
         {
-            title: "Laporan Transaksi",
-            desc: "Pantau dan unduh laporan transaksi harian, mingguan, atau bulanan untuk analisis penjualan.",
-            icon: laporanTransaksiIcon,
-            path: "/dashboard/laporan/laporan-transaksi",
+            title: "Data Barang / Produk",
+            desc: "Tambahkan barang atau jasa yang anda miliki untuk pengelolaan yang lebih akurat.",
+            icon: produkIcon,
+            path: "/dashboard/product",
         },
         {
-            title: "Laporan Pembelian Barang",
-            desc: "Lihat ringkasan pembelian dari supplier dan unduh laporan pembelian.",
-            icon: laporanPembelianIcon,
-            path: "/dashboard/laporan/laporan-pembelian",
+            title: "Kategori Barang",
+            desc: "Kelola barang dengan kategori tertentu untuk memudahkan manajemen produk.",
+            icon: kategoriIcon,
+            path: "/dashboard/categories",
         },
         {
-            title: "Laporan Persediaan Barang",
-            desc: "Pantau stok barang dan pergerakan persediaan secara real-time.",
-            icon: laporanStokIcon,
-            path: "/dashboard/laporan/laporan-ketersediaan",
+            title: "Data Pelanggan",
+            desc: "Kelola informasi pelanggan atau member dengan mudah dan pantau dengan efisien.",
+            icon: customerIcon,
+            path: "/dashboard/customers",
         },
         {
-            title: "Laporan Pelanggan",
-            desc: "Analisis pelanggan berdasarkan transaksi dan riwayat pembelian.",
-            icon: laporanCustomerIcon,
-            path: "/dashboard/laporan/laporan-pelanggan",
+            title: "Data Supplier",
+            desc: "Simpan data supplier anda secara teratur, untuk memastikan alur pasokan tetap lancar.",
+            icon: supplierIcon,
+            path: "/dashboard/suppliers",
+        },
+        {
+            title: "Pembelian Barang",
+            desc: "Catat pembelian barang dari supplier dan otomatis menambah stok.",
+            icon: marketIcon,
+            path: "/dashboard/pembelian",
+        },
+        {
+            title: "Diskon Barang",
+            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
+            icon: diskonIcon,
+            path: "/dashboard/discount",
+        },
+        {
+            title: "Pajak Barang",
+            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
+            icon: taxIcon,
+            path: "/dashboard/pajak",
+        },
+        {
+            title: "Stok Barang",
+            desc: "Kelola stok barang anda dengan mudah dan pantau stok secara real-time disini.",
+            icon: stokIcon,
+            path: "/dashboard/stock",
+        },
+        {
+            title: "Transaction",
+            desc: "Kelola Transaksi barang anda dengan mudah dan pembayaran yang profesional.",
+            icon: keuanganIcon,
+            path: "/dashboard/transaction",
         },
     ];
+
+    const {
+        notifications,
+        unreadCount,
+        markAllAsRead,
+    } = useNotifications();
 
     useEffect(() => {
         if (!authData) return;
@@ -64,11 +105,28 @@ const Laporan = () => {
         }
     }, [authData]);
 
-    const {
-        notifications,
-        unreadCount,
-        markAllAsRead,
-    } = useNotifications();
+    const filteredMenu = menuData.filter(item => {
+        if (role === "owner") return true;
+
+        if (role === "kasir") {
+            return [
+                "/dashboard/customers",
+                "/dashboard/transaction"
+            ].includes(item.path);
+        }
+
+        if (role === "gudang") {
+            return [
+                "/dashboard/product",
+                "/dashboard/categories",
+                "/dashboard/suppliers",
+                "/dashboard/pembelian",
+                "/dashboard/stock"
+            ].includes(item.path);
+        }
+
+        return false;
+    });
 
     if (!user) {
         return (
@@ -88,10 +146,13 @@ const Laporan = () => {
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        <button
+                            className="toggle-btn"
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                        >
                             <img src={toggleIcon} alt="Toggle Sidebar" />
                         </button>
-                        <h1>Laporan</h1>
+                        <h1>Manajemen Kasir</h1>
                     </div>
 
                     <div className="header-right">
@@ -242,24 +303,24 @@ const Laporan = () => {
                                 </div>
                             )}
                         </div>
+
                     </div>
                 </header>
 
-                <div className="card-grid laporan-grid">
-                    {laporanData.map((item, index) => (
-                        <div className="menu-card laporan-card" key={index}>
+                <div className="card-grid">
+                    {filteredMenu.map((item, index) => (
+                        <div className="menu-card" key={index}>
                             <div className="card-top">
                                 <div className="card-text">
                                     <h3>{item.title}</h3>
                                     <p>{item.desc}</p>
                                 </div>
-                                <div className="card-icon laporan-icon">
+                                <div className="card-icon">
                                     <img src={item.icon} alt="icon" />
                                 </div>
                             </div>
-
                             <button
-                                className="btn-atur laporan-btn"
+                                className="btn-atur"
                                 onClick={() => navigate(item.path)}
                             >
                                 Atur sekarang
@@ -348,4 +409,4 @@ const Laporan = () => {
     );
 };
 
-export default Laporan;
+export default Dashboard;

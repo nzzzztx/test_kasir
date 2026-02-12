@@ -13,6 +13,7 @@ import userDummy from '../../assets/img/profile.png';
 import trashIcon from '../../assets/icons/trash.png';
 import productDummy from '../../assets/img/product.png';
 import searchIcon from '../../assets/icons/search.png';
+import { useAuth } from '../../context/AuthContext';
 
 const defaultCategories = [
     { id: 1, name: 'Kebutuhan Rumah Tangga' },
@@ -51,6 +52,8 @@ const Categories = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const savedCategories = localStorage.getItem('categories');
@@ -88,16 +91,27 @@ const Categories = () => {
         setShowAdd(false);
     };
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -181,7 +195,7 @@ const Categories = () => {
                             )}
                         </div>
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>

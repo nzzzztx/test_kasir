@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/Sidebar";
 import EditStockModal from "../../components/Stock/EditStockModal";
@@ -16,7 +17,6 @@ import editIcon from "../../assets/icons/edit.png";
 import logIcon from "../../assets/icons/log.png";
 import productImg from "../../assets/img/product.png";
 
-
 const Stock = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -27,6 +27,8 @@ const Stock = () => {
     const { unreadCount } = useNotifications();
     const [stocks, setStocks] = useState([]);
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const { authData } = useAuth();
 
     const filtered = stocks.filter((item) =>
         item.name.toLowerCase().includes(search.toLowerCase())
@@ -123,16 +125,27 @@ const Stock = () => {
         setStocks(Array.from(map.values()));
     }, []);
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -167,7 +180,7 @@ const Stock = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>

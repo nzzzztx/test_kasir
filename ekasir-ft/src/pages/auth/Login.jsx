@@ -8,30 +8,32 @@ import eyeClose from "../../assets/icons/hidden.png";
 import { useState } from "react";
 
 export default function Login() {
-    const { login } = useAuth();
+    const { login, authData } = useAuth();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
-        email: "",
+        identifier: "",
         password: "",
     });
 
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = () => {
-        if (!form.email || !form.password) {
-            alert("Email dan password wajib diisi");
+        if (!form.identifier || !form.password) {
+            alert("Username/Email dan password wajib diisi");
             return;
         }
 
-        const success = login(form.email, form.password);
+        const result = login(form.identifier, form.password);
 
-        if (success) {
-            navigate("/dashboard");
-        } else {
-            alert("Login gagal");
+        if (!result.success) {
+            alert(result.message);
+            return;
         }
+
+        navigate("/dashboard");
     };
+
 
     return (
         <div className="auth-wrapper">
@@ -44,16 +46,16 @@ export default function Login() {
 
                 <div className="auth-card">
                     <h2>Masuk ke Akun Anda</h2>
-                    <p>Kamu dapat masuk sebagai owner ataupun staf</p>
+                    <p>Kamu dapat masuk sebagai owner, kasir ataupun gudang</p>
 
                     <div className="auth-group">
-                        <label>Email</label>
+                        <label>Email/Username</label>
                         <input
-                            type="email"
-                            placeholder="Email"
-                            value={form.email}
+                            type="text"
+                            placeholder="Masukan Email atau Username anda"
+                            value={form.identifier}
                             onChange={(e) =>
-                                setForm({ ...form, email: e.target.value })
+                                setForm({ ...form, identifier: e.target.value })
                             }
                         />
                     </div>

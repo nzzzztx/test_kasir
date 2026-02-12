@@ -96,14 +96,43 @@
 }
 
 .badge-active {
-  display: inline-block;
-  background: #e6f9f0;
-  color: #059669;
-  padding: 6px 14px;
-  border-radius: 999px;
+  background: #16a34a;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
-  max-width: 420px;
+}
+
+.badge-nonactive {
+  background: #dc2626;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.badge-empty {
+  background: #e5e7eb;
+  color: #6b7280;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.badge-fifo {
+  background: #2563eb;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.badge-lifo {
+  background: #9333ea;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
 }
 
 .info-divider {

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import "../../assets/css/suppliers.css";
 import "../../assets/css/dashboard.css";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/Sidebar";
 import AddSupplierModal from "../../components/Suppliers/AddSupplierModal";
@@ -23,6 +24,8 @@ const Suppliers = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
+    const [user, setUser] = useState(null);
+    const { authData } = useAuth();
 
     const [suppliers, setSuppliers] = useState(() => {
         const saved = localStorage.getItem("suppliers");
@@ -45,12 +48,12 @@ const Suppliers = () => {
     } = useNotifications();
 
     const filtered = suppliers.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase())
+        (s.name || "").toLowerCase().includes(search.toLowerCase())
     );
 
     const ITEMS_PER_PAGE = 15;
     const [page, setPage] = useState(1);
-    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
 
     const paginatedData = filtered.slice(
         (page - 1) * ITEMS_PER_PAGE,
@@ -95,16 +98,28 @@ const Suppliers = () => {
         reader.readAsArrayBuffer(file);
     };
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="dashboard-container">
@@ -195,7 +210,7 @@ const Suppliers = () => {
                         </div>
 
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>
@@ -233,7 +248,10 @@ const Suppliers = () => {
                             <input
                                 placeholder="Cari supplier..."
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
                             />
                         </div>
                     </div>
@@ -288,7 +306,7 @@ const Suppliers = () => {
                     </div>
 
                     <div className="suppliers-footer">
-                        <span>Tampilkan: 5</span>
+                        <span>Tampilkan: {ITEMS_PER_PAGE}</span>
                         <span>
                             Ditampilkan {(page - 1) * ITEMS_PER_PAGE + 1} -{" "}
                             {Math.min(page * ITEMS_PER_PAGE, filtered.length)} dari{" "}

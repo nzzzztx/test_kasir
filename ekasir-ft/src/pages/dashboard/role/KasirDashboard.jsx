@@ -1,84 +1,27 @@
-import React, { useState } from 'react';
-import Sidebar from '../../components/Sidebar';
-import '../../assets/css/dashboard.css';
-import { useAuth } from "../../context/AuthContext";
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../../../components/Sidebar';
+import '../../../assets/css/dashboard.css';
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
-import { getInfoToko } from "../../utils/toko";
-import { useNotifications } from '../../context/NotificationContext';
+import { useNotifications } from '../../../context/NotificationContext';
 
-import produkIcon from '../../assets/icons/produk.png';
-import kategoriIcon from '../../assets/icons/category.png';
-import customerIcon from '../../assets/icons/customer.png';
-import supplierIcon from '../../assets/icons/user.png';
-import diskonIcon from '../../assets/icons/discount.png';
-import marketIcon from '../../assets/icons/market.png';
-import stokIcon from '../../assets/icons/stock.png';
-import toggleIcon from '../../assets/icons/togglebutton.png';
-import notificationIcon from '../../assets/icons/notification.png';
-import taxIcon from '../../assets/icons/tax.png';
-import cameraIcon from '../../assets/icons/camera.png';
-import userDummy from '../../assets/img/profile.png';
+import transaksiIcon from '../../../assets/icons/keuangan.png';
+import customerIcon from '../../../assets/icons/customer.png';
+import toggleIcon from '../../../assets/icons/togglebutton.png';
+import notificationIcon from '../../../assets/icons/notification.png';
+import cameraIcon from '../../../assets/icons/camera.png';
+import userDummy from '../../../assets/img/profile.png';
 
-
-const Dashboard = () => {
+const KasirDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+
     const { changePassword, authData } = useAuth();
     const navigate = useNavigate();
-    const { namaToko, lokasi } = getInfoToko();
-
-    const menuData = [
-        {
-            title: "Data Barang / Produk",
-            desc: "Tambahkan barang atau jasa yang anda miliki untuk pengelolaan yang lebih akurat.",
-            icon: produkIcon,
-            path: "/dashboard/product",
-        },
-        {
-            title: "Kategori Barang",
-            desc: "Kelola barang dengan kategori tertentu untuk memudahkan manajemen produk.",
-            icon: kategoriIcon,
-            path: "/dashboard/categories",
-        },
-        {
-            title: "Data Pelanggan",
-            desc: "Kelola informasi pelanggan atau member dengan mudah dan pantau dengan efisien.",
-            icon: customerIcon,
-            path: "/dashboard/customers",
-        },
-        {
-            title: "Data Supplier",
-            desc: "Simpan data supplier anda secara teratur, untuk memastikan alur pasokan tetap lancar.",
-            icon: supplierIcon,
-            path: "/dashboard/suppliers",
-        },
-        {
-            title: "Pembelian Barang",
-            desc: "Catat pembelian barang dari supplier dan otomatis menambah stok.",
-            icon: marketIcon,
-            path: "/dashboard/pembelian",
-        },
-        {
-            title: "Diskon Barang",
-            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
-            icon: diskonIcon,
-            path: "/dashboard/discount",
-        },
-        {
-            title: "Pajak Barang",
-            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
-            icon: taxIcon,
-            path: "/dashboard/pajak",
-        },
-        {
-            title: "Stok Barang",
-            desc: "Kelola stok barang anda dengan mudah dan pantau stok secara real-time disini.",
-            icon: stokIcon,
-            path: "/dashboard/stock",
-        },
-    ];
+    const [user, setUser] = useState(null);
+    const role = authData?.role;
 
     const {
         notifications,
@@ -86,20 +29,46 @@ const Dashboard = () => {
         markAllAsRead,
     } = useNotifications();
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    const menuData = [
+        {
+            title: "Transaksi",
+            desc: "Kelola dan proses transaksi penjualan dengan cepat.",
+            icon: transaksiIcon,
+            path: "/dashboard/transaction",
+        },
+        {
+            title: "Data Pelanggan",
+            desc: "Kelola data pelanggan atau member.",
+            icon: customerIcon,
+            path: "/dashboard/customers",
+        },
+    ];
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
-            <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <Sidebar isOpen={sidebarOpen} />
 
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
                 <header className="content-header">
@@ -110,7 +79,7 @@ const Dashboard = () => {
                         >
                             <img src={toggleIcon} alt="Toggle Sidebar" />
                         </button>
-                        <h1>Manajemen Kasir</h1>
+                        <h1>Dashboard Kasir</h1>
                     </div>
 
                     <div className="header-right">
@@ -187,7 +156,7 @@ const Dashboard = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={user.avatar}
+                                src={user?.avatar || userDummy}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -205,7 +174,7 @@ const Dashboard = () => {
                                     <div className="profile-header profile-header-center">
                                         <div className="profile-avatar-wrapper profile-avatar-large">
                                             <img
-                                                src={user.avatar}
+                                                src={user?.avatar || userDummy}
                                                 alt="avatar"
                                                 className="profile-avatar-img"
                                             />
@@ -229,8 +198,11 @@ const Dashboard = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user.name}</div>
-                                            <div className="profile-email">{authData.email}</div>
+                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-email">{user?.email}</div>
+                                            <div className={`profile-role-badge ${authData?.role}`}>
+                                                {authData?.role?.toUpperCase()}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -278,90 +250,14 @@ const Dashboard = () => {
                                 className="btn-atur"
                                 onClick={() => navigate(item.path)}
                             >
-                                Atur sekarang
+                                Buka
                             </button>
                         </div>
                     ))}
                 </div>
-                {showPasswordModal && (
-                    <div className="password-modal-overlay">
-                        <div className="password-modal">
-                            <div className="password-modal-header">
-                                <h3>Ganti Password</h3>
-                                <button
-                                    className="password-close"
-                                    onClick={() => setShowPasswordModal(false)}
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <form
-                                className="password-modal-body"
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-
-                                    const oldPass = e.target.old_password.value;
-                                    const newPass = e.target.new_password.value;
-                                    const confirm = e.target.confirm_password.value;
-
-                                    if (newPass !== confirm) {
-                                        alert("Konfirmasi password tidak sama");
-                                        return;
-                                    }
-
-                                    const result = changePassword(oldPass, newPass);
-
-                                    if (!result.success) {
-                                        alert(result.message);
-                                        return;
-                                    }
-
-                                    alert("Password berhasil diganti");
-                                    setShowPasswordModal(false);
-                                    e.target.reset();
-                                }}
-                            >
-                                <div className="form-group">
-                                    <label>Password Lama</label>
-                                    <input
-                                        type="password"
-                                        name="old_password"
-                                        placeholder="Masukkan password lama"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Password Baru</label>
-                                    <input
-                                        type="password"
-                                        name="new_password"
-                                        placeholder="Minimal 8 karakter"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Konfirmasi Password Baru</label>
-                                    <input
-                                        type="password"
-                                        name="confirm_password"
-                                        placeholder="Ulangi password baru"
-                                        required
-                                    />
-                                </div>
-
-                                <button type="submit" className="btn-primary full">
-                                    Simpan Password
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
 };
 
-export default Dashboard;
+export default KasirDashboard;

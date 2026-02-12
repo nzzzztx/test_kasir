@@ -28,6 +28,8 @@ const Shift = () => {
     const [openCalendar, setOpenCalendar] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const role = authData?.role;
 
     const [range, setRange] = useState({
         startDate: today,
@@ -50,6 +52,17 @@ const Shift = () => {
     const [history, setHistory] = useState(() =>
         JSON.parse(localStorage.getItem("shift_history")) || []
     );
+
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
 
     const {
         notifications,
@@ -191,14 +204,16 @@ const Shift = () => {
         setSelectedShift(updatedShift);
     };
 
-    const [user] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                avatar: userDummy,
-            };
-    });
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -227,7 +242,15 @@ const Shift = () => {
                                 markAllAsRead();
                             }}
                         >
-                            <img src={notificationIcon} alt="notif" />
+                            <div className="notif-icon-wrapper">
+                                <img src={notificationIcon} alt="notif" />
+
+                                {unreadCount > 0 && (
+                                    <span className="notif-badge">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
                             <span>Notifikasi</span>
 
                             {notificationOpen && (
@@ -235,6 +258,7 @@ const Shift = () => {
                                     <div className="notif-header">
                                         <span>Notifikasi ({unreadCount})</span>
                                     </div>
+
                                     <div className={`notif-body ${notifications.length === 0 ? "empty" : ""}`}>
                                         {notifications.length === 0 ? (
                                             <>
@@ -265,9 +289,13 @@ const Shift = () => {
                                             ))
                                         )}
                                     </div>
+
                                     <div
                                         className="notif-footer"
-                                        onClick={() => setNotificationOpen(false)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setNotificationOpen(false);
+                                        }}
                                     >
                                         Tutup
                                     </div>
@@ -280,7 +308,7 @@ const Shift = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={user.avatar}
+                                src={user?.avatar || userDummy}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -298,7 +326,7 @@ const Shift = () => {
                                     <div className="profile-header profile-header-center">
                                         <div className="profile-avatar-wrapper profile-avatar-large">
                                             <img
-                                                src={user.avatar}
+                                                src={user?.avatar || userDummy}
                                                 alt="avatar"
                                                 className="profile-avatar-img"
                                             />
@@ -322,8 +350,11 @@ const Shift = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{authData?.name || "Kasir"}</div>
-                                            <div className="profile-email">{authData?.email || "-"}</div>
+                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-email">{user?.email}</div>
+                                            <div className={`profile-role-badge ${authData?.role}`}>
+                                                {authData?.role?.toUpperCase()}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -351,6 +382,7 @@ const Shift = () => {
                                 </div>
                             )}
                         </div>
+
                     </div>
                 </header>
 

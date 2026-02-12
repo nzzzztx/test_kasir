@@ -1,7 +1,8 @@
-import React, { use, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/discount.css";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/Sidebar";
 import AddDiscountModal from "../../components/Discount/AddDiscountModal";
@@ -25,9 +26,12 @@ const Discount = () => {
 
     const [selectedDiscount, setSelectedDiscount] = useState(null);
     const { unreadCount } = useNotifications();
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
     const [discounts, setDiscounts] = useState(() => {
-        const saved = localStorage.getItem("discounts");
+        const saved = localStorage.getItem(`products_owner_${authData.ownerId}`)
+            ;
         return saved
             ? JSON.parse(saved)
             : [
@@ -40,16 +44,30 @@ const Discount = () => {
         d.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                />
+                <div className="main-content">
+                    <div style={{ padding: 24 }}>Loading...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -84,7 +102,7 @@ const Discount = () => {
                             <span>Notifikasi ({unreadCount})</span>
                         </div>
                         <div className="profile-box">
-                            <img src={user.avatar} alt="profile" />
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
                     </div>
                 </header>

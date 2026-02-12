@@ -234,6 +234,28 @@
   background: #f9fafb;
 }
 
+.profile-role-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.profile-role-badge.owner {
+  background-color: #2563eb;
+}
+
+.profile-role-badge.kasir {
+  background-color: #16a34a;
+}
+
+.profile-role-badge.gudang {
+  background-color: #f97316;
+}
+
 .profile-img {
   width: 36px;
   height: 36px;

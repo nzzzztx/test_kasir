@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -23,6 +23,8 @@ const Setting = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const { changePassword } = useAuth();
     const navigate = useNavigate();
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
     const {
         notifications,
@@ -42,9 +44,9 @@ const Setting = () => {
             path: "/dashboard/setting/metode-pembayaran",
         },
         {
-            title: "Profile",
+            title: "Manajemen User",
             icon: profilIcon,
-            path: "/dashboard/akun",
+            path: "/dashboard/setting/manajemen-user",
         },
         {
             title: "Perangkat EDC",
@@ -58,16 +60,28 @@ const Setting = () => {
         },
     ];
 
-    const [user] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                email: "",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="main-content">
+                    <div style={{ padding: "24px" }}>Loading profile...</div>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="dashboard-container">
@@ -162,7 +176,7 @@ const Setting = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={user.avatar}
+                                src={user?.avatar || userDummy}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -180,7 +194,7 @@ const Setting = () => {
                                     <div className="profile-header profile-header-center">
                                         <div className="profile-avatar-wrapper profile-avatar-large">
                                             <img
-                                                src={user.avatar}
+                                                src={user?.avatar || userDummy}
                                                 alt="avatar"
                                                 className="profile-avatar-img"
                                             />
@@ -204,8 +218,11 @@ const Setting = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user.name}</div>
-                                            <div className="profile-email">{user.email}</div>
+                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-email">{user?.email}</div>
+                                            <div className={`profile-role-badge ${authData?.role}`}>
+                                                {authData?.role?.toUpperCase()}
+                                            </div>
                                         </div>
                                     </div>
 

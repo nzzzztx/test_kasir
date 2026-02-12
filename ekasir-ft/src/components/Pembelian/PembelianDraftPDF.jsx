@@ -1,25 +1,45 @@
 import { useEffect, useState } from "react";
+import { getCurrentOwnerId } from "../../utils/owner";
+import { getInfoToko } from "../../utils/toko";
 
 const PembelianDraftPDF = () => {
     const [draft, setDraft] = useState(null);
+    const { namaToko, lokasi, telepon } = getInfoToko();
 
     useEffect(() => {
-        const saved = localStorage.getItem("pembelian_draft");
+        const ownerId = getCurrentOwnerId();
+        if (!ownerId) return;
+
+        const saved = localStorage.getItem(`pembelian_draft_owner_${ownerId}`);
         if (saved) {
             setDraft(JSON.parse(saved));
         }
     }, []);
 
-    if (!draft) return null;
+    if (!draft) {
+        return (
+            <div style={{ padding: 24 }}>
+                Tidak ada draft pembelian.
+            </div>
+        );
+    }
 
-    const { supplier, items, total, paidAmount } = draft;
+    const { supplier, items = [], total = 0, paidAmount = 0 } = draft;
 
     return (
         <div id="pembelian-pdf" style={{ padding: 24, fontFamily: "Arial" }}>
-            <h2 style={{ textAlign: "center" }}>Draft Pembelian</h2>
+            <h2 style={{ textAlign: "center" }}>{namaToko}</h2>
+            <p style={{ textAlign: "center", fontSize: 12 }}>{lokasi}</p>
+            <p style={{ textAlign: "center", fontSize: 12 }}>Telp: {telepon}</p>
+            <h3 style={{ textAlign: "center" }}>Draft Pembelian</h3>
 
             <p><strong>Supplier:</strong> {supplier?.name}</p>
-            <p><strong>Tanggal:</strong> {new Date().toLocaleDateString("id-ID")}</p>
+            <p>
+                <strong>Tanggal:</strong>{" "}
+                {draft.date
+                    ? new Date(draft.date).toLocaleDateString("id-ID")
+                    : new Date().toLocaleDateString("id-ID")}
+            </p>
 
             <table
                 width="100%"
@@ -42,9 +62,10 @@ const PembelianDraftPDF = () => {
                             <td>{item.name}</td>
                             <td>{item.qty}</td>
                             <td>{item.unit}</td>
-                            <td>Rp {item.price.toLocaleString("id-ID")}</td>
+                            <td>Rp {(item.price || 0).toLocaleString("id-ID")}
+                            </td>
                             <td>
-                                Rp {(item.qty * item.price).toLocaleString("id-ID")}
+                                Rp {((item.qty || 0) * (item.price || 0)).toLocaleString("id-ID")}
                             </td>
                         </tr>
                     ))}

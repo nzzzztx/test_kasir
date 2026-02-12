@@ -7,15 +7,32 @@ import { useState } from "react";
 export default function ForgotPw() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
 
     const handleReset = () => {
         if (!email) {
-            alert("Email wajib diisi");
+            setError("Email wajib diisi");
+            setMessage("");
+            return;
+        }
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const user = users.find((u) => u.email === email);
+
+        if (!user) {
+            setError("Email tidak ditemukan");
+            setMessage("");
+            return;
+        }
+
+        if (user.role !== "owner") {
+            setError("");
+            setMessage("Silakan hubungi pemilik toko untuk reset password");
             return;
         }
 
         localStorage.setItem("reset_email", email);
-
         navigate("/password-notification");
     };
 
@@ -31,8 +48,8 @@ export default function ForgotPw() {
                 <div className="auth-card">
                     <h2>Lupa kata sandi?</h2>
                     <p>
-                        Jangan khawatir, kami akan mengirimkan petunjuk
-                        pengaturan ulang kepada anda.
+                        Fitur ini hanya tersedia untuk akun owner.
+                        Jika Anda adalah staf, silakan hubungi pemilik toko.
                     </p>
 
                     <div className="auth-group">
@@ -41,9 +58,28 @@ export default function ForgotPw() {
                             type="email"
                             placeholder="Masukkan email anda"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                setError("");
+                                setMessage("");
+                            }}
                         />
+                        <p style={{ fontSize: "13px", color: "#888" }}>
+                            Reset password hanya berlaku untuk akun owner
+                        </p>
                     </div>
+
+                    {error && (
+                        <p style={{ color: "red", fontSize: "14px" }}>
+                            {error}
+                        </p>
+                    )}
+
+                    {message && (
+                        <p style={{ color: "#ff6a00", fontSize: "14px" }}>
+                            {message}
+                        </p>
+                    )}
 
                     <button className="auth-btn" onClick={handleReset}>
                         Reset kata sandi

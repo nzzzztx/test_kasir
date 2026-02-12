@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function OtpModal({ onClose }) {
     const navigate = useNavigate();
-    const { verifyOtp, authData } = useAuth();
+    const { verifyOtp, pendingUser } = useAuth();
 
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -34,12 +34,13 @@ export default function OtpModal({ onClose }) {
     const handleVerify = () => {
         const code = otp.join("");
 
-        if (code !== "1234") {
-            alert("Kode OTP salah");
+        const result = verifyOtp(code);
+
+        if (!result.success) {
+            alert(result.message);
             return;
         }
 
-        verifyOtp();
         onClose();
         navigate("/register-password");
     };
@@ -65,7 +66,7 @@ export default function OtpModal({ onClose }) {
 
                 <p className="otp-desc">
                     Masukkan 4 digit kode verifikasi yang dikirim ke{" "}
-                    <b>{authData.phone || "-"}</b>
+                    <b>{pendingUser?.phone || "-"}</b>
                 </p>
 
                 <div className="otp-inputs">

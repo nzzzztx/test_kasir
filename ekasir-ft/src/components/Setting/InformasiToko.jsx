@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getCurrentOwnerId } from "../../utils/owner";
 import Sidebar from "../../components/Sidebar";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/informasi.css";
 
 import tokoIcon from "../../assets/icons/store.png";
-
-const STORAGE_KEY = "informasi_toko";
 
 const defaultData = {
     jenisUsaha: "",
@@ -13,20 +12,35 @@ const defaultData = {
     pemilik: "",
     telepon: "",
     lokasi: "",
-    metodeAkuntansi: "FIFO",
-    statusOlshop: "Aktif",
+    metodeAkuntansi: "",
+    statusOlshop: "",
 };
 
 const InformasiToko = () => {
-    const [toko, setToko] = useState(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : defaultData;
-    });
-
-    const [draft, setDraft] = useState(toko);
+    const [ownerId, setOwnerId] = useState(null);
+    const [toko, setToko] = useState(defaultData);
+    const [draft, setDraft] = useState(defaultData);
     const [isEdit, setIsEdit] = useState(false);
 
+    useEffect(() => {
+        const id = getCurrentOwnerId();
+        if (!id) return;
+
+        setOwnerId(id);
+
+        const STORAGE_KEY = `informasi_toko_owner_${id}`;
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        const data = saved ? JSON.parse(saved) : defaultData;
+        setToko(data);
+        setDraft(data);
+    }, []);
+
     const handleSave = () => {
+        if (!ownerId) return;
+
+        const STORAGE_KEY = `informasi_toko_owner_${ownerId}`;
+
         setToko(draft);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
         setIsEdit(false);
@@ -36,6 +50,17 @@ const InformasiToko = () => {
         setDraft(toko);
         setIsEdit(false);
     };
+
+    // if (!ownerId) {
+    //     return (
+    //         <div className="dashboard-container">
+    //             <Sidebar />
+    //             <div className="main-content">
+    //                 <div style={{ padding: 24 }}>Loading owner...</div>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="dashboard-container">
@@ -132,11 +157,22 @@ const InformasiToko = () => {
                                             })
                                         }
                                     >
+                                        <option value="">Pilih Metode</option>
                                         <option value="FIFO">FIFO</option>
                                         <option value="LIFO">LIFO</option>
                                     </select>
                                 ) : (
-                                    <b>{toko.metodeAkuntansi}</b>
+                                    <b
+                                        className={
+                                            toko.metodeAkuntansi === "FIFO"
+                                                ? "badge-fifo"
+                                                : toko.metodeAkuntansi === "LIFO"
+                                                    ? "badge-lifo"
+                                                    : "badge-empty"
+                                        }
+                                    >
+                                        {toko.metodeAkuntansi || "-"}
+                                    </b>
                                 )}
                             </div>
 
@@ -158,8 +194,16 @@ const InformasiToko = () => {
                                         </option>
                                     </select>
                                 ) : (
-                                    <b className="badge-active">
-                                        {toko.statusOlshop}
+                                    <b
+                                        className={
+                                            toko.statusOlshop === "Aktif"
+                                                ? "badge-active"
+                                                : toko.statusOlshop === "Nonaktif"
+                                                    ? "badge-nonactive"
+                                                    : "badge-empty"
+                                        }
+                                    >
+                                        {toko.statusOlshop || "-"}
                                     </b>
                                 )}
                             </div>

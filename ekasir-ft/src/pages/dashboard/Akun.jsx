@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Sidebar";
 import ProfileEditModal from "../../components/Akun/ProfileEditModal";
 
@@ -9,21 +10,19 @@ import userDummy from "../../assets/img/Profile.png";
 
 const Akun = () => {
     const [showEdit, setShowEdit] = useState(false);
+    const { authData } = useAuth();
+    const [user, setUser] = useState(null);
 
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("user_profile");
-        return saved
-            ? JSON.parse(saved)
-            : {
-                name: "",
-                role: "Admin",
-                email: "",
-                phone: "",
-                address: "",
-                referral: "AH7KA891",
-                avatar: userDummy,
-            };
-    });
+    useEffect(() => {
+        if (!authData) return;
+
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const currentUser = users.find(u => u.id === authData.id);
+
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, [authData]);
 
     const handleSaveProfile = (updated) => {
         const newUser = {
@@ -31,10 +30,27 @@ const Akun = () => {
             avatar: updated.avatar || user.avatar || userDummy,
         };
 
-        localStorage.setItem("user_profile", JSON.stringify(newUser));
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+
+        const updatedUsers = users.map(u =>
+            u.id === authData.id ? newUser : u
+        );
+
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
         setUser(newUser);
         setShowEdit(false);
     };
+
+    if (!user) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <div className="main-content">
+                    <p style={{ padding: "20px" }}>Loading profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -58,7 +74,7 @@ const Akun = () => {
 
                             <div className="akun-row">
                                 <span>Kode Referral</span>
-                                <b>{user.referral}</b>
+                                <b>{user.referralCode}</b>
                             </div>
 
                             <div className="akun-row">
