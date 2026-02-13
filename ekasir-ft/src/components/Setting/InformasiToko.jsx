@@ -17,29 +17,28 @@ const defaultData = {
 };
 
 const InformasiToko = () => {
-    const [ownerId, setOwnerId] = useState(null);
+    const ownerId = getCurrentOwnerId();
+
+    const STORAGE_KEY = ownerId
+        ? `informasi_toko_owner_${ownerId}`
+        : null;
+
     const [toko, setToko] = useState(defaultData);
     const [draft, setDraft] = useState(defaultData);
     const [isEdit, setIsEdit] = useState(false);
 
     useEffect(() => {
-        const id = getCurrentOwnerId();
-        if (!id) return;
+        if (!STORAGE_KEY) return;
 
-        setOwnerId(id);
-
-        const STORAGE_KEY = `informasi_toko_owner_${id}`;
         const saved = localStorage.getItem(STORAGE_KEY);
-
         const data = saved ? JSON.parse(saved) : defaultData;
+
         setToko(data);
         setDraft(data);
-    }, []);
+    }, [STORAGE_KEY]);
 
     const handleSave = () => {
-        if (!ownerId) return;
-
-        const STORAGE_KEY = `informasi_toko_owner_${ownerId}`;
+        if (!STORAGE_KEY) return;
 
         setToko(draft);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
@@ -51,16 +50,18 @@ const InformasiToko = () => {
         setIsEdit(false);
     };
 
-    // if (!ownerId) {
-    //     return (
-    //         <div className="dashboard-container">
-    //             <Sidebar />
-    //             <div className="main-content">
-    //                 <div style={{ padding: 24 }}>Loading owner...</div>
-    //             </div>
-    //         </div>
-    //     );
-    // }
+    if (!ownerId) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <div className="main-content">
+                    <div style={{ padding: 24 }}>
+                        Owner tidak ditemukan
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -188,6 +189,7 @@ const InformasiToko = () => {
                                             })
                                         }
                                     >
+                                        <option value="">Pilih Status</option>
                                         <option value="Aktif">Aktif</option>
                                         <option value="Nonaktif">
                                             Nonaktif

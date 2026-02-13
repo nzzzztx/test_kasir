@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
+import { getCurrentOwnerId } from "../../utils/owner";
+import { useMemo } from "react";
 
 import "../../assets/css/ketersediaan.css";
 import Sidebar from "../../components/Sidebar";
@@ -10,6 +12,7 @@ import backIcon from "../../assets/icons/back.png";
 import toggleIcon from "../../assets/icons/togglebutton.png";
 
 const LaporanKetersediaan = () => {
+    const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -19,8 +22,19 @@ const LaporanKetersediaan = () => {
     const [kategoriList, setKategoriList] = useState([]);
 
     useEffect(() => {
-        const stocks = JSON.parse(localStorage.getItem("stocks") || "[]");
-        const logistics = JSON.parse(localStorage.getItem("logistics") || "[]");
+        if (!ownerId) {
+            setItems([]);
+            return;
+        }
+
+        const stocks = JSON.parse(
+            localStorage.getItem(`stocks_${ownerId}`) || "[]"
+        );
+
+        const logistics = JSON.parse(
+            localStorage.getItem(`logistics_${ownerId}`) || "[]"
+        );
+
         const lastStockByCode = {};
 
         logistics.forEach((log) => {
@@ -35,10 +49,10 @@ const LaporanKetersediaan = () => {
                 nama: s.name,
                 sku: s.code,
                 kategori: s.category,
-                qty: lastLog ? lastLog.stock : s.stock,
+                qty: Number(lastLog?.stock ?? s.stock ?? 0),
                 satuan: "pcs",
-                hargaModal: s.basePrice,
-                hargaJual: s.sellPrice,
+                hargaModal: Number(s.basePrice || 0),
+                hargaJual: Number(s.sellPrice || 0),
             };
         });
 
@@ -49,29 +63,34 @@ const LaporanKetersediaan = () => {
         ];
 
         setKategoriList(uniqueCategories);
-    }, []);
 
-    const filtered = items.filter((item) => {
-        const keyword = search.toLowerCase();
+    }, [ownerId]);
 
-        if (
-            keyword &&
-            !(
-                item.nama.toLowerCase().includes(keyword) ||
-                item.sku.toLowerCase().includes(keyword)
+    const filtered = useMemo(() => {
+        return items.filter((item) => {
+            const keyword = search.toLowerCase();
+
+            if (
+                keyword &&
+                !(
+                    (item.nama || "").toLowerCase().includes(keyword) ||
+                    (item.sku || "").toLowerCase().includes(keyword)
+                )
             )
-        )
-            return false;
+                return false;
 
-        if (kategori !== "ALL" && item.kategori !== kategori) return false;
+            if (kategori !== "ALL" && item.kategori !== kategori) return false;
 
-        return true;
-    });
+            return true;
+        });
+    }, [items, search, kategori]);
 
-    const totalNilaiPersediaan = filtered.reduce(
-        (s, i) => s + i.qty * i.hargaModal,
-        0
-    );
+    const totalNilaiPersediaan = useMemo(() => {
+        return filtered.reduce(
+            (s, i) => s + (i.qty || 0) * (i.hargaModal || 0),
+            0
+        );
+    }, [filtered]);
 
     const handleExport = () => {
         const excel = filtered.map((i, idx) => ({
@@ -82,7 +101,7 @@ const LaporanKetersediaan = () => {
             Stok: i.qty,
             Satuan: i.satuan,
             HargaModal: i.hargaModal,
-            TotalNilai: i.qty * i.hargaModal,
+            TotalNilai: (i.qty || 0) * (i.hargaModal || 0),
         }));
 
         const ws = XLSX.utils.json_to_sheet(excel);
@@ -183,15 +202,11 @@ const LaporanKetersediaan = () => {
                                         <td>{i.satuan}</td>
                                         <td>
                                             Rp{" "}
-                                            {i.hargaModal.toLocaleString(
-                                                "id-ID"
-                                            )}
+                                            {(i.hargaModal || 0).toLocaleString("id-ID")}
                                         </td>
                                         <td>
                                             Rp{" "}
-                                            {(i.qty * i.hargaModal).toLocaleString(
-                                                "id-ID"
-                                            )}
+                                            {(i.qty * (i.hargaModal || 0)).toLocaleString("id-ID")}
                                         </td>
                                     </tr>
                                 ))}

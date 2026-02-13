@@ -29,20 +29,26 @@ const Discount = () => {
     const { authData } = useAuth();
     const [user, setUser] = useState(null);
 
-    const [discounts, setDiscounts] = useState(() => {
-        const saved = localStorage.getItem(`products_owner_${authData.ownerId}`)
-            ;
-        return saved
-            ? JSON.parse(saved)
-            : [
-                { id: 1, name: "Diskon Ramadhan", type: "percent", value: 20 },
-                { id: 2, name: "Diskon HUT RI ke-79", type: "percent", value: 50 },
-            ];
-    });
+    const [discounts, setDiscounts] = useState([]);
+
+    useEffect(() => {
+        if (!authData?.ownerId) return;
+
+        const saved = localStorage.getItem(
+            `discounts_owner_${authData.ownerId}`
+        );
+
+        setDiscounts(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     const filtered = discounts.filter((d) =>
-        d.name.toLowerCase().includes(search.toLowerCase())
+        (d.name || "").toLowerCase().includes(search.toLowerCase())
     );
+
+    useEffect(() => {
+        setSearch("");
+        setSelectedDiscount(null);
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -177,12 +183,15 @@ const Discount = () => {
                     onSubmit={(data) => {
                         const newDiscount = {
                             id: Date.now(),
+                            ownerId: authData.ownerId,
                             ...data,
                         };
-
                         setDiscounts((prev) => {
                             const updated = [newDiscount, ...prev];
-                            localStorage.setItem("discounts", JSON.stringify(updated));
+                            localStorage.setItem(
+                                `discounts_owner_${authData.ownerId}`,
+                                JSON.stringify(updated)
+                            );
                             return updated;
                         });
 
@@ -199,7 +208,10 @@ const Discount = () => {
                                 d.id === updated.id ? { ...d, ...updated } : d
                             );
 
-                            localStorage.setItem("discounts", JSON.stringify(newData));
+                            localStorage.setItem(
+                                `discounts_owner_${authData.ownerId}`,
+                                JSON.stringify(newData)
+                            );
                             return newData;
                         });
 
@@ -214,7 +226,11 @@ const Discount = () => {
                     onConfirm={(id) => {
                         setDiscounts((prev) => {
                             const updated = prev.filter((d) => d.id !== id);
-                            localStorage.setItem("discounts", JSON.stringify(updated));
+
+                            localStorage.setItem(
+                                `discounts_owner_${authData.ownerId}`,
+                                JSON.stringify(updated)
+                            );
                             return updated;
                         });
 

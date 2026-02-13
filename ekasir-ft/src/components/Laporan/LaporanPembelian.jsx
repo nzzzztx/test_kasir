@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import html2pdf from "html2pdf.js";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 import "../../assets/css/laporanpembelian.css";
 import Sidebar from "../../components/Sidebar";
@@ -14,6 +15,7 @@ import backIcon from "../../assets/icons/back.png";
 import toggleIcon from "../../assets/icons/togglebutton.png";
 
 const LaporanPembelian = () => {
+    const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -27,8 +29,14 @@ const LaporanPembelian = () => {
     const [pelunasanPDF, setPelunasanPDF] = useState(null);
 
     useEffect(() => {
-        const data =
-            JSON.parse(localStorage.getItem("pembelian_list")) || [];
+        if (!ownerId) {
+            setPembelian([]);
+            return;
+        }
+
+        const data = JSON.parse(
+            localStorage.getItem(`pembelian_list_${ownerId}`) || "[]"
+        );
 
         const parsed = data.map((p) => {
             const total = Number(p.total || 0);
@@ -37,8 +45,11 @@ const LaporanPembelian = () => {
             return {
                 id: p.id,
                 supplier: p.supplier?.name || "-",
-                namaBarang: p.items?.map(i => i.name).join(", "),
-                tanggal: new Date(p.createdAt),
+                namaBarang:
+                    p.items && p.items.length > 2
+                        ? `${p.items[0].name} +${p.items.length - 1} lainnya`
+                        : p.items?.map(i => i.name).join(", ") || "-",
+                tanggal: p.createdAt ? new Date(p.createdAt) : new Date(),
                 qty: p.items?.reduce((s, i) => s + i.qty, 0),
                 satuan: p.items?.[0]?.unit || "-",
                 totalHarga: total,
@@ -286,7 +297,10 @@ const LaporanPembelian = () => {
                             <input
                                 // type="number"
                                 value={bayarNominal}
-                                onChange={(e) => setBayarNominal(Number(e.target.value))}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setBayarNominal(val === "" ? "" : Number(val));
+                                }}
                                 placeholder="Nominal bayar"
                                 className="calendar-time-input"
                                 style={{ width: "100%" }}
@@ -299,7 +313,7 @@ const LaporanPembelian = () => {
                                 <button
                                     className="btn-primary"
                                     onClick={() => {
-                                        if (bayarNominal <= 0) {
+                                        if (!Number(bayarNominal) || Number(bayarNominal) <= 0) {
                                             alert("Nominal pembayaran tidak valid");
                                             return;
                                         }
@@ -311,9 +325,10 @@ const LaporanPembelian = () => {
                                             alert("Nominal melebihi sisa pembayaran");
                                             return;
                                         }
-
                                         const list =
-                                            JSON.parse(localStorage.getItem("pembelian_list")) || [];
+                                            JSON.parse(
+                                                localStorage.getItem(`pembelian_list_${ownerId}`) || "[]"
+                                            );
 
                                         let pelunasanData = null;
 
@@ -321,7 +336,7 @@ const LaporanPembelian = () => {
                                             if (item.id !== selectedPembelian.id) return item;
 
                                             const newPaid = Number(item.paidAmount || 0) + bayarNominal;
-                                            const isLunas = newPaid >= item.total;
+                                            const isLunas = newPaid >= Number(item.total || 0);
 
                                             const updatedItem = {
                                                 ...item,
@@ -345,7 +360,7 @@ const LaporanPembelian = () => {
                                         });
 
                                         localStorage.setItem(
-                                            "pembelian_list",
+                                            `pembelian_list_${ownerId}`,
                                             JSON.stringify(updated)
                                         );
 

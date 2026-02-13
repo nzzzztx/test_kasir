@@ -27,25 +27,26 @@ const Suppliers = () => {
     const [user, setUser] = useState(null);
     const { authData } = useAuth();
 
-    const [suppliers, setSuppliers] = useState(() => {
-        const saved = localStorage.getItem("suppliers");
-        return saved
-            ? JSON.parse(saved)
-            : Array.from({ length: 0 }, (_, i) => ({
-                id: i + 1,
-                name: "",
-                address: "",
-                email: "",
-                phone: "",
-                code: "",
-            }));
-    });
+    const [suppliers, setSuppliers] = useState([]);
+
+    useEffect(() => {
+        if (!authData?.id) return;
+
+        const saved = localStorage.getItem(`suppliers_${authData.id}`);
+        setSuppliers(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     const {
         notifications,
         unreadCount,
         markAllAsRead,
     } = useNotifications();
+
+    useEffect(() => {
+        setSelectedSupplier(null);
+        setSearch("");
+        setPage(1);
+    }, [authData]);
 
     const filtered = suppliers.filter((s) =>
         (s.name || "").toLowerCase().includes(search.toLowerCase())
@@ -92,7 +93,10 @@ const Suppliers = () => {
 
             const merged = [...imported, ...suppliers];
             setSuppliers(merged);
-            localStorage.setItem("suppliers", JSON.stringify(merged));
+            localStorage.setItem(
+                `suppliers_${authData.id}`,
+                JSON.stringify(merged)
+            );
         };
 
         reader.readAsArrayBuffer(file);
@@ -334,13 +338,17 @@ const Suppliers = () => {
                 onSubmit={(data) => {
                     const newSupplier = {
                         id: Date.now(),
+                        ownerId: authData.id,
                         ...data,
                         code: Math.floor(100000 + Math.random() * 900000).toString(),
                     };
 
                     const updated = [newSupplier, ...suppliers];
                     setSuppliers(updated);
-                    localStorage.setItem("suppliers", JSON.stringify(updated));
+                    localStorage.setItem(
+                        `suppliers_${authData.id}`,
+                        JSON.stringify(updated)
+                    );
                     setOpenModal(false);
                 }}
             />
@@ -354,7 +362,10 @@ const Suppliers = () => {
                         s.id === updated.id ? { ...s, ...updated } : s
                     );
                     setSuppliers(newData);
-                    localStorage.setItem("suppliers", JSON.stringify(newData));
+                    localStorage.setItem(
+                        `suppliers_${authData.id}`,
+                        JSON.stringify(newData)
+                    );
                 }}
             />
 
@@ -365,7 +376,10 @@ const Suppliers = () => {
                 onConfirm={(id) => {
                     const updated = suppliers.filter((s) => s.id !== id);
                     setSuppliers(updated);
-                    localStorage.setItem("suppliers", JSON.stringify(updated));
+                    localStorage.setItem(
+                        `suppliers_${authData.id}`,
+                        JSON.stringify(updated)
+                    );
                     setDeleteModalOpen(false);
                     setSelectedSupplier(null);
                 }}

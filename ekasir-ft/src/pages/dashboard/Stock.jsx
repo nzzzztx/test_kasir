@@ -31,7 +31,7 @@ const Stock = () => {
     const { authData } = useAuth();
 
     const filtered = stocks.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
+        (item.name || "").toLowerCase().includes(search.toLowerCase())
     );
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -42,7 +42,7 @@ const Stock = () => {
     );
 
     const handleExport = () => {
-        const exportData = stocks.map((item) => ({
+        const exportData = filtered.map((item) => ({
             "Nama Barang": item.name,
             "Kode": item.code,
             "Kategori": item.category,
@@ -95,35 +95,47 @@ const Stock = () => {
     };
 
     useEffect(() => {
-        localStorage.setItem("stocks", JSON.stringify(stocks));
-    }, [stocks]);
+        if (!authData?.ownerId) return;
+
+        const normalized = stocks.map(item => ({
+            id: item.id,
+            name: item.name,
+            code: item.code,
+            category: item.category,
+            stock: item.stock,
+            priceMax: item.sellPrice,
+            priceMin: item.basePrice,
+            image: item.image
+        }));
+
+        localStorage.setItem(
+            `products_owner_${authData.ownerId}`,
+            JSON.stringify(normalized)
+        );
+    }, [stocks, authData]);
 
     useEffect(() => {
-        const savedStocks = JSON.parse(
-            localStorage.getItem("stocks") || "[]"
-        );
+        if (!authData?.ownerId) return;
 
         const savedProducts = JSON.parse(
-            localStorage.getItem("products") || "[]"
+            localStorage.getItem(
+                `products_owner_${authData.ownerId}`
+            ) || "[]"
         );
 
-        const map = new Map(savedStocks.map((s) => [s.code, s]));
+        const formatted = savedProducts.map(prod => ({
+            id: prod.id,
+            name: prod.name,
+            code: prod.code,
+            category: prod.category,
+            stock: prod.stock ?? 0,
+            sellPrice: prod.priceMax ?? 0,
+            basePrice: prod.priceMin ?? 0,
+            image: prod.image ?? productImg,
+        }));
 
-        savedProducts.forEach((prod) => {
-            map.set(prod.code, {
-                id: prod.id,
-                name: prod.name,
-                code: prod.code,
-                category: prod.category,
-                stock: map.get(prod.code)?.stock ?? prod.stock ?? 0,
-                sellPrice: prod.priceMax ?? 0,
-                basePrice: prod.priceMin ?? 0,
-                image: prod.image ?? productImg,
-            });
-        });
-
-        setStocks(Array.from(map.values()));
-    }, []);
+        setStocks(formatted);
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -291,7 +303,6 @@ const Stock = () => {
                             >
                                 ‹
                             </button>
-
                             {Array.from({ length: totalPages }, (_, i) => (
                                 <button
                                     key={i}

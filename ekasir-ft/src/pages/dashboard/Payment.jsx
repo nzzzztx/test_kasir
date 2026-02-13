@@ -25,17 +25,30 @@ const Payment = () => {
     const store = getInfoToko();
     const { pushNotification } = useNotifications();
 
+    const authRaw = localStorage.getItem("auth");
+    const ownerId = authRaw ? JSON.parse(authRaw)?.ownerId : null;
+
     useEffect(() => {
-        const saved = localStorage.getItem("current_transaction");
-        if (!saved) return setLoading(false);
+        if (!ownerId) return;
+
+        const saved = localStorage.getItem(
+            `current_transaction_owner_${ownerId}`
+        );
+
+        if (!saved) {
+            setLoading(false);
+            return;
+        }
 
         try {
             const parsed = JSON.parse(saved);
-            if (parsed?.items?.length) setTransaction(parsed);
+            if (parsed?.items?.length) {
+                setTransaction(parsed);
+            }
         } catch { }
 
         setLoading(false);
-    }, []);
+    }, [ownerId]);
 
     const handleKeyPress = (key) => {
         if (!transaction) return;
@@ -46,25 +59,18 @@ const Payment = () => {
         if (key === "⌫") return setPaidAmount(prev => prev.slice(0, -1));
 
         if (key === "✓") {
-            const activeShift = JSON.parse(localStorage.getItem("active_shift"));
+
+            const activeShift = JSON.parse(
+                localStorage.getItem(`active_shift_owner_${ownerId}`)
+            );
 
             if (!activeShift) {
                 alert("Shift belum dimulai");
                 return;
             }
 
-            if (method === "TRANSFER" && !subMethod) {
-                alert("Pilih bank terlebih dahulu");
-                return;
-            }
-
-            if (method === "EWALLET" && !subMethod) {
-                alert("Pilih e-wallet terlebih dahulu");
-                return;
-            }
-
-            if (method === "EDC" && !subMethod) {
-                alert("Pilih perangkat EDC terlebih dahulu");
+            if (method !== "TUNAI" && !subMethod) {
+                alert("Pilih metode detail terlebih dahulu");
                 return;
             }
 
@@ -73,15 +79,16 @@ const Payment = () => {
                     ? Number(paidAmount || 0)
                     : finalTotal;
 
-            const isPaid = paid >= finalTotal;
-            const change = method === "EDC" ? 0 : paid - finalTotal;
-
-            if (!isPaid) {
+            if (paid < finalTotal) {
                 alert("Pembayaran belum lunas");
                 return;
             }
 
-            const products = JSON.parse(localStorage.getItem("products") || "[]");
+            const change = method === "EDC" ? 0 : paid - finalTotal;
+
+            const products = JSON.parse(
+                localStorage.getItem(`products_owner_${ownerId}`) || "[]"
+            );
 
             const cartItems = transaction.items.map(item => ({
                 productKey: item.code,
@@ -94,108 +101,74 @@ const Payment = () => {
             }
 
             const updatedProducts = reduceStock(products, cartItems);
-            localStorage.setItem("products", JSON.stringify(updatedProducts));
 
-            const rawCurrent = JSON.parse(
-                localStorage.getItem("current_transaction") || "null"
+            localStorage.setItem(
+                `products_owner_${ownerId}`,
+                JSON.stringify(updatedProducts)
             );
 
-            const safeCustomer = rawCurrent?.customer ?? {
-                id: crypto.randomUUID(),
-                name: "Umum",
-                phone: "-",
-                address: "-",
-            };
+            const invoiceKey = `invoice_counter_owner_${ownerId}`;
+            const lastNumber =
+                Number(localStorage.getItem(invoiceKey) || 0) + 1;
+
+            localStorage.setItem(invoiceKey, lastNumber);
+
+            const invoiceNumber =
+                `INV-${ownerId}-${String(lastNumber).padStart(5, "0")}`;
 
             const updatedTransaction = {
-                id: transaction.id ?? crypto.randomUUID(),
                 ...transaction,
-
-                cashier:
-                    transaction.cashier ||
-                    activeShift.cashier ||
-                    activeShift.user ||
-                    "Kasir",
-
-                customer: safeCustomer,
+                invoiceNumber,
                 paidAmount: paid,
                 change,
                 paymentMethod: method,
                 paymentSubMethod: subMethod,
                 paidAt: new Date().toISOString(),
                 status: "paid",
+                cashier:
+                    transaction.cashier ||
+                    activeShift.cashier ||
+                    "Kasir",
                 shiftStartedAt: activeShift.startedAt,
             };
 
-            localStorage.setItem(
-                "current_transaction",
-                JSON.stringify(updatedTransaction)
+            const transactionsKey = `transactions_owner_${ownerId}`;
+            const history = JSON.parse(
+                localStorage.getItem(transactionsKey) || "[]"
             );
 
-            const history = JSON.parse(
-                localStorage.getItem("transaction_history") || "[]"
+            history.unshift(updatedTransaction);
+
+            localStorage.setItem(
+                transactionsKey,
+                JSON.stringify(history)
+            );
+
+            localStorage.removeItem(
+                `current_transaction_owner_${ownerId}`
             );
 
             pushNotification({
                 type: "payment",
                 title: "Pembayaran Berhasil",
-                message: `Transaksi Rp ${updatedTransaction.finalTotal.toLocaleString("id-ID")} berhasil`,
+                message: `Transaksi ${invoiceNumber} berhasil`,
                 ref: updatedTransaction.id,
-                cashier: updatedTransaction.cashier,
             });
-
-            const historyItem = {
-                id: updatedTransaction.id,
-
-                createdAt:
-                    updatedTransaction.createdAt ??
-                    transaction.createdAt ??
-                    new Date().toISOString(),
-
-                paidAt: updatedTransaction.paidAt,
-
-                outlet: store.namaToko,
-                outletPhone: store.telepon,
-                outletLocation: store.lokasi,
-
-                jenis_order: "Lainnya",
-                metode: method,
-                status: "paid",
-
-                subtotal: updatedTransaction.subtotal || 0,
-                discountAmount: updatedTransaction.discountAmount || 0,
-                taxAmount: updatedTransaction.taxAmount || 0,
-
-                finalTotal: updatedTransaction.finalTotal,
-                paidAmount: updatedTransaction.paidAmount,
-                change: updatedTransaction.change,
-
-                cashier: updatedTransaction.cashier,
-                customer: safeCustomer,
-                shiftStartedAt: activeShift.startedAt,
-            };
-
-            console.log("HISTORY ITEM:", historyItem);
-
-            history.push(historyItem);
-
-            localStorage.setItem(
-                "transaction_history",
-                JSON.stringify(history)
-            );
 
             setTransaction(updatedTransaction);
             setReceiptData(updatedTransaction);
             setKembalian(change);
-
-            setShowReceipt(false);
             setShowValidasi(true);
             return;
         }
 
-
         setPaidAmount(prev => prev + key);
     };
+
+    if (!ownerId) {
+        console.error("OWNER ID NOT FOUND");
+        return null;
+    }
 
     return (
         <div className="dashboard-container">

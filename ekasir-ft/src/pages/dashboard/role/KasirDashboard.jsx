@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../../context/NotificationContext';
 
 import transaksiIcon from '../../../assets/icons/keuangan.png';
+import laporanIcon from '../../../assets/icons/report.png';
 import customerIcon from '../../../assets/icons/customer.png';
 import toggleIcon from '../../../assets/icons/togglebutton.png';
 import notificationIcon from '../../../assets/icons/notification.png';
@@ -52,6 +53,12 @@ const KasirDashboard = () => {
             desc: "Kelola data pelanggan atau member.",
             icon: customerIcon,
             path: "/dashboard/customers",
+        },
+        {
+            title: "Laporan Transaksi",
+            desc: "Laporan aktivitas keluar masuk transaksi barang.",
+            icon: laporanIcon,
+            path: "/dashboard/laporan",
         },
     ];
 

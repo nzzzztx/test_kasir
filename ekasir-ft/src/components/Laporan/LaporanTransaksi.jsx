@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 import "../../assets/css/laporantransaksi.css";
 import Sidebar from "../../components/Sidebar";
@@ -13,7 +14,15 @@ import toggleIcon from "../../assets/icons/togglebutton.png";
 import downIcon from "../../assets/icons/down.png";
 
 const getInfoToko = () => {
-    const saved = localStorage.getItem("informasi_toko");
+    const ownerId = getCurrentOwnerId();
+    if (!ownerId) {
+        return { namaToko: "Nama Toko", lokasi: "-" };
+    }
+
+    const saved = localStorage.getItem(
+        `informasi_toko_owner_${ownerId}`
+    );
+
     if (!saved) {
         return { namaToko: "Nama Toko", lokasi: "-" };
     }
@@ -67,17 +76,21 @@ const LaporanTransaksi = () => {
     // ];
 
     useEffect(() => {
-        const history = JSON.parse(
-            localStorage.getItem("transaction_history") || "[]"
-        );
-
-        if (!history.length) {
+        const ownerId = getCurrentOwnerId();
+        if (!ownerId) {
             setTransactions([]);
             return;
         }
 
+        const history = JSON.parse(
+            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
+        );
+
         const parsed = history.map((t, i) => ({
-            nomor: `TRX/${new Date(t.createdAt).toISOString().slice(0, 10).replace(/-/g, "")}/${i + 1}`,
+            nomor: `TRX/${new Date(t.createdAt)
+                .toISOString()
+                .slice(0, 10)
+                .replace(/-/g, "")}/${i + 1}`,
             waktu_order: t.createdAt ? new Date(t.createdAt) : null,
             waktu_bayar: t.paidAt ? new Date(t.paidAt) : null,
             outlet: namaToko,
@@ -88,7 +101,7 @@ const LaporanTransaksi = () => {
         }));
 
         setTransactions(parsed);
-    }, []);
+    }, [namaToko]);
 
     const formatDate = (date) =>
         date.toLocaleDateString("id-ID", {
@@ -415,9 +428,9 @@ const LaporanTransaksi = () => {
                         </table>
                     </div>
 
-                    <div className="laporan-footer">
-                        <span>Menampilkan 1 - 5 dari 17 data</span>
-                    </div>
+                    <span>
+                        Menampilkan {filteredTransaksi.length} dari {transactions.length} data
+                    </span>
                 </div>
                 {openCalendar && (
                     <KalenderTransaksi

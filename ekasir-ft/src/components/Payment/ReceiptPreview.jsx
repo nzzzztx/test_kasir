@@ -28,13 +28,30 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         >
             <div className="receipt-card">
                 <div id="receipt-print">
-                    <h3 className="receipt-title">{namaToko}</h3>
+                    <h3 className="receipt-title center">{namaToko}</h3>
                     {lokasi && lokasi !== "-" && (
                         <p className="receipt-sub">{lokasi}</p>
                     )}
                     {/* {telepon && telepon !== "-" && (
                         <p className="receipt-sub">Telp: {telepon}</p>
                     )} */}
+                    <div className="receipt-line thick" />
+                    {transaction.invoiceNumber && (
+                        <>
+                            <div className="receipt-row">
+                                <span>No Invoice</span>
+                                <span>{transaction.invoiceNumber}</span>
+                            </div>
+                            <div className="receipt-row">
+                                <span>Tanggal</span>
+                                <span>
+                                    {new Date(transaction.paidAt || transaction.createdAt)
+                                        .toLocaleString("id-ID")}
+                                </span>
+                            </div>
+                            <div className="receipt-line" />
+                        </>
+                    )}
                     {cashier && (
                         <>
                             <div className="receipt-row">
@@ -78,13 +95,18 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                     <div className="receipt-line" />
 
                     {items.map((item) => (
-                        <div key={item.code} className="receipt-row">
-                            <span>
-                                {item.name} x{item.qty}
-                            </span>
-                            <span>
-                                Rp {(item.sellPrice * item.qty).toLocaleString("id-ID")}
-                            </span>
+                        <div key={item.code} className="receipt-item">
+                            <div className="receipt-item-name">
+                                {item.name}
+                            </div>
+                            <div className="receipt-row">
+                                <span>
+                                    {item.qty} x Rp {item.sellPrice.toLocaleString("id-ID")}
+                                </span>
+                                <span>
+                                    Rp {(item.sellPrice * item.qty).toLocaleString("id-ID")}
+                                </span>
+                            </div>
                         </div>
                     ))}
 
@@ -123,7 +145,17 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         <strong>Total Bayar</strong>
                         <strong>Rp {finalTotal.toLocaleString("id-ID")}</strong>
                     </div>
+                    <div className="receipt-line" />
 
+                    <div className="receipt-row">
+                        <span>Metode</span>
+                        <span>
+                            {transaction.paymentMethod}
+                            {transaction.paymentSubMethod
+                                ? ` - ${transaction.paymentSubMethod}`
+                                : ""}
+                        </span>
+                    </div>
                     <div className="receipt-row">
                         <span>Dibayar</span>
                         <span>Rp {paidAmount.toLocaleString("id-ID")}</span>
@@ -144,6 +176,12 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                     )}
 
                     <p className="receipt-footer">Terima kasih 🙏</p>
+                    <p className="receipt-footer">
+                        Barang yang sudah dibeli tidak dapat dikembalikan
+                    </p>
+                    <p className="receipt-footer small">
+                        {new Date().toLocaleDateString("id-ID")}
+                    </p>
                 </div>
 
                 <button className="receipt-close" onClick={onClose}>

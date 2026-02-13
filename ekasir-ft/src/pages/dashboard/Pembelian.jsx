@@ -37,7 +37,7 @@ const Pembelian = () => {
     useEffect(() => {
         if (!ownerId) return;
 
-        const saved = localStorage.getItem(`suppliers_owner_${ownerId}`);
+        const saved = localStorage.getItem(`suppliers_${ownerId}`);
         if (saved) setSuppliers(JSON.parse(saved));
     }, [ownerId]);
 

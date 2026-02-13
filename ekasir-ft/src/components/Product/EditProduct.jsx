@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import '../../assets/css/product.css';
 import imageIcon from '../../assets/icons/camera.png';
 import productDummy from '../../assets/img/product.png';
@@ -101,9 +102,9 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                         value={form.type}
                         onChange={(e) => handleChange('type', e.target.value)}
                     >
-                        <option value="Default">Default</option>
-                        <option value="Paket">Paket</option>
-                        <option value="Multisatuan">Multisatuan</option>
+                        <option value="default">Default</option>
+                        <option value="paket">Paket</option>
+                        <option value="multisatuan">Multisatuan</option>
                     </select>
                 </div>
                 <div className="form-grid-2">

@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen }) => {
                     </Link>
                 )}
 
-                {role === "owner" && (
+                {(role === "owner" || role === "gudang" || role === "kasir") && (
                     <Link to="/dashboard/laporan" className="menu-item">
                         <img src={laporanIcon} alt="icon" />
                         {isOpen && <span>Laporan</span>}

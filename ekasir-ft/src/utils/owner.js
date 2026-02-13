@@ -1,9 +1,14 @@
 export const getCurrentOwnerId = () => {
-  const auth = JSON.parse(localStorage.getItem("authData"));
-  if (!auth) return null;
+  const raw = localStorage.getItem("auth");
+  if (!raw) return null;
 
-  if (auth.role === "owner") return auth.id;
+  try {
+    const auth = JSON.parse(raw);
 
-  // kalau kasir / gudang
-  return auth.ownerId;
+    if (auth.role === "owner") return auth.id;
+
+    return auth.ownerId;
+  } catch {
+    return null;
+  }
 };

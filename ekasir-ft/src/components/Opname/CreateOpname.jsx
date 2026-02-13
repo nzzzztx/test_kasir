@@ -1,18 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getCurrentOwnerId } from "../../utils/owner";
 import "../../assets/css/opname.css";
 
 const CreateOpname = ({ open, onClose, onSaved, selectedDate }) => {
-    if (!open) return null;
+    const ownerId = getCurrentOwnerId();
+    if (!open || !ownerId) return null;
+
+    const STORAGE_KEY = `stock_opname_${ownerId}`;
 
     const [tanggal, setTanggal] = useState(selectedDate);
-    React.useEffect(() => {
+    const [kategori, setKategori] = useState("");
+    const [keterangan, setKeterangan] = useState("");
+
+    useEffect(() => {
         setTanggal(selectedDate);
     }, [selectedDate]);
 
-    const [kategori, setKategori] = useState("");
-    const [keterangan, setKeterangan] = useState("");
-    const categories = JSON.parse(localStorage.getItem("categories")) || [];
-
+    // ⚠️ Kalau kategori juga mau scoped
+    const categories =
+        JSON.parse(localStorage.getItem(`categories_${ownerId}`)) || [];
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -34,10 +40,10 @@ const CreateOpname = ({ open, onClose, onSaved, selectedDate }) => {
         };
 
         const existing =
-            JSON.parse(localStorage.getItem("stock_opname")) || [];
+            JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         localStorage.setItem(
-            "stock_opname",
+            STORAGE_KEY,
             JSON.stringify([newOpname, ...existing])
         );
 

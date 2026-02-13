@@ -9,7 +9,7 @@
 }
 
 .receipt-card {
-  width: 280px;
+  width: 300px;
   background: #ffffff;
   border-radius: 10px;
   padding: 16px 14px;
@@ -24,7 +24,7 @@
 
 .receipt-title {
   text-align: center;
-  font-weight: 900;
+  font-weight: bold;
   font-size: 14px;
   margin-bottom: 4px;
   color: #000;
@@ -32,14 +32,18 @@
 
 .receipt-sub {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 8px;
   color: #374151;
 }
 
 .receipt-line {
   border-top: 1px dashed #9ca3af;
-  margin: 8px 0;
+  margin: 6px 0;
+}
+
+.receipt-line.thick {
+  border-top: 2px solid #000;
 }
 
 .receipt-row {
@@ -48,6 +52,14 @@
   gap: 8px;
   font-size: 12px;
   color: #000;
+  margin-bottom: 4px;
+}
+
+.receipt-item-name {
+  font-weight: 500;
+}
+
+.receipt-item {
   margin-bottom: 4px;
 }
 
@@ -62,9 +74,14 @@
 
 .receipt-footer {
   text-align: center;
-  font-size: 11px;
-  margin-top: 12px;
+  margin-top: 10px;
+  font-size: 12px;
   color: #000;
+}
+
+.receipt-footer.small {
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .receipt-close {
@@ -94,7 +111,7 @@
 .receipt-status {
   text-align: center;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: bold;
   letter-spacing: 1px;
   padding: 6px 0;
   margin: 6px 0 10px;

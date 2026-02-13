@@ -33,9 +33,25 @@ const Transaction = () => {
     const [profileOpen, setProfileOpen] = useState(false);
 
     useEffect(() => {
-        const saved = localStorage.getItem("products");
-        if (saved) setProducts(JSON.parse(saved));
-    }, []);
+        if (!authData?.ownerId) return;
+
+        const saved = localStorage.getItem(
+            `products_owner_${authData.ownerId}`
+        );
+
+        if (saved) {
+            const parsed = JSON.parse(saved);
+
+            const formatted = parsed.map(prod => ({
+                ...prod,
+                priceMax: prod.priceMax ?? 0,
+                priceMin: prod.priceMin ?? 0,
+                stock: prod.stock ?? 0,
+            }));
+
+            setProducts(formatted);
+        }
+    }, [authData]);
 
     const {
         notifications,
@@ -329,7 +345,10 @@ const Transaction = () => {
                     <CartPanel
                         cart={cart}
                         setCart={setCart}
-                        userEmail={authData.email}
+                        products={products}
+                        setProducts={setProducts}
+                        ownerId={authData.ownerId}
+                        cashierName={user?.name}
                     />
                 </div>
 

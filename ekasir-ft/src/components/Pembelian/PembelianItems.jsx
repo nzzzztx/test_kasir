@@ -4,8 +4,20 @@ import AddPembelianItemModal from "./AddPembelianItemModal";
 const PembelianItems = ({ items, setItems }) => {
     const [openModal, setOpenModal] = useState(false);
 
-    const handleAddItem = (item) => {
-        setItems((prev) => [...prev, item]);
+    const handleAddItem = (newItem) => {
+        setItems((prev) => {
+            const existing = prev.find(p => p.id === newItem.id);
+
+            if (existing) {
+                return prev.map(p =>
+                    p.id === newItem.id
+                        ? { ...p, qty: p.qty + newItem.qty }
+                        : p
+                );
+            }
+
+            return [...prev, newItem];
+        });
     };
 
     return (
@@ -20,25 +32,36 @@ const PembelianItems = ({ items, setItems }) => {
                         <th>Satuan</th>
                         <th>Harga</th>
                         <th>Total</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {items.length === 0 && (
                         <tr>
-                            <td colSpan="5" className="table-empty">
+                            <td colSpan="6" className="table-empty">
                                 Belum ada barang
                             </td>
                         </tr>
                     )}
 
                     {items.map((item, i) => (
-                        <tr key={i}>
+                        <tr key={item.id}>
                             <td>{item.name}</td>
                             <td>{item.qty}</td>
                             <td>{item.unit}</td>
                             <td>Rp {item.price.toLocaleString("id-ID")}</td>
                             <td>
                                 Rp {(item.qty * item.price).toLocaleString("id-ID")}
+                            </td>
+                            <td>
+                                <button
+                                    className="btn-delete-item"
+                                    onClick={() =>
+                                        setItems(prev => prev.filter(p => p.id !== item.id))
+                                    }
+                                >
+                                    Hapus
+                                </button>
                             </td>
                         </tr>
                     ))}

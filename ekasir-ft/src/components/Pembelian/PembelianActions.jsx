@@ -1,4 +1,5 @@
 import html2pdf from "html2pdf.js";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 const PembelianActions = ({
     items,
@@ -10,6 +11,8 @@ const PembelianActions = ({
     onSaved
 }) => {
     const sisa = Math.max(total - paidAmount, 0);
+    const ownerId = getCurrentOwnerId();
+
     const handleExportDraftPDF = () => {
         const draft = {
             supplier,
@@ -20,7 +23,10 @@ const PembelianActions = ({
             updatedAt: new Date().toISOString()
         };
 
-        localStorage.setItem("pembelian_draft", JSON.stringify(draft));
+        localStorage.setItem(
+            `pembelian_draft_owner_${ownerId}`,
+            JSON.stringify(draft)
+        );
 
         const element = document.getElementById("pembelian-pdf");
         if (!element) {
@@ -58,14 +64,14 @@ const PembelianActions = ({
         };
 
         const existing =
-            JSON.parse(localStorage.getItem("pembelian_list")) || [];
+            JSON.parse(localStorage.getItem(`pembelian_list_owner_${ownerId}`)) || [];
 
         localStorage.setItem(
-            "pembelian_list",
+            `pembelian_list_owner_${ownerId}`,
             JSON.stringify([...existing, pembelian])
         );
 
-        localStorage.removeItem("pembelian_draft");
+        localStorage.removeItem(`pembelian_draft_owner_${ownerId}`);
 
         onSaved(pembelian);
 

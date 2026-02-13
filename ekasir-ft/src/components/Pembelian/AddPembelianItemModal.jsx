@@ -9,13 +9,20 @@ const AddPembelianItemModal = ({ open, onClose, onSubmit }) => {
     if (!open) return null;
 
     const handleSubmit = () => {
-        if (!name || qty <= 0 || price <= 0) return;
+        const qtyNumber = Number(qty);
+        const priceNumber = Number(price);
+
+        if (!name.trim() || qtyNumber <= 0 || priceNumber <= 0) {
+            alert("Isi data dengan benar");
+            return;
+        }
 
         onSubmit({
-            name,
-            qty: Number(qty),
+            id: Date.now(),
+            name: name.trim(),
+            qty: qtyNumber,
             unit,
-            price: Number(price),
+            price: priceNumber,
         });
 
         setName("");

@@ -6,7 +6,15 @@ import EditCartModal from "./EditCartModal";
 import DiscountModal from "./DiscountModal";
 import TaxModal from "./TaxModal";
 
-const CartPanel = ({ cart, setCart, cashierName }) => {
+const CartPanel = ({
+    cart,
+    setCart,
+    products,
+    setProducts,
+    ownerId,
+    cashierName
+}) => {
+
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
     const [tax, setTax] = useState(null);
@@ -53,7 +61,8 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
 
     const handleOpenDiscount = () => {
         const discounts = JSON.parse(
-            localStorage.getItem("discounts") || "[]"
+            localStorage.getItem(`discounts_owner_${ownerId}`)
+            || "[]"
         );
 
         if (!discounts.length) {
@@ -67,7 +76,10 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
     const handlePay = () => {
         if (!cart.length) return;
 
-        const activeShift = JSON.parse(localStorage.getItem("active_shift"));
+        const activeShift = JSON.parse(
+            localStorage.getItem(`active_shift_owner_${ownerId}`)
+        );
+
         if (!activeShift) {
             alert("Belum ada shift aktif");
             return;
@@ -76,45 +88,33 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
         const payload = {
             id: Date.now(),
             items: [...cart],
-
             customer: {
                 name: customer.name?.trim() || "Umum",
                 phone: customer.phone?.trim() || "-",
                 address: customer.address?.trim() || "-",
             },
-
             subtotal,
             discount,
             discountAmount: Math.max(subtotal - afterDiscount, 0),
             tax,
             taxAmount,
             finalTotal,
-
             cashier:
                 cashierName ||
                 activeShift.cashier ||
                 activeShift.user ||
                 "Kasir",
             shiftStartedAt: activeShift.startedAt,
-
             status: "pending",
             createdAt: new Date().toISOString(),
         };
 
-        localStorage.setItem("current_transaction", JSON.stringify(payload));
-
-        setCart([]);
-        setDiscount(null);
-        setTax(null);
+        localStorage.setItem(
+            `current_transaction_owner_${ownerId}`,
+            JSON.stringify(payload)
+        );
 
         window.location.href = "/dashboard/transaction/payment";
-        console.log("ACTIVE SHIFT:", activeShift);
-        console.log("CASHIER SAVED:",
-            cashierName ||
-            activeShift.cashier ||
-            activeShift.user ||
-            "Kasir"
-        );
     };
 
     return (
@@ -170,7 +170,7 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
                     className="cart-tax"
                     onClick={() => {
                         const taxes = JSON.parse(
-                            localStorage.getItem("taxes") || "[]"
+                            localStorage.getItem(`taxes_owner_${ownerId}`) || "[]"
                         );
 
                         if (!taxes.length) {
@@ -247,6 +247,8 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
 
             {showDiscount && (
                 <DiscountModal
+                    title="Pilih Diskon"
+                    storageKey={`discounts_owner_${ownerId}`}
                     onClose={() => setShowDiscount(false)}
                     onSelect={(d) => {
                         setDiscount(d);
@@ -259,7 +261,7 @@ const CartPanel = ({ cart, setCart, cashierName }) => {
             {showTax && (
                 <TaxModal
                     title="Pilih Pajak"
-                    storageKey="taxes"
+                    storageKey={`taxes_owner_${ownerId}`}
                     onClose={() => setShowTax(false)}
                     onSelect={(t) => {
                         setTax(t);

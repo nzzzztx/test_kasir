@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { generateStockOpnamePDF } from "../../utils/stockOpnamePDF";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
@@ -13,19 +14,8 @@ import searchIcon from "../../assets/icons/search.png";
 import calendarIcon from "../../assets/icons/calendar.png";
 import toggleIcon from "../../assets/icons/togglebutton.png";
 
-const dummyOpname = [
-    {
-        id: 1,
-        tanggal: "2026-01-02",
-        user: "Admin",
-        kategori: "Barang Habis Pakai",
-        totalItem: 32,
-        status: "Selesai",
-        items: [],
-    },
-];
-
 const Opname = () => {
+    const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [openCalendar, setOpenCalendar] = useState(false);
     const [range, setRange] = useState(null);
@@ -42,16 +32,19 @@ const Opname = () => {
         new Date().toISOString().slice(0, 10)
     );
 
-
     useEffect(() => {
-        const saved = localStorage.getItem("stock_opname");
+        if (!ownerId) return;
+
+        const STORAGE_KEY = `stock_opname_${ownerId}`;
+        const saved = localStorage.getItem(STORAGE_KEY);
+
         if (saved) {
             setOpnameData(JSON.parse(saved));
         } else {
-            localStorage.setItem("stock_opname", JSON.stringify(dummyOpname));
-            setOpnameData(dummyOpname);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            setOpnameData([]);
         }
-    }, []);
+    }, [ownerId]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -85,7 +78,10 @@ const Opname = () => {
 
         const updated = opnameData.filter((o) => o.id !== id);
         setOpnameData(updated);
-        localStorage.setItem("stock_opname", JSON.stringify(updated));
+        localStorage.setItem(
+            `stock_opname_${ownerId}`,
+            JSON.stringify(updated)
+        );
     };
 
     return (
@@ -221,11 +217,19 @@ const Opname = () => {
                         onBack={() => setMode("list")}
                         onUpdate={(updated) => {
                             const all =
-                                JSON.parse(localStorage.getItem("stock_opname")) || [];
+                                JSON.parse(
+                                    localStorage.getItem(`stock_opname_${ownerId}`)
+                                ) || [];
+
                             const newAll = all.map((o) =>
                                 o.id === updated.id ? updated : o
                             );
-                            localStorage.setItem("stock_opname", JSON.stringify(newAll));
+
+                            localStorage.setItem(
+                                `stock_opname_${ownerId}`,
+                                JSON.stringify(newAll)
+                            );
+
                             setOpnameData(newAll);
                             setSelectedOpname(updated);
                         }}
@@ -238,7 +242,10 @@ const Opname = () => {
                     onClose={() => setShowCreate(false)}
                     onSaved={() => {
                         const data =
-                            JSON.parse(localStorage.getItem("stock_opname")) || [];
+                            JSON.parse(
+                                localStorage.getItem(`stock_opname_${ownerId}`)
+                            ) || [];
+
                         setOpnameData(data);
                     }}
                 />

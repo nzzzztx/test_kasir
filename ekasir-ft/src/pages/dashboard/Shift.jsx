@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
 import { useNotifications } from "../../context/NotificationContext";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/shift.css";
@@ -18,8 +19,27 @@ import notificationIcon from "../../assets/icons/notification.png";
 import cameraIcon from "../../assets/icons/camera.png";
 import userDummy from "../../assets/img/user1.png";
 
+const DRAWER_CONFIG = {
+    "Cash Drawer 1": {
+        label: "Pagi",
+        start: "07:00",
+        end: "14:00",
+    },
+    "Cash Drawer 2": {
+        label: "Siang",
+        start: "15:00",
+        end: "22:00",
+    },
+    "Cash Drawer 3": {
+        label: "Backup",
+        start: null,
+        end: null,
+    },
+};
+
 const Shift = () => {
     const today = new Date();
+    const ownerId = getCurrentOwnerId();
     const { authData, changePassword } = useAuth();
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,11 +66,15 @@ const Shift = () => {
     const [showDetail, setShowDetail] = useState(false);
 
     const [activeShift, setActiveShift] = useState(() =>
-        JSON.parse(localStorage.getItem("active_shift"))
+        ownerId
+            ? JSON.parse(localStorage.getItem(`active_shift_${ownerId}`))
+            : null
     );
 
     const [history, setHistory] = useState(() =>
-        JSON.parse(localStorage.getItem("shift_history")) || []
+        ownerId
+            ? JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || []
+            : []
     );
 
     useEffect(() => {
@@ -71,8 +95,12 @@ const Shift = () => {
     } = useNotifications();
 
     useEffect(() => {
-        setHistory(JSON.parse(localStorage.getItem("shift_history")) || []);
-    }, [showAkhiri]);
+        if (!ownerId) return;
+
+        setHistory(
+            JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || []
+        );
+    }, [showAkhiri, ownerId]);
 
     useEffect(() => {
         if (!authData?.isLoggedIn) {
@@ -107,7 +135,9 @@ const Shift = () => {
     };
 
     const allTransactions =
-        JSON.parse(localStorage.getItem("transaction_history")) || [];
+        JSON.parse(
+            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
+        );
 
     const transactions = activeShift
         ? allTransactions.filter(
@@ -116,7 +146,9 @@ const Shift = () => {
         : [];
 
     const expenses =
-        JSON.parse(localStorage.getItem("expenses")) || [];
+        JSON.parse(
+            localStorage.getItem(`expenses_${ownerId}`) || "[]"
+        );
 
     const saldoSistem = activeShift
         ? hitungSaldoSistem({
@@ -134,21 +166,27 @@ const Shift = () => {
             return;
         }
 
+        const drawerInfo = DRAWER_CONFIG[drawer] || {
+            label: "Custom",
+            start: null,
+            end: null,
+        };
+
         const shiftData = {
             cashier: currentUser.name,
             drawer,
-            drawerLabel:
-                drawer === "Cash Drawer 1"
-                    ? "Pagi"
-                    : drawer === "Cash Drawer 2"
-                        ? "Siang"
-                        : "Malam",
+            drawerLabel: drawerInfo.label,
+            shiftStartTime: drawerInfo.start,
+            shiftEndTime: drawerInfo.end,
             saldoAwal: Number(saldoAwal),
             startedAt: new Date().toISOString(),
             status: "ACTIVE",
         };
 
-        localStorage.setItem("active_shift", JSON.stringify(shiftData));
+        localStorage.setItem(
+            `active_shift_${ownerId}`,
+            JSON.stringify(shiftData)
+        );
         setActiveShift(shiftData);
         setShowMulai(false);
 
@@ -156,7 +194,9 @@ const Shift = () => {
     };
 
     const handleAkhiriShift = ({ saldoAkhir, note }) => {
-        const active = JSON.parse(localStorage.getItem("active_shift"));
+        const active = JSON.parse(
+            localStorage.getItem(`active_shift_${ownerId}`)
+        );
         if (!active) return;
 
         const finishedShift = {
@@ -168,12 +208,16 @@ const Shift = () => {
         };
 
         const prevHistory =
-            JSON.parse(localStorage.getItem("shift_history")) || [];
+            JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || [];
 
         const newHistory = [...prevHistory, finishedShift];
 
-        localStorage.setItem("shift_history", JSON.stringify(newHistory));
-        localStorage.removeItem("active_shift");
+        localStorage.setItem(
+            `shift_history_${ownerId}`,
+            JSON.stringify(newHistory)
+        );
+
+        localStorage.removeItem(`active_shift_${ownerId}`);
 
         setHistory(newHistory);
         setActiveShift(null);
@@ -199,9 +243,46 @@ const Shift = () => {
             h.startedAt === selectedShift.startedAt ? updatedShift : h
         );
 
-        localStorage.setItem("shift_history", JSON.stringify(newHistory));
+        localStorage.setItem(
+            `shift_history_${ownerId}`,
+            JSON.stringify(newHistory)
+        );
         setHistory(newHistory);
         setSelectedShift(updatedShift);
+    };
+
+    const getShiftWarning = () => {
+        if (!activeShift?.shiftEndTime) return null;
+
+        const now = new Date();
+        const [h, m] = activeShift.shiftEndTime.split(":");
+        const hour = Number(h);
+        const minute = Number(m);
+
+        const shiftEnd = new Date();
+        shiftEnd.setHours(hour, minute, 0, 0);
+
+        const diff = (shiftEnd - now) / 1000 / 60;
+
+        if (diff <= 0) {
+            return "Shift sudah melewati waktu yang ditentukan";
+        }
+
+        if (diff <= 30) {
+            return `Shift akan berakhir dalam ${Math.floor(diff)} menit`;
+        }
+
+        return null;
+    };
+
+    const getShiftColor = () => {
+        if (!activeShift) return "#e2e8f0";
+
+        if (activeShift.drawerLabel === "Pagi") return "#22c55e";
+        if (activeShift.drawerLabel === "Siang") return "#f97316";
+        if (activeShift.drawerLabel === "Backup") return "#3b82f6";
+
+        return "#64748b";
     };
 
     if (!user) {
@@ -388,7 +469,7 @@ const Shift = () => {
 
                 <div className="shift-page">
                     <div className="shift-left">
-                        <div className="shift-card">
+                        <div className="shift-card" style={{ borderTop: `4px solid ${getShiftColor()}` }}>
                             <h4>Saat ini</h4>
 
                             <div className="shift-user">
@@ -402,6 +483,21 @@ const Shift = () => {
                                     <div className="role">{currentUser.role}</div>
                                 </div>
                             </div>
+                            {activeShift?.shiftStartTime && (
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                                    {activeShift.shiftStartTime} - {activeShift.shiftEndTime}
+                                </div>
+                            )}
+                            {activeShift?.drawerLabel === "Backup" && (
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                                    Shift fleksibel
+                                </div>
+                            )}
+                            {getShiftWarning() && (
+                                <div style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px" }}>
+                                    {getShiftWarning()}
+                                </div>
+                            )}
 
                             <div className="form-group">
                                 <label>Pilih Cash Drawer</label>
@@ -569,7 +665,7 @@ const Shift = () => {
                                     setSelectedShift(updatedShift);
 
                                     localStorage.setItem(
-                                        "shift_history",
+                                        `shift_history_${ownerId}`,
                                         JSON.stringify(newHistory)
                                     );
                                 }}

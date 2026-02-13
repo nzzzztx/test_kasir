@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getCurrentOwnerId } from '../../utils/owner';
+
 import '../../assets/css/product.css';
 import '../../assets/css/transaction.css';
 import imageIcon from '../../assets/icons/camera.png';
@@ -6,6 +8,7 @@ import dummyProduct from '../../assets/img/product.png';
 import BarcodeScannerModal from '../Transaction/BarcodeScannerModal';
 
 const AddProduct = ({ onClose, onSave, categories }) => {
+    const ownerId = getCurrentOwnerId();
     const [imagePreview, setImagePreview] = useState(dummyProduct);
     const [showScanner, setShowScanner] = useState(false);
 
@@ -86,9 +89,9 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                 <div className="form-group">
                     <label>Tipe Barang</label>
                     <select value={type} onChange={(e) => setType(e.target.value)}>
-                        <option value="Default">Default</option>
-                        <option value="Paket">Paket</option>
-                        <option value="Multisatuan">Multisatuan</option>
+                        <option value="default">Default</option>
+                        <option value="paket">Paket</option>
+                        <option value="multisatuan">Multisatuan</option>
                     </select>
                 </div>
 

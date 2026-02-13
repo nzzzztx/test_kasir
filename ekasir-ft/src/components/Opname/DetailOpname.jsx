@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { getCurrentOwnerId } from "../../utils/owner";
 import "../../assets/css/opname.css";
 
 const DetailOpname = ({ data, onBack, onUpdate }) => {
+    const ownerId = getCurrentOwnerId();
     const [opname, setOpname] = useState(data);
 
     // const [nama, setNama] = useState("");
     const [stokSistem, setStokSistem] = useState("");
     const [stokFisik, setStokFisik] = useState("");
-    const products = JSON.parse(localStorage.getItem("products")) || [];
+    const products = ownerId
+        ? JSON.parse(localStorage.getItem(`products_${ownerId}`)) || []
+        : [];
 
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedProductId, setSelectedProductId] = useState("");
@@ -37,6 +41,26 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
             finishedAt: new Date().toISOString(),
         };
 
+        const productsKey = `products_${ownerId}`;
+        if (!ownerId) {
+            alert("Owner tidak ditemukan");
+            return;
+        }
+        const existingProducts =
+            JSON.parse(localStorage.getItem(productsKey)) || [];
+
+        const updatedProducts = existingProducts.map((p) => {
+            const found = opname.items.find(i => i.productId === p.id);
+            if (!found) return p;
+
+            return {
+                ...p,
+                stock: found.stokFisik
+            };
+        });
+
+        localStorage.setItem(productsKey, JSON.stringify(updatedProducts));
+
         setOpname(finished);
         onUpdate(finished);
     };
@@ -44,6 +68,15 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
     const handleAddItem = () => {
         if (!selectedProduct || stokFisik === "") {
             alert("Pilih produk & isi stok fisik");
+            return;
+        }
+
+        const alreadyExists = opname.items?.some(
+            (i) => i.productId === selectedProduct.id
+        );
+
+        if (alreadyExists) {
+            alert("Produk sudah ada di daftar opname");
             return;
         }
 

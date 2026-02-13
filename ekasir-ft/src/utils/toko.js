@@ -14,8 +14,8 @@ export const getInfoToko = () => {
   if (!ownerId) return DEFAULT_TOKO;
 
   const STORAGE_KEY = `informasi_toko_owner_${ownerId}`;
-
   const saved = localStorage.getItem(STORAGE_KEY);
+
   if (!saved) return DEFAULT_TOKO;
 
   try {
@@ -24,8 +24,7 @@ export const getInfoToko = () => {
       ...DEFAULT_TOKO,
       ...parsed,
     };
-  } catch (e) {
-    console.warn("informasi_toko rusak, fallback ke default");
+  } catch {
     return DEFAULT_TOKO;
   }
 };

@@ -15,23 +15,16 @@ import userDummy from '../../assets/img/profile.png';
 import productDummy from '../../assets/img/product.png';
 import trashIcon from '../../assets/icons/trash.png';
 
-const initialProducts = [
-    {
-        id: 1,
-        code: '000002',
-        name: 'Tissue Paseo 2 Lapis 250 Lembar',
-        category: 'Alat Rumah Tangga',
-        stock: 145,
-        priceMin: 9000,
-        priceMax: 11000,
-    },
-];
-
 const Product = () => {
-    const [products, setProducts] = useState(() => {
-        const saved = localStorage.getItem('products');
-        return saved ? JSON.parse(saved) : initialProducts;
-    });
+    const { authData } = useAuth();
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        if (!authData?.id) return;
+
+        const saved = localStorage.getItem(`products_${authData.id}`);
+        setProducts(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,7 +36,6 @@ const Product = () => {
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('Semua');
     const [categories, setCategories] = useState([]);
-    const { authData } = useAuth();
     const [user, setUser] = useState(null);
 
     const {
@@ -53,14 +45,27 @@ const Product = () => {
     } = useNotifications();
 
     useEffect(() => {
-        if (products.length && !selectedProduct) {
-            setSelectedProduct(products[0]);
-        }
-    }, [products, selectedProduct]);
+        setSelectedProduct(null);
+        setSearch('');
+        setActiveCategory('Semua');
+    }, [authData]);
 
     useEffect(() => {
-        localStorage.setItem('products', JSON.stringify(products));
+        if (products.length > 0) {
+            setSelectedProduct(products[0]);
+        } else {
+            setSelectedProduct(null);
+        }
     }, [products]);
+
+    useEffect(() => {
+        if (!authData?.id) return;
+
+        localStorage.setItem(
+            `products_${authData.id}`,
+            JSON.stringify(products)
+        );
+    }, [products, authData]);
 
     const filteredProducts = products.filter((p) => {
         const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -70,10 +75,13 @@ const Product = () => {
     });
 
     useEffect(() => {
-        const saved = localStorage.getItem('categories');
+        if (!authData?.id) return;
+
+        const saved = localStorage.getItem(`categories_${authData.id}`);
         const parsed = saved ? JSON.parse(saved) : [];
+
         setCategories(['Semua', ...parsed.map((c) => c.name)]);
-    }, []);
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -94,8 +102,8 @@ const Product = () => {
         }
 
         const newProduct = {
-            id: Date.now(),
             ...data,
+            ownerId: authData.id,
         };
 
         const next = [...products, newProduct];
@@ -105,6 +113,17 @@ const Product = () => {
     };
 
     const handleUpdateProduct = (updated) => {
+        const duplicate = products.some(
+            (p) =>
+                p.code.trim() === updated.code.trim() &&
+                p.id !== updated.id
+        );
+
+        if (duplicate) {
+            alert("Barcode sudah digunakan produk lain!");
+            return;
+        }
+
         const next = products.map((p) =>
             p.id === updated.id ? updated : p
         );
@@ -289,7 +308,7 @@ const Product = () => {
 
                                     <h4>{item.name}</h4>
                                     <p className="price">
-                                        Rp {item.priceMin} – Rp {item.priceMax}
+                                        Rp {Number(item.priceMin).toLocaleString()} – Rp {Number(item.priceMax).toLocaleString()}
                                     </p>
                                 </div>
                             ))}
@@ -310,7 +329,10 @@ const Product = () => {
                             <div className="detail-actions">
                                 <button
                                     className="btn-edit-barang"
-                                    onClick={() => setShowEditModal(true)}
+                                    onClick={() => {
+                                        if (!selectedProduct) return;
+                                        setShowEditModal(true);
+                                    }}
                                 >
                                     Edit rincian
                                 </button>

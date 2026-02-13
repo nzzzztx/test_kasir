@@ -10,6 +10,7 @@ import kategoriIcon from '../../../assets/icons/category.png';
 import supplierIcon from '../../../assets/icons/user.png';
 import marketIcon from '../../../assets/icons/market.png';
 import stokIcon from '../../../assets/icons/stock.png';
+import laporanIcon from '../../../assets/icons/report.png';
 import toggleIcon from '../../../assets/icons/togglebutton.png';
 import notificationIcon from '../../../assets/icons/notification.png';
 import cameraIcon from '../../../assets/icons/camera.png';
@@ -73,6 +74,12 @@ const GudangDashboard = () => {
             desc: "Pantau dan kelola stok barang.",
             icon: stokIcon,
             path: "/dashboard/stock",
+        },
+        {
+            title: "Laporan Barang",
+            desc: "Laporan aktivitas keluar masuk stock barang.",
+            icon: laporanIcon,
+            path: "/dashboard/laporan",
         },
     ];
 

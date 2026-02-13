@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import TambahCatatanModal from "../Shift/TambahCatatanModal";
 import "../../assets/css/shift-modal.css";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 const RekapShift = ({ shift, onUpdate }) => {
+    const ownerId = getCurrentOwnerId();
     const [showCatatan, setShowCatatan] = useState(false);
     const [notes, setNotes] = useState([]);
 
@@ -11,27 +13,36 @@ const RekapShift = ({ shift, onUpdate }) => {
     }, [shift]);
 
     const handleAddNote = (data) => {
-        const updatedNotes = [...(shift.notes || []), data];
+        const updatedNotes = [...notes, data];
+        setNotes(updatedNotes);
 
         const updatedShift = {
             ...shift,
             notes: updatedNotes,
         };
 
+        if (!ownerId) return;
+
         const history =
-            JSON.parse(localStorage.getItem("shift_history")) || [];
+            JSON.parse(
+                localStorage.getItem(`shift_history_${ownerId}`)
+            ) || [];
 
         const newHistory = history.map((s) =>
             s.startedAt === shift.startedAt ? updatedShift : s
         );
 
-        localStorage.setItem("shift_history", JSON.stringify(newHistory));
+        localStorage.setItem(
+            `shift_history_${ownerId}`,
+            JSON.stringify(newHistory)
+        );
 
         onUpdate(updatedShift);
     };
 
-    const allTransactions =
-        JSON.parse(localStorage.getItem("transaction_history")) || [];
+    const allTransactions = ownerId
+        ? JSON.parse(localStorage.getItem(`transaction_history_${ownerId}`)) || []
+        : [];
 
     const shiftTransactions = allTransactions.filter(
         (t) =>

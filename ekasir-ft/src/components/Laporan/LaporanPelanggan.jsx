@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
+import { getCurrentOwnerId } from "../../utils/owner";
+import { useMemo } from "react";
 
 import "../../assets/css/laporanpelanggan.css";
 import Sidebar from "../../components/Sidebar";
@@ -25,6 +27,7 @@ const formatRangeLabel = (start, end) => {
 };
 
 const LaporanPelanggan = () => {
+    const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -54,8 +57,13 @@ const LaporanPelanggan = () => {
     };
 
     useEffect(() => {
+        if (!ownerId) {
+            setCustomers([]);
+            return;
+        }
+
         const transactions = JSON.parse(
-            localStorage.getItem("transaction_history") || "[]"
+            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
         );
 
         const grouped = {};
@@ -112,8 +120,7 @@ const LaporanPelanggan = () => {
                 };
             }
 
-            const trxId = trx.id;
-            if (!trxId) return;
+            const trxId = trx.id || `${trxDateRaw}-${customerKey}`;
 
             if (!grouped[customerKey]._trxIds.has(trxId)) {
                 grouped[customerKey]._trxIds.add(trxId);
@@ -134,23 +141,27 @@ const LaporanPelanggan = () => {
         );
 
         setCustomers(result);
-    }, [dateRange]);
+    }, [dateRange, ownerId]);
 
-
-    const filtered = customers.filter((c) => {
+    const filtered = useMemo(() => {
         const keyword = search.toLowerCase();
-        return (
+
+        return customers.filter((c) =>
             c.nama.toLowerCase().includes(keyword) ||
             c.phone.toLowerCase().includes(keyword)
         );
-    });
+    }, [customers, search]);
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const totalPages = useMemo(() =>
+        Math.ceil(filtered.length / PAGE_SIZE),
+        [filtered]);
 
-    const paginated = filtered.slice(
-        (page - 1) * PAGE_SIZE,
-        page * PAGE_SIZE
-    );
+    const paginated = useMemo(() =>
+        filtered.slice(
+            (page - 1) * PAGE_SIZE,
+            page * PAGE_SIZE
+        ),
+        [filtered, page]);
 
     const handleExport = () => {
         const excel = filtered.map((c, i) => ({
@@ -266,9 +277,11 @@ const LaporanPelanggan = () => {
 
                     <div className="laporan-footer">
                         <span>
-                            Ditampilkan {(page - 1) * PAGE_SIZE + 1} –{" "}
-                            {Math.min(page * PAGE_SIZE, filtered.length)} dari{" "}
-                            {filtered.length} data
+                            {filtered.length === 0
+                                ? "Tidak ada data"
+                                : `Ditampilkan ${(page - 1) * PAGE_SIZE + 1} – 
+                                    ${Math.min(page * PAGE_SIZE, filtered.length)} 
+                                    dari ${filtered.length} data`}
                         </span>
 
                         <div className="pagination">

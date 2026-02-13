@@ -26,20 +26,13 @@ const Customers = () => {
     const [user, setUser] = useState(null);
     const { authData } = useAuth();
 
-    const [customers, setCustomers] = useState(() => {
-        const saved = localStorage.getItem("customers");
-        return saved
-            ? JSON.parse(saved)
-            : Array.from({ length: 0 }, (_, i) => ({
-                id: i + 1,
-                name: "",
-                email: "",
-                phone: "",
-                address: "",
-                point: 0,
-                code: "",
-            }));
-    });
+    const [customers, setCustomers] = useState([]);
+    useEffect(() => {
+        if (!authData?.id) return;
+
+        const saved = localStorage.getItem(`customers_${authData.id}`);
+        setCustomers(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -50,6 +43,12 @@ const Customers = () => {
         if (currentUser) {
             setUser(currentUser);
         }
+    }, [authData]);
+
+    useEffect(() => {
+        setSelectedCustomer(null);
+        setSearch("");
+        setPage(1);
     }, [authData]);
 
     const {
@@ -108,7 +107,11 @@ const Customers = () => {
 
             const merged = [...imported, ...customers];
             setCustomers(merged);
-            localStorage.setItem("customers", JSON.stringify(merged));
+            localStorage.setItem(
+                `customers_${authData.id}`,
+                JSON.stringify(merged)
+            );
+
         };
 
         reader.readAsArrayBuffer(file);
@@ -322,6 +325,7 @@ const Customers = () => {
                 onSubmit={(data) => {
                     const newCustomer = {
                         id: Date.now(),
+                        ownerId: authData.id,
                         name: data.name,
                         phone: data.phone,
                         address: data.address,
@@ -333,7 +337,10 @@ const Customers = () => {
                     const updated = [newCustomer, ...customers];
 
                     setCustomers(updated);
-                    localStorage.setItem("customers", JSON.stringify(updated));
+                    localStorage.setItem(
+                        `customers_${authData.id}`,
+                        JSON.stringify(updated)
+                    );
 
                     setOpenModal(false);
                 }}
@@ -349,7 +356,10 @@ const Customers = () => {
                     );
 
                     setCustomers(newData);
-                    localStorage.setItem("customers", JSON.stringify(newData));
+                    localStorage.setItem(
+                        `customers_${authData.id}`,
+                        JSON.stringify(newData)
+                    );
                 }}
             />
 
@@ -361,7 +371,10 @@ const Customers = () => {
                     const updated = customers.filter((c) => c.id !== id);
 
                     setCustomers(updated);
-                    localStorage.setItem("customers", JSON.stringify(updated));
+                    localStorage.setItem(
+                        `customers_${authData.id}`,
+                        JSON.stringify(updated)
+                    );
 
                     setDeleteModalOpen(false);
                     setSelectedCustomer(null);

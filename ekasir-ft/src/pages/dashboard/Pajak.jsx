@@ -27,21 +27,26 @@ const Pajak = () => {
     const [selectedTax, setSelectedTax] = useState(null);
     const { authData } = useAuth();
     const [user, setUser] = useState(null);
+    const [taxes, setTaxes] = useState([]);
 
-    const [taxes, setTaxes] = useState(() => {
-        const saved = localStorage.getItem(`taxes_owner_${authData.ownerId}`)
-            ;
-        return saved
-            ? JSON.parse(saved)
-            : [
-                { id: 1, name: "PPN 11%", type: "percent", value: 11 },
-                { id: 2, name: "Pajak Layanan", type: "percent", value: 5 },
-            ];
-    });
+    useEffect(() => {
+        if (!authData?.ownerId) return;
+
+        const saved = localStorage.getItem(
+            `taxes_owner_${authData.ownerId}`
+        );
+
+        setTaxes(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     const filtered = taxes.filter((t) =>
         t.name.toLowerCase().includes(search.toLowerCase())
     );
+
+    useEffect(() => {
+        setSearch("");
+        setSelectedTax(null);
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -64,7 +69,6 @@ const Pajak = () => {
             </div>
         );
     }
-
 
     return (
         <div className="dashboard-container">
@@ -175,10 +179,17 @@ const Pajak = () => {
                     open={addOpen}
                     onClose={() => setAddOpen(false)}
                     onSubmit={(data) => {
-                        const newTax = { id: Date.now(), ...data };
+                        const newTax = {
+                            id: Date.now(),
+                            ownerId: authData.ownerId,
+                            ...data
+                        };
                         setTaxes((prev) => {
                             const updated = [newTax, ...prev];
-                            localStorage.setItem("taxes", JSON.stringify(updated));
+                            localStorage.setItem(
+                                `taxes_owner_${authData.ownerId}`,
+                                JSON.stringify(updated)
+                            );
                             return updated;
                         });
                         setAddOpen(false);
@@ -194,7 +205,10 @@ const Pajak = () => {
                             const data = prev.map((t) =>
                                 t.id === updated.id ? { ...t, ...updated } : t
                             );
-                            localStorage.setItem("taxes", JSON.stringify(data));
+                            localStorage.setItem(
+                                `taxes_owner_${authData.ownerId}`,
+                                JSON.stringify(data)
+                            );
                             return data;
                         });
                         setEditOpen(false);
@@ -209,7 +223,10 @@ const Pajak = () => {
                     onConfirm={(id) => {
                         setTaxes((prev) => {
                             const updated = prev.filter((t) => t.id !== id);
-                            localStorage.setItem("taxes", JSON.stringify(updated));
+                            localStorage.setItem(
+                                `taxes_owner_${authData.ownerId}`,
+                                JSON.stringify(updated)
+                            );
                             return updated;
                         });
                         setDeleteOpen(false);

@@ -20,10 +20,9 @@ const Laporan = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const { changePassword } = useAuth();
+    const { authData, changePassword } = useAuth();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const { authData } = useAuth();
     const role = authData?.role;
 
     const laporanData = [
@@ -52,6 +51,19 @@ const Laporan = () => {
             path: "/dashboard/laporan/laporan-pelanggan",
         },
     ];
+
+    const ROLE_ACCESS = {
+        owner: "all",
+        kasir: ["Laporan Transaksi", "Laporan Pelanggan"],
+        gudang: ["Laporan Pembelian Barang", "Laporan Persediaan Barang"],
+    };
+
+    const filteredLaporan = laporanData.filter(item => {
+        const access = ROLE_ACCESS[role];
+        if (!access) return false;
+        if (access === "all") return true;
+        return access.includes(item.title);
+    });
 
     useEffect(() => {
         if (!authData) return;
@@ -246,7 +258,7 @@ const Laporan = () => {
                 </header>
 
                 <div className="card-grid laporan-grid">
-                    {laporanData.map((item, index) => (
+                    {filteredLaporan.map((item, index) => (
                         <div className="menu-card laporan-card" key={index}>
                             <div className="card-top">
                                 <div className="card-text">

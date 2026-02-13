@@ -111,7 +111,8 @@ const Dashboard = () => {
         if (role === "kasir") {
             return [
                 "/dashboard/customers",
-                "/dashboard/transaction"
+                "/dashboard/transaction",
+                "/dashboard/laporan"
             ].includes(item.path);
         }
 

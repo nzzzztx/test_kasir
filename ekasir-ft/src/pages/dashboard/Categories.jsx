@@ -56,12 +56,14 @@ const Categories = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const savedCategories = localStorage.getItem('categories');
-        const savedProducts = localStorage.getItem('products');
+        if (!authData?.id) return;
 
-        setCategories(savedCategories ? JSON.parse(savedCategories) : defaultCategories);
-        setProducts(savedProducts ? JSON.parse(savedProducts) : dummyProducts);
-    }, []);
+        const savedCategories = localStorage.getItem(`categories_${authData.id}`);
+        const savedProducts = localStorage.getItem(`products_${authData.id}`);
+
+        setCategories(savedCategories ? JSON.parse(savedCategories) : []);
+        setProducts(savedProducts ? JSON.parse(savedProducts) : []);
+    }, [authData]);
 
     const getCategoryProducts = (categoryName) =>
         products.filter((p) => p.category === categoryName);
@@ -80,16 +82,25 @@ const Categories = () => {
     const handleAddCategory = (name) => {
         const newCategory = {
             id: Date.now(),
+            ownerId: authData.id,
             name,
         };
 
         const updatedCategories = [...categories, newCategory];
 
         setCategories(updatedCategories);
-        localStorage.setItem("categories", JSON.stringify(updatedCategories));
+        localStorage.setItem(
+            `categories_${authData.id}`,
+            JSON.stringify(updatedCategories)
+        );
 
         setShowAdd(false);
     };
+
+    useEffect(() => {
+        setSelectedCategory(null);
+        setSearch('');
+    }, [authData]);
 
     useEffect(() => {
         if (!authData) return;
@@ -292,7 +303,10 @@ const Categories = () => {
                                 const updated = categories.filter(c => c.id !== cat.id);
 
                                 setCategories(updated);
-                                localStorage.setItem('categories', JSON.stringify(updated));
+                                localStorage.setItem(
+                                    `categories_${authData.id}`,
+                                    JSON.stringify(updated)
+                                );
 
                                 setDeleteTarget(null);
 
