@@ -28,7 +28,7 @@ const LaporanKetersediaan = () => {
         }
 
         const stocks = JSON.parse(
-            localStorage.getItem(`stocks_${ownerId}`) || "[]"
+            localStorage.getItem(`products_${ownerId}`) || "[]"
         );
 
         const logistics = JSON.parse(

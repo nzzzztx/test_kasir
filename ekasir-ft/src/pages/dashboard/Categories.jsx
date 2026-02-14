@@ -70,7 +70,9 @@ const Categories = () => {
 
     const filteredProducts = selectedCategory
         ? getCategoryProducts(selectedCategory.name).filter((p) =>
-            p.name.toLowerCase().includes(search.toLowerCase())
+            (p.name || "")
+                .toLowerCase()
+                .includes(search.toLowerCase())
         )
         : [];
 
@@ -80,10 +82,25 @@ const Categories = () => {
         markAllAsRead, } = useNotifications();
 
     const handleAddCategory = (name) => {
+
+        if (!name?.trim()) {
+            alert("Nama kategori wajib diisi");
+            return;
+        }
+
+        if (
+            categories.some(
+                c => c.name.toLowerCase() === name.toLowerCase()
+            )
+        ) {
+            alert("Kategori sudah ada!");
+            return;
+        }
+
         const newCategory = {
             id: Date.now(),
             ownerId: authData.id,
-            name,
+            name: name.trim(),
         };
 
         const updatedCategories = [...categories, newCategory];
@@ -159,7 +176,7 @@ const Categories = () => {
                             {notificationOpen && (
                                 <div className="notif-dropdown">
                                     <div className="notif-header">
-                                        <span>Notifikasi (0)</span>
+                                        <span>Notifikasi ({unreadCount})</span>
                                     </div>
 
                                     <div className={`notif-body ${notifications.length === 0 ? "empty" : ""}`}>
@@ -223,41 +240,51 @@ const Categories = () => {
                         </div>
 
                         <div className="category-list">
-                            {categories.map((cat) => {
-                                const catProducts = getCategoryProducts(cat.name);
-                                const totalStock = catProducts.reduce((s, p) => s + p.stock, 0);
-                                const totalModal = catProducts.reduce(
-                                    (s, p) => s + p.stock * p.priceMin,
-                                    0
-                                );
+                            {categories
+                                .filter(cat =>
+                                    (cat.name || "")
+                                        .toLowerCase()
+                                        .includes(search.toLowerCase())
+                                )
+                                .map((cat) => {
+                                    const catProducts = getCategoryProducts(cat.name);
+                                    const totalStock = catProducts.reduce(
+                                        (s, p) => s + Number(p.stock || 0),
+                                        0
+                                    );
 
-                                return (
-                                    <div
-                                        key={cat.id}
-                                        className={`category-item ${selectedCategory?.id === cat.id ? 'active' : ''
-                                            }`}
-                                        onClick={() => setSelectedCategory(cat)}
-                                    >
-                                        <div>
-                                            <h4>{cat.name}</h4>
-                                            <p className="price orange">Sisa : {totalStock}</p>
-                                        </div>
+                                    const totalModal = catProducts.reduce(
+                                        (s, p) => s + Number(p.stock || 0) * Number(p.priceMin || 0),
+                                        0
+                                    );
 
-                                        <div className="category-right">
-                                            <p className="price">Modal : Rp {totalModal.toLocaleString()}</p>
-                                            <button
-                                                className="icon-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setDeleteTarget(cat);
-                                                }}
-                                            >
-                                                <img src={trashIcon} alt="hapus" />
-                                            </button>
+                                    return (
+                                        <div
+                                            key={cat.id}
+                                            className={`category-item ${selectedCategory?.id === cat.id ? 'active' : ''
+                                                }`}
+                                            onClick={() => setSelectedCategory(cat)}
+                                        >
+                                            <div>
+                                                <h4>{cat.name}</h4>
+                                                <p className="price orange">Sisa : {totalStock}</p>
+                                            </div>
+
+                                            <div className="category-right">
+                                                <p className="price">Modal : Rp {totalModal.toLocaleString()}</p>
+                                                <button
+                                                    className="icon-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setDeleteTarget(cat);
+                                                    }}
+                                                >
+                                                    <img src={trashIcon} alt="hapus" />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
                         </div>
 
                         <button className="btn-add-category" onClick={() => setShowAdd(true)}>
@@ -300,6 +327,16 @@ const Categories = () => {
                             category={deleteTarget}
                             onCancel={() => setDeleteTarget(null)}
                             onConfirm={(cat) => {
+
+                                const relatedProducts = products.filter(
+                                    p => p.category === cat.name
+                                );
+
+                                if (relatedProducts.length > 0) {
+                                    alert("Kategori masih memiliki produk!");
+                                    return;
+                                }
+
                                 const updated = categories.filter(c => c.id !== cat.id);
 
                                 setCategories(updated);

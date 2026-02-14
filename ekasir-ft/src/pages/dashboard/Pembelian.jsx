@@ -23,6 +23,10 @@ const Pembelian = () => {
     const [paidAmount, setPaidAmount] = useState(0);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState("lunas");
+    const [tanggal, setTanggal] = useState(
+        new Date().toISOString().split("T")[0]
+    );
+
     const [lastSavedPembelian, setLastSavedPembelian] = useState(null);
     const ownerId = getCurrentOwnerId();
 
@@ -122,6 +126,8 @@ const Pembelian = () => {
                             paymentStatus={paymentStatus}
                             setPaymentStatus={setPaymentStatus}
                             isSupplierLocked={isSupplierLocked}
+                            tanggal={tanggal}
+                            setTanggal={setTanggal}
                         />
 
                         <PembelianItems

@@ -1,97 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AddPembelianItemModal from "./AddPembelianItemModal";
+import { getCurrentOwnerId } from "../../utils/owner";
 
-const AddPembelianItemModal = ({ open, onClose, onSubmit }) => {
-    const [name, setName] = useState("");
-    const [qty, setQty] = useState(1);
-    const [unit, setUnit] = useState("pcs");
-    const [price, setPrice] = useState("");
+const PembelianItems = ({ items, setItems }) => {
+    const [openModal, setOpenModal] = useState(false);
+    const [products, setProducts] = useState([]);
 
-    if (!open) return null;
+    const ownerId = getCurrentOwnerId();
 
-    const handleSubmit = () => {
-        const qtyNumber = Number(qty);
-        const priceNumber = Number(price);
+    useEffect(() => {
+        if (!ownerId) return;
 
-        if (!name.trim() || qtyNumber <= 0 || priceNumber <= 0) {
-            alert("Isi data dengan benar");
-            return;
-        }
+        const saved =
+            JSON.parse(localStorage.getItem(`products_${ownerId}`)) || [];
 
-        onSubmit({
-            id: Date.now(),
-            name: name.trim(),
-            qty: qtyNumber,
-            unit,
-            price: priceNumber,
+        setProducts(saved);
+    }, [ownerId]);
+
+    const handleAddItem = (newItem) => {
+        setItems((prev) => {
+            const existing = prev.find(
+                (p) => p.productId === newItem.productId
+            );
+
+            if (existing) {
+                return prev.map((p) =>
+                    p.productId === newItem.productId
+                        ? { ...p, qty: p.qty + newItem.qty }
+                        : p
+                );
+            }
+
+            return [...prev, newItem];
         });
-
-        setName("");
-        setQty(1);
-        setUnit("pcs");
-        setPrice("");
-        onClose();
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-card">
-                <h4>Tambah Barang</h4>
-                <p className="modal-subtitle">
-                    Isi detail barang yang dibeli
-                </p>
+        <div className="pembelian-card">
+            <h4 className="card-title">Detail Barang</h4>
 
-                <div className="modal-form">
-                    <label>Nama Barang</label>
-                    <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Contoh: Minyak Goreng 2L"
-                    />
+            <table className="pembelian-table">
+                <thead>
+                    <tr>
+                        <th>Nama Barang</th>
+                        <th>Qty</th>
+                        <th>Satuan</th>
+                        <th>Harga</th>
+                        <th>Total</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items.length === 0 && (
+                        <tr>
+                            <td colSpan="6" className="table-empty">
+                                Belum ada barang
+                            </td>
+                        </tr>
+                    )}
 
-                    <div className="modal-grid">
-                        <div>
-                            <label>Qty</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={qty}
-                                onChange={(e) => setQty(e.target.value)}
-                            />
-                        </div>
+                    {items.map((item) => (
+                        <tr key={item.productId}>
+                            <td>{item.name}</td>
+                            <td>{item.qty}</td>
+                            <td>{item.unit}</td>
+                            <td>
+                                Rp{" "}
+                                {Number(item.price).toLocaleString("id-ID")}
+                            </td>
+                            <td>
+                                Rp{" "}
+                                {(
+                                    item.qty * item.price
+                                ).toLocaleString("id-ID")}
+                            </td>
+                            <td>
+                                <button
+                                    className="btn-delete-item"
+                                    onClick={() =>
+                                        setItems((prev) =>
+                                            prev.filter(
+                                                (p) =>
+                                                    p.productId !==
+                                                    item.productId
+                                            )
+                                        )
+                                    }
+                                >
+                                    Hapus
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
 
-                        <div>
-                            <label>Satuan</label>
-                            <select
-                                value={unit}
-                                onChange={(e) => setUnit(e.target.value)}
-                            >
-                                <option>pcs</option>
-                                <option>dus</option>
-                                <option>kg</option>
-                                <option>liter</option>
-                            </select>
-                        </div>
-                    </div>
+            <button
+                className="btn-add-item add-item"
+                onClick={() => setOpenModal(true)}
+            >
+                + Tambah Barang
+            </button>
 
-                    <label>Harga Satuan</label>
-                    <input
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="Rp 0"
-                    />
-                </div>
-
-                <div className="modal-actions">
-                    <button className="btn-outline" onClick={onClose}>
-                        Batal
-                    </button>
-                    <button className="btn-primary" onClick={handleSubmit}>
-                        Tambah
-                    </button>
-                </div>
-            </div>
+            <AddPembelianItemModal
+                open={openModal}
+                onClose={() => setOpenModal(false)}
+                onSubmit={handleAddItem}
+                products={products}
+            />
         </div>
     );
 };
 
-export default AddPembelianItemModal;
+export default PembelianItems;

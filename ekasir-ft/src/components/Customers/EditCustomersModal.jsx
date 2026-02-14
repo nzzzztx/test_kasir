@@ -11,14 +11,13 @@ const EditCustomersModal = ({ open, onClose, onSubmit, customer }) => {
 
         const data = {
             id: customer.id, // PENTING
-            name: formData.get("name"),
-            phone: formData.get("phone"),
-            address: formData.get("address"),
-            email: formData.get("email"),
+            name: formData.get("name")?.trim(),
+            phone: formData.get("phone")?.trim(),
+            address: formData.get("address")?.trim(),
+            email: formData.get("email")?.trim(),
         };
 
         onSubmit(data);
-        onClose();
     };
 
     return (
@@ -35,7 +34,7 @@ const EditCustomersModal = ({ open, onClose, onSubmit, customer }) => {
                         <input
                             type="text"
                             name="name"
-                            defaultValue={customer.name}
+                            defaultValue={customer.name || ""}
                             required
                         />
                     </div>
@@ -45,7 +44,7 @@ const EditCustomersModal = ({ open, onClose, onSubmit, customer }) => {
                         <input
                             type="tel"
                             name="phone"
-                            defaultValue={customer.phone}
+                            defaultValue={customer.phone || ""}
                             required
                         />
                     </div>
@@ -55,7 +54,7 @@ const EditCustomersModal = ({ open, onClose, onSubmit, customer }) => {
                         <input
                             type="text"
                             name="address"
-                            defaultValue={customer.address}
+                            defaultValue={customer.address || ""}
                             required
                         />
                     </div>
@@ -65,7 +64,7 @@ const EditCustomersModal = ({ open, onClose, onSubmit, customer }) => {
                         <input
                             type="email"
                             name="email"
-                            defaultValue={customer.email}
+                            defaultValue={customer.email || ""}
                         />
                     </div>
 

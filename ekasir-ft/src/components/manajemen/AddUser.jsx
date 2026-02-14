@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { getCurrentOwnerId } from "../../utils/owner";
+
 import viewIcon from "../../assets/icons/view.png";
 import hiddenIcon from "../../assets/icons/hidden.png";
 
@@ -28,19 +30,29 @@ export default function AddUser({ onClose, onSave }) {
             return;
         }
 
+        const ownerId = getCurrentOwnerId();
+
+        if (!ownerId) {
+            alert("Owner tidak ditemukan");
+            return;
+        }
+
         const newUser = {
             id: Date.now(),
+            ownerId: ownerId,
             name: form.name || form.username,
             phone: form.phone || "-",
             username: form.username,
             password: form.password,
             role: form.role,
-            referralCode: generateReferral(),
+            referralCode: `USR-${ownerId}-${Date.now()}`,
             otpVerified: true,
+            createdAt: new Date().toISOString(),
         };
 
         onSave(newUser);
     };
+
 
     return (
         <div className="manajemen-modal-overlay">

@@ -4,7 +4,9 @@ const PembelianForm = ({
     suppliers = [],
     paymentStatus,
     setPaymentStatus,
-    isSupplierLocked
+    isSupplierLocked,
+    tanggal,
+    setTanggal
 }) => {
     return (
         <div className="pembelian-card">
@@ -16,12 +18,12 @@ const PembelianForm = ({
 
                     <select
                         value={supplier?.id || ""}
-                        // disabled={isSupplierLocked}
+                        disabled={isSupplierLocked}
                         onChange={(e) => {
                             const selected = suppliers.find(
                                 (s) => s.id === Number(e.target.value)
                             );
-                            setSupplier(selected);
+                            setSupplier(selected || null);
                         }}
                     >
                         <option value="">Pilih Supplier</option>
@@ -39,13 +41,12 @@ const PembelianForm = ({
                     )}
                 </div>
 
-
                 <div className="form-group">
                     <label>Tanggal Pembelian</label>
                     <input
                         type="date"
-                        className="input-date"
-                        defaultValue={new Date().toISOString().split("T")[0]}
+                        value={tanggal}
+                        onChange={(e) => setTanggal(e.target.value)}
                     />
                 </div>
 
@@ -53,8 +54,10 @@ const PembelianForm = ({
                     <label>Status Pembayaran</label>
                     <select
                         value={paymentStatus}
-                        // disabled={!isSupplierLocked}
-                        onChange={(e) => setPaymentStatus(e.target.value)}
+                        disabled={!isSupplierLocked}
+                        onChange={(e) =>
+                            setPaymentStatus(e.target.value)
+                        }
                     >
                         <option value="lunas">Lunas</option>
                         <option value="belum">Belum Lunas</option>

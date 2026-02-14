@@ -1,26 +1,41 @@
 import React, { useState } from "react";
-
 import discountIcon from "../../assets/icons/discount.png";
 import rupiahIcon from "../../assets/icons/rupiah.png";
 
-
 const AddDiscountModal = ({ open, onClose, onSubmit }) => {
-    if (!open) return null;
-
     const [type, setType] = useState("percent");
+
+    if (!open) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const formData = new FormData(e.target);
 
-        const data = {
-            name: formData.get("name"),
-            value: Number(formData.get("value")),
-            type,
-        };
+        const name = formData.get("name")?.trim();
+        const value = Number(formData.get("value"));
 
-        onSubmit(data);
+        if (!name) {
+            alert("Nama diskon wajib diisi");
+            return;
+        }
+
+        if (value <= 0) {
+            alert("Nilai diskon harus lebih dari 0");
+            return;
+        }
+
+        if (type === "percent" && value > 100) {
+            alert("Diskon persen tidak boleh lebih dari 100%");
+            return;
+        }
+
+        onSubmit({
+            name,
+            value,
+            type,
+        });
+
         onClose();
     };
 
@@ -62,20 +77,18 @@ const AddDiscountModal = ({ open, onClose, onSubmit }) => {
                                     type="button"
                                     className={type === "percent" ? "active" : ""}
                                     onClick={() => setType("percent")}
-                                    title="Diskon Persen"
                                 >
                                     <img src={discountIcon} alt="percent" />
                                 </button>
+
                                 <button
                                     type="button"
                                     className={type === "rupiah" ? "active" : ""}
                                     onClick={() => setType("rupiah")}
-                                    title="Diskon Rupiah"
                                 >
                                     <img src={rupiahIcon} alt="rupiah" />
                                 </button>
                             </div>
-
                         </div>
                     </div>
 

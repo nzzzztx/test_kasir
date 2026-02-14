@@ -24,6 +24,7 @@ const Product = () => {
 
         const saved = localStorage.getItem(`products_${authData.id}`);
         setProducts(saved ? JSON.parse(saved) : []);
+        setIsLoaded(true);
     }, [authData]);
 
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -37,6 +38,7 @@ const Product = () => {
     const [activeCategory, setActiveCategory] = useState('Semua');
     const [categories, setCategories] = useState([]);
     const [user, setUser] = useState(null);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const {
         notifications,
@@ -51,24 +53,24 @@ const Product = () => {
     }, [authData]);
 
     useEffect(() => {
-        if (products.length > 0) {
+        if (!selectedProduct && products.length > 0) {
             setSelectedProduct(products[0]);
-        } else {
-            setSelectedProduct(null);
         }
     }, [products]);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.id || !isLoaded) return;
 
         localStorage.setItem(
             `products_${authData.id}`,
             JSON.stringify(products)
         );
-    }, [products, authData]);
+    }, [products, authData, isLoaded]);
 
     const filteredProducts = products.filter((p) => {
-        const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+        const matchSearch = (p.name || "")
+            .toLowerCase()
+            .includes(search.toLowerCase());
         const matchCategory =
             activeCategory === 'Semua' || p.category === activeCategory;
         return matchSearch && matchCategory;
@@ -95,9 +97,26 @@ const Product = () => {
     }, [authData]);
 
     const handleSaveProduct = (data) => {
-        const exists = products.some((p) => p.code === data.code);
+        const exists = products.some(
+            (p) => p.code?.trim() === data.code?.trim()
+        );
+
         if (exists) {
             alert("Barcode sudah terdaftar!");
+            return;
+        }
+
+        if (!data.name?.trim()) {
+            alert("Nama barang wajib diisi");
+            return;
+        }
+
+        if (
+            data.priceMax &&
+            data.priceMin &&
+            Number(data.priceMax) < Number(data.priceMin)
+        ) {
+            alert("Harga jual tidak boleh lebih kecil dari harga dasar");
             return;
         }
 
@@ -115,7 +134,7 @@ const Product = () => {
     const handleUpdateProduct = (updated) => {
         const duplicate = products.some(
             (p) =>
-                p.code.trim() === updated.code.trim() &&
+                p.code?.trim() === updated.code?.trim() &&
                 p.id !== updated.id
         );
 

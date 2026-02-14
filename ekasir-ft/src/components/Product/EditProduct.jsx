@@ -17,7 +17,7 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
         minStock: '',
         rack: '',
         weight: '',
-        unit: 'gram',
+        unit: '',
         discount: '',
         description: '',
         image: '',
@@ -33,7 +33,7 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                 minStock: product.minStock || '',
                 rack: product.rack || '',
                 weight: product.weight || '',
-                unit: product.unit || 'gram',
+                unit: product.unit || '',
                 discount: product.discount || '',
                 description: product.description || '',
             });
@@ -216,6 +216,7 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                         >
                             <option value="gram">gram</option>
                             <option value="kg">kg</option>
+                            <option value="pcs">pcs</option>
                         </select>
                     </div>
                 </div>

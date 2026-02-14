@@ -30,16 +30,31 @@ const Discount = () => {
     const [user, setUser] = useState(null);
 
     const [discounts, setDiscounts] = useState([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    if (authData?.role !== "owner") {
+        return null;
+    }
 
     useEffect(() => {
-        if (!authData?.ownerId) return;
+        if (!authData?.id) return;
 
         const saved = localStorage.getItem(
-            `discounts_owner_${authData.ownerId}`
+            `discounts_${authData.id}`
         );
 
         setDiscounts(saved ? JSON.parse(saved) : []);
+        setIsLoaded(true);
     }, [authData]);
+
+    useEffect(() => {
+        if (!authData?.id || !isLoaded) return;
+
+        localStorage.setItem(
+            `discounts_${authData.id}`,
+            JSON.stringify(discounts)
+        );
+    }, [discounts, authData, isLoaded]);
 
     const filtered = discounts.filter((d) =>
         (d.name || "").toLowerCase().includes(search.toLowerCase())
@@ -188,10 +203,6 @@ const Discount = () => {
                         };
                         setDiscounts((prev) => {
                             const updated = [newDiscount, ...prev];
-                            localStorage.setItem(
-                                `discounts_owner_${authData.ownerId}`,
-                                JSON.stringify(updated)
-                            );
                             return updated;
                         });
 
@@ -208,10 +219,6 @@ const Discount = () => {
                                 d.id === updated.id ? { ...d, ...updated } : d
                             );
 
-                            localStorage.setItem(
-                                `discounts_owner_${authData.ownerId}`,
-                                JSON.stringify(newData)
-                            );
                             return newData;
                         });
 
@@ -227,10 +234,6 @@ const Discount = () => {
                         setDiscounts((prev) => {
                             const updated = prev.filter((d) => d.id !== id);
 
-                            localStorage.setItem(
-                                `discounts_owner_${authData.ownerId}`,
-                                JSON.stringify(updated)
-                            );
                             return updated;
                         });
 

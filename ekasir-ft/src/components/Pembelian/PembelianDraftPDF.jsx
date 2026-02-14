@@ -25,6 +25,7 @@ const PembelianDraftPDF = () => {
     }
 
     const { supplier, items = [], total = 0, paidAmount = 0 } = draft;
+    const sisa = Math.max(total - paidAmount, 0);
 
     return (
         <div id="pembelian-pdf" style={{ padding: 24, fontFamily: "Arial" }}>
@@ -82,7 +83,7 @@ const PembelianDraftPDF = () => {
 
             <p>
                 <strong>Sisa:</strong>{" "}
-                Rp {(total - paidAmount).toLocaleString("id-ID")}
+                Rp {sisa.toLocaleString("id-ID")}
             </p>
 
             <p style={{ fontSize: 12, marginTop: 24, textAlign: "center" }}>

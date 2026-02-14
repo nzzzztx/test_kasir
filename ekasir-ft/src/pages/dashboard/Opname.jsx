@@ -236,19 +236,20 @@ const Opname = () => {
                     />
                 )}
 
-                <CreateOpname
-                    open={showCreate}
-                    selectedDate={selectedDate}
-                    onClose={() => setShowCreate(false)}
-                    onSaved={() => {
-                        const data =
-                            JSON.parse(
-                                localStorage.getItem(`stock_opname_${ownerId}`)
-                            ) || [];
+                {showCreate && (
+                    <CreateOpname
+                        selectedDate={selectedDate}
+                        onClose={() => setShowCreate(false)}
+                        onSaved={() => {
+                            const data =
+                                JSON.parse(
+                                    localStorage.getItem(`stock_opname_${ownerId}`)
+                                ) || [];
 
-                        setOpnameData(data);
-                    }}
-                />
+                            setOpnameData(data);
+                        }}
+                    />
+                )}
 
                 {openCalendar && (
                     <KalenderTransaksi

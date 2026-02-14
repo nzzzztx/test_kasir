@@ -4,23 +4,31 @@ import taxIcon from "../../assets/icons/tax.png";
 import rupiahIcon from "../../assets/icons/rupiah.png";
 
 const EditPajakModal = ({ open, onClose, onSubmit, tax }) => {
-    if (!open || !tax) return null;
-
     const [type, setType] = useState("percent");
 
     useEffect(() => {
-        setType(tax.type || "percent");
+        if (tax) {
+            setType(tax.type || "percent");
+        }
     }, [tax]);
+
+    if (!open || !tax) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const formData = new FormData(e.target);
+        const valueNumber = Number(formData.get("value"));
+
+        if (!formData.get("name")?.trim() || valueNumber <= 0) {
+            alert("Isi data dengan benar");
+            return;
+        }
 
         const data = {
             id: tax.id,
-            name: formData.get("name"),
-            value: Number(formData.get("value")),
+            name: formData.get("name").trim(),
+            value: valueNumber,
             type,
         };
 

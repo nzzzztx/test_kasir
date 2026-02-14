@@ -20,6 +20,7 @@ const PembelianActions = ({
             paidAmount,
             total,
             status: "DRAFT",
+            date: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
@@ -58,13 +59,43 @@ const PembelianActions = ({
             supplier,
             items,
             total,
+            tanggal,
             paidAmount,
             status: paymentStatus === "lunas" ? "SELESAI" : "BELUM_LUNAS",
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            payments: [
+                {
+                    id: Date.now(),
+                    type: paymentStatus === "lunas" ? "PELUNASAN" : "DP",
+                    amount: paidAmount,
+                    date: new Date().toISOString()
+                }
+            ]
         };
 
         const existing =
             JSON.parse(localStorage.getItem(`pembelian_list_owner_${ownerId}`)) || [];
+
+        const products =
+            JSON.parse(localStorage.getItem(`products_${ownerId}`)) || [];
+
+        const updatedProducts = products.map((prod) => {
+            const totalQty = items
+                .filter(i => i.productId === prod.id)
+                .reduce((sum, item) => sum + Number(item.qty), 0);
+
+            if (totalQty === 0) return prod;
+
+            return {
+                ...prod,
+                stock: Number(prod.stock) + totalQty
+            };
+        });
+
+        localStorage.setItem(
+            `products_${ownerId}`,
+            JSON.stringify(updatedProducts)
+        );
 
         localStorage.setItem(
             `pembelian_list_owner_${ownerId}`,
@@ -86,7 +117,9 @@ const PembelianActions = ({
                 // type="number"
                 placeholder="Nominal Dibayar"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(Number(e.target.value))}
+                onChange={(e) =>
+                    setPaidAmount(e.target.value ? Number(e.target.value) : 0)
+                }
             />
 
             <button

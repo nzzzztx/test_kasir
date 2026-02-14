@@ -207,6 +207,19 @@
   gap: 8px;
 }
 
+.toggle-password-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password-btn:hover img {
+  opacity: 1;
+}
+
 .password-input {
   position: relative;
   display: flex;

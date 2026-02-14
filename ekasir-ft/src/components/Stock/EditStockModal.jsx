@@ -44,11 +44,16 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
             basePrice,
         });
 
+        const ownerId = authData?.id;
+        if (!ownerId) return;
+
+        const STORAGE_KEY = `logistics_${ownerId}`;
+
         const newLog = {
             id: Date.now(),
             code: String(stock.code),
             productName: stock.name,
-            date: new Date().toISOString().split("T")[0],
+            date: form.date,
             in: qty,
             out: 0,
             stock: newStock,
@@ -60,11 +65,11 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
         };
 
         const prevLogs = JSON.parse(
-            localStorage.getItem("logistics") || "[]"
+            localStorage.getItem(STORAGE_KEY) || "[]"
         );
 
         localStorage.setItem(
-            "logistics",
+            STORAGE_KEY,
             JSON.stringify([newLog, ...prevLogs])
         );
 

@@ -58,13 +58,18 @@ const Customers = () => {
     } = useNotifications();
 
     const filtered = customers.filter((c) =>
-        c.name.toLowerCase().includes(search.toLowerCase())
+        (c.name || "")
+            .toLowerCase()
+            .includes(search.toLowerCase())
     );
 
     const ITEMS_PER_PAGE = 15;
     const [page, setPage] = useState(1);
 
-    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filtered.length / ITEMS_PER_PAGE)
+    );
 
     const paginatedData = filtered.slice(
         (page - 1) * ITEMS_PER_PAGE,
@@ -95,6 +100,7 @@ const Customers = () => {
 
             const imported = rows.map((row) => ({
                 id: Date.now() + Math.random(),
+                ownerId: authData.id,
                 name: row.name || "",
                 email: row.email || "-",
                 phone: row.phone || "",
@@ -105,7 +111,17 @@ const Customers = () => {
                     Math.floor(100000 + Math.random() * 900000).toString(),
             }));
 
-            const merged = [...imported, ...customers];
+            const merged = [
+                ...imported.filter(
+                    newCust =>
+                        !customers.some(
+                            c => c.phone?.trim() === newCust.phone?.trim()
+                        )
+
+                ),
+                ...customers
+            ];
+
             setCustomers(merged);
             localStorage.setItem(
                 `customers_${authData.id}`,
@@ -301,9 +317,12 @@ const Customers = () => {
                     <div className="customers-footer">
                         <span>Tampilkan: {ITEMS_PER_PAGE}</span>
                         <span>
-                            Ditampilkan {(page - 1) * ITEMS_PER_PAGE + 1} -{" "}
-                            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} dari{" "}
-                            {filtered.length} data
+                            {filtered.length === 0
+                                ? "0 - 0"
+                                : `${(page - 1) * ITEMS_PER_PAGE + 1} - ${Math.min(
+                                    page * ITEMS_PER_PAGE,
+                                    filtered.length
+                                )}`} dari {filtered.length} data
                         </span>
                         <div className="pagination">
                             {Array.from({ length: totalPages }, (_, i) => (
@@ -323,6 +342,17 @@ const Customers = () => {
                 open={openModal}
                 onClose={() => setOpenModal(false)}
                 onSubmit={(data) => {
+                    if (!data.name?.trim()) {
+                        alert("Nama pelanggan wajib diisi");
+                        return;
+                    }
+
+                    if (customers.some(c => c.phone?.trim() === data.phone?.trim()
+                    )) {
+                        alert("Nomor telepon sudah terdaftar");
+                        return;
+                    }
+
                     const newCustomer = {
                         id: Date.now(),
                         ownerId: authData.id,
@@ -351,6 +381,17 @@ const Customers = () => {
                 customer={selectedCustomer}
                 onClose={() => setEditModalOpen(false)}
                 onSubmit={(updated) => {
+                    if (
+                        customers.some(
+                            c =>
+                                c.phone?.trim() === updated.phone?.trim() &&
+                                c.id !== updated.id
+                        )
+                    ) {
+                        alert("Nomor telepon sudah digunakan pelanggan lain");
+                        return;
+                    }
+
                     const newData = customers.map((c) =>
                         c.id === updated.id ? { ...c, ...updated } : c
                     );
@@ -360,6 +401,9 @@ const Customers = () => {
                         `customers_${authData.id}`,
                         JSON.stringify(newData)
                     );
+                    setEditModalOpen(false);
+                    setSelectedCustomer(null);
+
                 }}
             />
 

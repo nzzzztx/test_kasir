@@ -10,15 +10,14 @@ const EditSupplierModal = ({ open, onClose, onSubmit, supplier }) => {
         const formData = new FormData(e.target);
 
         const data = {
-            id: supplier.id, // PENTING
-            name: formData.get("name"),
-            phone: formData.get("phone"),
-            address: formData.get("address"),
-            email: formData.get("email"),
+            id: supplier.id,
+            name: formData.get("name")?.trim(),
+            phone: formData.get("phone")?.trim(),
+            address: formData.get("address")?.trim(),
+            email: formData.get("email")?.trim(),
         };
 
         onSubmit(data);
-        onClose();
     };
 
     return (

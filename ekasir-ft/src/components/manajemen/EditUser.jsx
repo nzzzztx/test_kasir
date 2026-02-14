@@ -12,6 +12,11 @@ export default function EditUser({ user, onClose, onUpdate }) {
             return;
         }
 
+        if (form.password && form.password.length < 8) {
+            alert("Password minimal 8 karakter");
+            return;
+        }
+
         onUpdate(form);
     };
 

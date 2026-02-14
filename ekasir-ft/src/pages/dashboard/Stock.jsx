@@ -18,6 +18,7 @@ import logIcon from "../../assets/icons/log.png";
 import productImg from "../../assets/img/product.png";
 
 const Stock = () => {
+    const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [editOpen, setEditOpen] = useState(false);
@@ -28,7 +29,7 @@ const Stock = () => {
     const [stocks, setStocks] = useState([]);
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const { authData } = useAuth();
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const filtered = stocks.filter((item) =>
         (item.name || "").toLowerCase().includes(search.toLowerCase())
@@ -95,7 +96,7 @@ const Stock = () => {
     };
 
     useEffect(() => {
-        if (!authData?.ownerId) return;
+        if (!authData?.id || !isLoaded) return;
 
         const normalized = stocks.map(item => ({
             id: item.id,
@@ -109,18 +110,17 @@ const Stock = () => {
         }));
 
         localStorage.setItem(
-            `products_owner_${authData.ownerId}`,
+            `products_${authData.id}`,
             JSON.stringify(normalized)
         );
-    }, [stocks, authData]);
+
+    }, [stocks, authData, isLoaded]);
 
     useEffect(() => {
-        if (!authData?.ownerId) return;
+        if (!authData?.id) return;
 
         const savedProducts = JSON.parse(
-            localStorage.getItem(
-                `products_owner_${authData.ownerId}`
-            ) || "[]"
+            localStorage.getItem(`products_${authData.id}`) || "[]"
         );
 
         const formatted = savedProducts.map(prod => ({
@@ -135,6 +135,7 @@ const Stock = () => {
         }));
 
         setStocks(formatted);
+        setIsLoaded(true);
     }, [authData]);
 
     useEffect(() => {
@@ -158,6 +159,10 @@ const Stock = () => {
             </div>
         );
     }
+
+    console.log("authData:", authData);
+    console.log("ownerId:", authData?.ownerId);
+    console.log("id:", authData?.id);
 
     return (
         <div className="dashboard-container">

@@ -32,14 +32,14 @@ const Logistics = () => {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
-        const saved = localStorage.getItem("logistics");
+        if (!authData?.id) return;
 
-        if (saved) {
-            setLogs(JSON.parse(saved));
-        } else {
-            setLogs([]);
-        }
-    }, []);
+        const STORAGE_KEY = `logistics_${authData.id}`;
+
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        setLogs(saved ? JSON.parse(saved) : []);
+    }, [authData]);
 
     const isInRange = (date) => {
         const now = new Date();
@@ -69,8 +69,8 @@ const Logistics = () => {
 
     const filtered = logs.filter((l) => {
         const matchSearch =
-            l.email.toLowerCase().includes(search.toLowerCase()) ||
-            l.mode.toLowerCase().includes(search.toLowerCase());
+            (l.email || "").toLowerCase().includes(search.toLowerCase()) ||
+            (l.mode || "").toLowerCase().includes(search.toLowerCase());
 
         const matchProduct = selectedCode
             ? String(l.code) === String(selectedCode)

@@ -251,23 +251,12 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                         className="btn-confirm"
                         onClick={() => {
 
-                            if (!name.trim()) {
-                                alert("Nama barang wajib diisi");
-                                nameInputRef.current?.focus();
+                            if (!ownerId) {
+                                alert("Owner tidak ditemukan");
                                 return;
                             }
 
-                            if (
-                                priceSell &&
-                                priceBase &&
-                                Number(priceSell) < Number(priceBase)
-                            ) {
-                                alert("Harga jual tidak boleh lebih kecil dari harga dasar");
-                                priceSellRef.current?.focus();
-                                return;
-                            }
-
-                            onSave({
+                            const newProduct = {
                                 id: Date.now(),
                                 code: code || Date.now().toString(),
                                 name,
@@ -284,7 +273,10 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                                 description: note,
                                 image: imagePreview,
                                 showInTransaction,
-                            });
+                                ownerId
+                            };
+
+                            onSave(newProduct);
                         }}
                     >
                         Simpan

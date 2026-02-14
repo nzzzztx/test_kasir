@@ -4,7 +4,6 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 const BarcodeScannerModal = ({ onClose, onDetected }) => {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
-  const streamRef = useRef(null);
   const stoppedRef = useRef(false);
 
   const startScan = async () => {
@@ -12,22 +11,17 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
       stoppedRef.current = false;
       readerRef.current = new BrowserMultiFormatReader();
 
-      streamRef.current = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-
-      videoRef.current.srcObject = streamRef.current;
-      await videoRef.current.play();
-
       const devices =
         await BrowserMultiFormatReader.listVideoInputDevices();
 
-      const deviceId = devices[0]?.deviceId;
-      if (!deviceId) throw new Error("Camera not found");
+      if (!devices.length) throw new Error("No camera found");
+
+      const backCamera = devices.find(d =>
+        d.label.toLowerCase().includes("back") ||
+        d.label.toLowerCase().includes("rear")
+      );
+
+      const deviceId = backCamera?.deviceId || devices[0].deviceId;
 
       readerRef.current.decodeFromVideoDevice(
         deviceId,
@@ -58,27 +52,24 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
 
   const stopScan = () => {
     stoppedRef.current = true;
-
-    try {
-      readerRef.current?.reset();
-    } catch (_) {}
-
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-
+    readerRef.current?.reset();
     readerRef.current = null;
-    streamRef.current = null;
   };
 
-  // 🔒 cleanup kalau modal ditutup paksa
   useEffect(() => {
     return () => stopScan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="scanner-overlay">
       <div className="scanner-card">
-        <video ref={videoRef} playsInline muted />
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          autoPlay
+          style={{ width: "100%" }}
+        />
 
         <div className="scanner-laser" />
         <div className="scanner-hint">
@@ -111,5 +102,5 @@ const playBeep = () => {
   const audio = new Audio(
     "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="
   );
-  audio.play().catch(() => {});
+  audio.play().catch(() => { });
 };

@@ -10,14 +10,13 @@ const AddSupplierModal = ({ open, onClose, onSubmit }) => {
         const formData = new FormData(e.target);
 
         const data = {
-            name: formData.get("name"),
-            phone: formData.get("phone"),
-            address: formData.get("address"),
-            email: formData.get("email"),
+            name: formData.get("name")?.trim(),
+            phone: formData.get("phone")?.trim(),
+            address: formData.get("address")?.trim(),
+            email: formData.get("email")?.trim(),
         };
 
         onSubmit(data);
-        onClose();
     };
 
     return (

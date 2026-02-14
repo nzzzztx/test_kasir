@@ -8,7 +8,8 @@ const DeleteCategoryModal = ({ category, onCancel, onConfirm }) => {
         <div className="modal-overlay">
             <div className="modal-delete-category">
                 <p className="modal-delete-title">
-                    Apakah anda yakin ingin menghapus kategori ini?
+                    Apakah anda yakin ingin menghapus kategori ini
+                    <strong> {category.name}</strong> ?
                 </p>
 
                 <div className="modal-delete-actions">

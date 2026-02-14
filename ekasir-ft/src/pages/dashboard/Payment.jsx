@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { isStockEnough, reduceStock } from "../../utils/stock";
 import { getInfoToko } from "../../utils/toko";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
+import { getCurrentOwnerId } from "../../utils/owner";
+
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
 import Sidebar from "../../components/Sidebar";
@@ -11,6 +14,9 @@ import PaymentValidasi from "../../components/Payment/PaymentValidasi";
 import ReceiptPreview from "../../components/Payment/ReceiptPreview";
 
 const Payment = () => {
+    const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
+
     const [transaction, setTransaction] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -25,11 +31,11 @@ const Payment = () => {
     const store = getInfoToko();
     const { pushNotification } = useNotifications();
 
-    const authRaw = localStorage.getItem("auth");
-    const ownerId = authRaw ? JSON.parse(authRaw)?.ownerId : null;
-
     useEffect(() => {
-        if (!ownerId) return;
+        if (!ownerId) {
+            setLoading(false);
+            return;
+        }
 
         const saved = localStorage.getItem(
             `current_transaction_owner_${ownerId}`
@@ -53,7 +59,7 @@ const Payment = () => {
     const handleKeyPress = (key) => {
         if (!transaction) return;
 
-        const finalTotal = transaction.finalTotal;
+        const finalTotal = Number(transaction.finalTotal || 0);
 
         if (key === "C") return setPaidAmount("");
         if (key === "⌫") return setPaidAmount(prev => prev.slice(0, -1));
@@ -61,7 +67,7 @@ const Payment = () => {
         if (key === "✓") {
 
             const activeShift = JSON.parse(
-                localStorage.getItem(`active_shift_owner_${ownerId}`)
+                localStorage.getItem(`active_shift_${ownerId}`)
             );
 
             if (!activeShift) {
@@ -69,7 +75,7 @@ const Payment = () => {
                 return;
             }
 
-            if (method !== "TUNAI" && !subMethod) {
+            if (method === "EDC" && !subMethod) {
                 alert("Pilih metode detail terlebih dahulu");
                 return;
             }
@@ -84,10 +90,10 @@ const Payment = () => {
                 return;
             }
 
-            const change = method === "EDC" ? 0 : paid - finalTotal;
+            const change = paid - finalTotal;
 
             const products = JSON.parse(
-                localStorage.getItem(`products_owner_${ownerId}`) || "[]"
+                localStorage.getItem(`products_${ownerId}`) || "[]"
             );
 
             const cartItems = transaction.items.map(item => ({
@@ -103,7 +109,7 @@ const Payment = () => {
             const updatedProducts = reduceStock(products, cartItems);
 
             localStorage.setItem(
-                `products_owner_${ownerId}`,
+                `products_${ownerId}`,
                 JSON.stringify(updatedProducts)
             );
 
@@ -159,6 +165,11 @@ const Payment = () => {
             setReceiptData(updatedTransaction);
             setKembalian(change);
             setShowValidasi(true);
+
+            setPaidAmount("");
+            setMethod("TUNAI");
+            setSubMethod(null);
+
             return;
         }
 

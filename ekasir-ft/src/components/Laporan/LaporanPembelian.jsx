@@ -61,7 +61,8 @@ const LaporanPembelian = () => {
         });
 
         setPembelian(parsed);
-    }, []);
+
+    }, [ownerId]);
 
     useEffect(() => {
         if (!pelunasanPDF) return;
@@ -341,7 +342,7 @@ const LaporanPembelian = () => {
                                             const updatedItem = {
                                                 ...item,
                                                 paidAmount: newPaid,
-                                                status: isLunas ? "SELESAI" : "BELUM_LUNAS",
+                                                status: isLunas ? "paid" : "unpaid",
                                                 payments: [
                                                     ...(item.payments || []),
                                                     {

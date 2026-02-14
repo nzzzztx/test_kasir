@@ -83,21 +83,18 @@ const LaporanTransaksi = () => {
         }
 
         const history = JSON.parse(
-            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
+            localStorage.getItem(`transactions_owner_${ownerId}`) || "[]"
         );
 
-        const parsed = history.map((t, i) => ({
-            nomor: `TRX/${new Date(t.createdAt)
-                .toISOString()
-                .slice(0, 10)
-                .replace(/-/g, "")}/${i + 1}`,
+        const parsed = history.map((t) => ({
+            nomor: t.invoiceNumber || "-",
             waktu_order: t.createdAt ? new Date(t.createdAt) : null,
             waktu_bayar: t.paidAt ? new Date(t.paidAt) : null,
             outlet: namaToko,
-            jenis_order: t.jenis_order || "Lainnya",
+            jenis_order: "Lainnya",
             penjualan: Number(t.finalTotal || 0),
-            metode: t.metode || "-",
-            status: t.paidAmount >= t.finalTotal ? "paid" : "unpaid",
+            metode: t.paymentMethod || "-",
+            status: t.status || "unpaid",
         }));
 
         setTransactions(parsed);
@@ -171,7 +168,9 @@ const LaporanTransaksi = () => {
 
         if (range) {
             const targetDate =
-                waktuType === "order" ? t.waktu_order : t.waktu_bayar;
+                waktuType === "order"
+                    ? t.waktu_order
+                    : t.waktu_bayar;
 
             if (!targetDate) return false;
 

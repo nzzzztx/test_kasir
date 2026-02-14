@@ -63,7 +63,7 @@ const LaporanPelanggan = () => {
         }
 
         const transactions = JSON.parse(
-            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
+            localStorage.getItem(`transactions_owner_${ownerId}`) || "[]"
         );
 
         const grouped = {};
@@ -73,72 +73,73 @@ const LaporanPelanggan = () => {
             dateRange.end
         );
 
-        transactions.forEach((trx) => {
-            const customerName =
-                trx.customerName ||
-                trx.customer?.name ||
-                "Umum";
+        transactions
+            .filter((trx) => trx.status === "paid")
+            .forEach((trx) => {
 
-            const customerPhone =
-                trx.customerPhone ||
-                trx.customer?.phone ||
-                "";
+                const customerName =
+                    trx.customerName ||
+                    trx.customer?.name ||
+                    "Umum";
 
-            const customerAddress =
-                trx.customerAddress ||
-                trx.customer?.address ||
-                "-";
+                const customerPhone =
+                    trx.customerPhone ||
+                    trx.customer?.phone ||
+                    "";
 
-            const customerKey =
-                trx.customer?.id ||
-                `fallback:${customerName}-${customerPhone}`;
+                const customerAddress =
+                    trx.customerAddress ||
+                    trx.customer?.address ||
+                    "-";
 
-            const trxDateRaw =
-                trx.createdAt ||
-                trx.paidAt ||
-                trx.created_at ||
-                trx.time;
+                const customerKey =
+                    trx.customer?.id ||
+                    `fallback:${customerName}-${customerPhone}`;
 
-            if (!trxDateRaw) return;
+                const trxDateRaw =
+                    trx.paidAt || trx.createdAt;
 
-            const trxDate = new Date(trxDateRaw);
+                if (!trxDateRaw) return;
 
-            if (normalizedRange) {
-                if (trxDate < normalizedRange.start) return;
-                if (trxDate > normalizedRange.end) return;
-            }
+                const trxDate = new Date(trxDateRaw);
 
-            if (!grouped[customerKey]) {
-                grouped[customerKey] = {
-                    nama: customerName,
-                    alamat: customerAddress,
-                    phone: customerPhone || "-",
-                    totalTransaksi: 0,
-                    totalPenjualan: 0,
-                    lastVisit: trxDateRaw,
-                    _trxIds: new Set(),
-                };
-            }
+                if (normalizedRange) {
+                    if (trxDate < normalizedRange.start) return;
+                    if (trxDate > normalizedRange.end) return;
+                }
 
-            const trxId = trx.id || `${trxDateRaw}-${customerKey}`;
+                if (!grouped[customerKey]) {
+                    grouped[customerKey] = {
+                        nama: customerName,
+                        alamat: customerAddress,
+                        phone: customerPhone || "-",
+                        totalTransaksi: 0,
+                        totalPenjualan: 0,
+                        lastVisit: trxDateRaw,
+                        _trxIds: new Set(),
+                    };
+                }
 
-            if (!grouped[customerKey]._trxIds.has(trxId)) {
-                grouped[customerKey]._trxIds.add(trxId);
+                const trxId = trx.id || `${trxDateRaw}-${customerKey}`;
 
-                grouped[customerKey].totalTransaksi += 1;
-                grouped[customerKey].totalPenjualan += Number(
-                    trx.finalTotal ?? trx.total ?? 0
-                );
-            }
+                if (!grouped[customerKey]._trxIds.has(trxId)) {
+                    grouped[customerKey]._trxIds.add(trxId);
 
-            if (trxDate > new Date(grouped[customerKey].lastVisit)) {
-                grouped[customerKey].lastVisit = trxDateRaw;
-            }
-        });
+                    grouped[customerKey].totalTransaksi += 1;
+                    grouped[customerKey].totalPenjualan += Number(
+                        trx.finalTotal ?? trx.total ?? 0
+                    );
+                }
+
+                if (trxDate > new Date(grouped[customerKey].lastVisit)) {
+                    grouped[customerKey].lastVisit = trxDateRaw;
+                }
+            });
 
         const result = Object.values(grouped).map(
             ({ _trxIds, ...rest }) => rest
         );
+        result.sort((a, b) => b.totalPenjualan - a.totalPenjualan);
 
         setCustomers(result);
     }, [dateRange, ownerId]);
@@ -156,6 +157,12 @@ const LaporanPelanggan = () => {
         Math.ceil(filtered.length / PAGE_SIZE),
         [filtered]);
 
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(1);
+        }
+    }, [totalPages]);
+
     const paginated = useMemo(() =>
         filtered.slice(
             (page - 1) * PAGE_SIZE,
@@ -171,7 +178,7 @@ const LaporanPelanggan = () => {
             Telepon: c.phone,
             TotalTransaksi: c.totalTransaksi,
             TotalPenjualan: c.totalPenjualan,
-            KunjunganTerakhir: c.lastVisit,
+            KunjunganTerakhir: new Date(c.lastVisit).toLocaleString("id-ID"),
         }));
 
         const ws = XLSX.utils.json_to_sheet(excel);

@@ -82,6 +82,7 @@ const Suppliers = () => {
 
             const imported = rows.map((row) => ({
                 id: Date.now() + Math.random(),
+                ownerId: authData.id,
                 name: row.name || "",
                 address: row.address || "",
                 email: row.email || "-",
@@ -91,7 +92,17 @@ const Suppliers = () => {
                     Math.floor(100000 + Math.random() * 900000).toString(),
             }));
 
-            const merged = [...imported, ...suppliers];
+            const merged = [
+                ...imported.filter(
+                    newSup =>
+                        !suppliers.some(
+                            s => s.phone?.trim() === updated.phone?.trim() &&
+                                s.id !== updated.id
+                        )
+                ),
+                ...suppliers
+            ];
+
             setSuppliers(merged);
             localStorage.setItem(
                 `suppliers_${authData.id}`,
@@ -312,9 +323,12 @@ const Suppliers = () => {
                     <div className="suppliers-footer">
                         <span>Tampilkan: {ITEMS_PER_PAGE}</span>
                         <span>
-                            Ditampilkan {(page - 1) * ITEMS_PER_PAGE + 1} -{" "}
-                            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} dari{" "}
-                            {filtered.length} data
+                            {filtered.length === 0
+                                ? "0 - 0"
+                                : `${(page - 1) * ITEMS_PER_PAGE + 1} - ${Math.min(
+                                    page * ITEMS_PER_PAGE,
+                                    filtered.length
+                                )}`} dari {filtered.length} data
                         </span>
 
                         <div className="pagination">
@@ -336,6 +350,18 @@ const Suppliers = () => {
                 open={openModal}
                 onClose={() => setOpenModal(false)}
                 onSubmit={(data) => {
+                    if (!data.name?.trim()) {
+                        alert("Nama supplier wajib diisi");
+                        return;
+                    }
+
+                    if (suppliers.some(
+                        s => s.phone?.trim() === data.phone?.trim()
+                    )) {
+                        alert("Nomor telepon sudah terdaftar");
+                        return;
+                    }
+
                     const newSupplier = {
                         id: Date.now(),
                         ownerId: authData.id,
@@ -358,6 +384,17 @@ const Suppliers = () => {
                 supplier={selectedSupplier}
                 onClose={() => setEditModalOpen(false)}
                 onSubmit={(updated) => {
+                    if (
+                        suppliers.some(
+                            s =>
+                                s.phone?.trim() === updated.phone?.trim() &&
+                                s.id !== updated.id
+                        )
+                    ) {
+                        alert("Nomor telepon sudah digunakan supplier lain");
+                        return;
+                    }
+
                     const newData = suppliers.map((s) =>
                         s.id === updated.id ? { ...s, ...updated } : s
                     );
@@ -366,6 +403,9 @@ const Suppliers = () => {
                         `suppliers_${authData.id}`,
                         JSON.stringify(newData)
                     );
+                    setEditModalOpen(false);
+                    setSelectedSupplier(null);
+
                 }}
             />
 

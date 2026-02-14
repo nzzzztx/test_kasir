@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useNavigate } from "react-router-dom";
+import { getCurrentOwnerId } from "../../utils/owner";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/transaction.css";
@@ -20,6 +21,7 @@ import cameraIcon from "../../assets/icons/camera.png";
 
 const Transaction = () => {
     const { authData } = useAuth();
+    const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
@@ -31,13 +33,14 @@ const Transaction = () => {
     const [user, setUser] = useState(null);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [discounts, setDiscounts] = useState([]);
+    const [taxes, setTaxes] = useState([]);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
-        if (!authData?.ownerId) return;
+        if (!ownerId) return;
 
-        const saved = localStorage.getItem(
-            `products_owner_${authData.ownerId}`
-        );
+        const saved = localStorage.getItem(`products_${ownerId}`);
 
         if (saved) {
             const parsed = JSON.parse(saved);
@@ -51,6 +54,16 @@ const Transaction = () => {
 
             setProducts(formatted);
         }
+    }, [ownerId]);
+
+    useEffect(() => {
+        if (!authData?.id) return;
+
+        const savedDiscounts = localStorage.getItem(`discounts_${ownerId}`);
+        const savedTaxes = localStorage.getItem(`taxes_${ownerId}`);
+
+        setDiscounts(savedDiscounts ? JSON.parse(savedDiscounts) : []);
+        setTaxes(savedTaxes ? JSON.parse(savedTaxes) : []);
     }, [authData]);
 
     const {
@@ -121,6 +134,7 @@ const Transaction = () => {
             setUser(currentUser);
         }
     }, [authData]);
+
 
     if (!user) {
         return (
@@ -347,8 +361,10 @@ const Transaction = () => {
                         setCart={setCart}
                         products={products}
                         setProducts={setProducts}
-                        ownerId={authData.ownerId}
+                        ownerId={ownerId}
                         cashierName={user?.name}
+                        discounts={discounts}
+                        taxes={taxes}
                     />
                 </div>
 

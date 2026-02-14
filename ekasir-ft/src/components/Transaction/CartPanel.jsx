@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import trashIcon from "../../assets/icons/trash.png";
 import editIcon from "../../assets/icons/edit.png";
 
@@ -12,9 +13,12 @@ const CartPanel = ({
     products,
     setProducts,
     ownerId,
-    cashierName
+    cashierName,
+    discounts,
+    taxes
 }) => {
 
+    const navigate = useNavigate();
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
     const [tax, setTax] = useState(null);
@@ -60,12 +64,7 @@ const CartPanel = ({
     };
 
     const handleOpenDiscount = () => {
-        const discounts = JSON.parse(
-            localStorage.getItem(`discounts_owner_${ownerId}`)
-            || "[]"
-        );
-
-        if (!discounts.length) {
+        if (!discounts?.length) {
             alert("Tidak ada diskon tersedia");
             return;
         }
@@ -77,7 +76,7 @@ const CartPanel = ({
         if (!cart.length) return;
 
         const activeShift = JSON.parse(
-            localStorage.getItem(`active_shift_owner_${ownerId}`)
+            localStorage.getItem(`active_shift_${ownerId}`)
         );
 
         if (!activeShift) {
@@ -102,7 +101,6 @@ const CartPanel = ({
             cashier:
                 cashierName ||
                 activeShift.cashier ||
-                activeShift.user ||
                 "Kasir",
             shiftStartedAt: activeShift.startedAt,
             status: "pending",
@@ -114,7 +112,12 @@ const CartPanel = ({
             JSON.stringify(payload)
         );
 
-        window.location.href = "/dashboard/transaction/payment";
+        if (!ownerId) {
+            alert("Owner tidak ditemukan");
+            return;
+        }
+
+        navigate("/dashboard/transaction/payment");
     };
 
     return (
@@ -169,11 +172,7 @@ const CartPanel = ({
                 <div
                     className="cart-tax"
                     onClick={() => {
-                        const taxes = JSON.parse(
-                            localStorage.getItem(`taxes_owner_${ownerId}`) || "[]"
-                        );
-
-                        if (!taxes.length) {
+                        if (!taxes?.length) {
                             alert("Tidak ada pajak tersedia");
                             return;
                         }
@@ -248,7 +247,7 @@ const CartPanel = ({
             {showDiscount && (
                 <DiscountModal
                     title="Pilih Diskon"
-                    storageKey={`discounts_owner_${ownerId}`}
+                    storageKey={`discounts_${ownerId}`}
                     onClose={() => setShowDiscount(false)}
                     onSelect={(d) => {
                         setDiscount(d);
@@ -261,7 +260,7 @@ const CartPanel = ({
             {showTax && (
                 <TaxModal
                     title="Pilih Pajak"
-                    storageKey={`taxes_owner_${ownerId}`}
+                    storageKey={`taxes_${ownerId}`}
                     onClose={() => setShowTax(false)}
                     onSelect={(t) => {
                         setTax(t);

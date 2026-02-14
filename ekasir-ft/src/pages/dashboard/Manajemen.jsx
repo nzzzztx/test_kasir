@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "../../assets/css/manajemen.css";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
+// import { getCurrentOwnerId } from "../../utils/owner";
 
 import Sidebar from "../../components/Sidebar";
 import AddUser from "../../components/manajemen/AddUser";
@@ -12,9 +13,19 @@ import notificationIcon from "../../assets/icons/notification.png";
 import userDummy from "../../assets/img/profile.png";
 import searchIcon from "../../assets/icons/search.png";
 import hideIcon from "../../assets/icons/view.png";
+import hiddenIcon from "../../assets/icons/hidden.png";
 
 export default function Manajemen() {
     const { authData } = useAuth();
+
+    const ownerId =
+        authData?.role === "owner"
+            ? authData.id
+            : authData?.ownerId;
+
+    const STORAGE_KEY =
+        ownerId ? `users_owner_${ownerId}` : null;
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [users, setUsers] = useState([]);
@@ -40,13 +51,8 @@ export default function Manajemen() {
     };
 
     useEffect(() => {
-        if (!authData) return;
-
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const currentUser = users.find(u => u.id === authData.id);
-
-        if (currentUser) {
-            setUser(currentUser);
+        if (authData) {
+            setUser(authData);
         }
     }, [authData]);
 
@@ -55,10 +61,12 @@ export default function Manajemen() {
     }, [search]);
 
     useEffect(() => {
-        const allUsers = JSON.parse(localStorage.getItem("users")) || [];
+        if (!STORAGE_KEY) return;
+
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         const filtered = allUsers.filter(u => u.role !== "owner");
         setUsers(filtered);
-    }, []);
+    }, [STORAGE_KEY]);
 
     const filteredUsers = users.filter(u =>
         u.username.toLowerCase().includes(search.toLowerCase())
@@ -70,37 +78,42 @@ export default function Manajemen() {
     const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
     const handleDelete = (id) => {
+        if (!STORAGE_KEY) return;
+
         const confirmDelete = window.confirm("Yakin ingin menghapus user ini?");
         if (!confirmDelete) return;
 
-        const allUsers = JSON.parse(localStorage.getItem("users")) || [];
-        const updatedAll = allUsers.filter(u => u.id !== id);
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-        localStorage.setItem("users", JSON.stringify(updatedAll));
+        const updated = allUsers.filter(u => u.id !== id);
 
-        const filtered = updatedAll.filter(u => u.role !== "owner");
-        setUsers(filtered);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setUsers(updated.filter(u => u.role !== "owner"));
     };
 
     const handleAddUser = (newUser) => {
-        const allUsers = JSON.parse(localStorage.getItem("users")) || [];
+        if (!STORAGE_KEY) return;
 
-        allUsers.push(newUser);
-        localStorage.setItem("users", JSON.stringify(allUsers));
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-        setUsers((prev) => [...prev, newUser]);
+        const updated = [...allUsers, newUser];
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setUsers(updated.filter(u => u.role !== "owner"));
         setShowModal(false);
     };
 
     const handleUpdateUser = (updatedUser) => {
-        const allUsers = JSON.parse(localStorage.getItem("users")) || [];
+        if (!STORAGE_KEY) return;
 
-        const updated = allUsers.map((u) =>
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const updated = allUsers.map(u =>
             u.id === updatedUser.id ? updatedUser : u
         );
 
-        localStorage.setItem("users", JSON.stringify(updated));
-        setUsers(updated.filter((u) => u.role !== "owner"));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setUsers(updated.filter(u => u.role !== "owner"));
         setEditingUser(null);
     };
 
@@ -266,9 +279,26 @@ export default function Manajemen() {
                                             <td>{u.phone || "-"}</td>
                                             <td>{u.username}</td>
                                             <td>
-                                                {authData.role === "owner"
-                                                    ? user.password
-                                                    : "••••••••"}
+                                                <div className="password-cell">
+                                                    <span>
+                                                        {visiblePasswords[u.id]
+                                                            ? "••••••••"
+                                                            : u.password
+                                                        }
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        className="toggle-password-btn"
+                                                        onClick={() => togglePassword(u.id)}
+                                                    >
+                                                        <img
+                                                            src={visiblePasswords[u.id] ? hideIcon : hiddenIcon}
+                                                            alt="toggle"
+                                                            style={{ width: "16px", opacity: 0.6 }}
+                                                        />
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td>
                                                 <span className={`role-badge ${u.role}`}>

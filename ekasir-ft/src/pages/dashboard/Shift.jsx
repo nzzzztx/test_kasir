@@ -61,15 +61,21 @@ const Shift = () => {
 
     const [saldoAwal, setSaldoAwal] = useState("");
     const [drawer, setDrawer] = useState("Cash Drawer 1");
+    const [activeShift, setActiveShift] = useState(null);
 
     const [selectedShift, setSelectedShift] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
 
-    const [activeShift, setActiveShift] = useState(() =>
-        ownerId
-            ? JSON.parse(localStorage.getItem(`active_shift_${ownerId}`))
-            : null
-    );
+    useEffect(() => {
+        if (!ownerId) return;
+
+        const active = JSON.parse(
+            localStorage.getItem(`active_shift_${ownerId}`)
+        );
+
+        setActiveShift(active);
+    }, [ownerId]);
+
 
     const [history, setHistory] = useState(() =>
         ownerId
@@ -97,10 +103,12 @@ const Shift = () => {
     useEffect(() => {
         if (!ownerId) return;
 
-        setHistory(
-            JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || []
-        );
-    }, [showAkhiri, ownerId]);
+        const data = JSON.parse(
+            localStorage.getItem(`shift_history_${ownerId}`)
+        ) || [];
+
+        setHistory(data);
+    }, [ownerId]);
 
     useEffect(() => {
         if (!authData?.isLoggedIn) {
@@ -136,7 +144,7 @@ const Shift = () => {
 
     const allTransactions =
         JSON.parse(
-            localStorage.getItem(`transaction_history_${ownerId}`) || "[]"
+            localStorage.getItem(`transactions_owner_${ownerId}`)
         );
 
     const transactions = activeShift

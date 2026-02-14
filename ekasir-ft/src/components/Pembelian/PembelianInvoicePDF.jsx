@@ -80,7 +80,9 @@ const PembelianInvoicePDF = ({ data }) => {
                     <strong>INVOICE PEMBELIAN</strong>
                     <div>No: {data.invoiceNumber}</div>
                     <div>
-                        {new Date(data.createdAt).toLocaleDateString("id-ID")}
+                        {data.createdAt
+                            ? new Date(data.createdAt).toLocaleDateString("id-ID")
+                            : "-"}
                     </div>
                 </div>
             </div>
@@ -100,7 +102,7 @@ const PembelianInvoicePDF = ({ data }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.items.map((item, i) => (
+                    {(data.items || []).map((item, i) => (
                         <tr key={i}>
                             <td style={{ border: "1px solid #000" }}>{item.name}</td>
                             <td style={{ border: "1px solid #000" }}>{item.qty}</td>
