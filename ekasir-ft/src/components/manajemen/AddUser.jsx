@@ -15,10 +15,6 @@ export default function AddUser({ onClose, onSave }) {
 
     const [showPassword, setShowPassword] = useState(false);
 
-    const generateReferral = () => {
-        return "USR-" + Math.floor(10000 + Math.random() * 90000);
-    };
-
     const handleSubmit = () => {
         if (!form.username || !form.password) {
             alert("Username dan password wajib diisi");
@@ -37,6 +33,33 @@ export default function AddUser({ onClose, onSave }) {
             return;
         }
 
+        const STORAGE_KEY = `users_owner_${ownerId}`;
+        const existingUsers =
+            JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const usernameExists = existingUsers.some(
+            u => u.username.toLowerCase() === form.username.toLowerCase()
+        );
+
+        if (usernameExists) {
+            alert("Username sudah digunakan");
+            return;
+        }
+
+        if (!form.role) {
+            alert("Role wajib dipilih");
+            return;
+        }
+
+        const counterKey = `user_counter_${ownerId}`;
+        const lastNumber =
+            Number(localStorage.getItem(counterKey) || 0) + 1;
+
+        localStorage.setItem(counterKey, lastNumber);
+
+        const referralCode =
+            `USR-${ownerId}-${String(lastNumber).padStart(4, "0")}`;
+
         const newUser = {
             id: Date.now(),
             ownerId: ownerId,
@@ -45,7 +68,7 @@ export default function AddUser({ onClose, onSave }) {
             username: form.username,
             password: form.password,
             role: form.role,
-            referralCode: `USR-${ownerId}-${Date.now()}`,
+            referralCode: referralCode,
             otpVerified: true,
             createdAt: new Date().toISOString(),
         };

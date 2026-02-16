@@ -5,10 +5,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function ResetPwSucces() {
     const navigate = useNavigate();
-    const handleContinue = () => {
-        localStorage.removeItem("reset_email");
-        navigate("/login");
-    };
 
     return (
         <div className="auth-wrapper">
@@ -20,19 +16,24 @@ export default function ResetPwSucces() {
                 <img src={logo} alt="logo" className="auth-logo" />
 
                 <div className="auth-card">
-                    <h2>Reset kata sandi</h2>
+                    <h2>Reset kata sandi berhasil 🎉</h2>
                     <p>
-                        Kata sandi anda telah berhasil direset.
+                        Kata sandi Anda telah berhasil diperbarui.
                         <br />
-                        Klik di bawah untuk melihat.
+                        Silakan masuk kembali menggunakan password baru.
                     </p>
 
-                    <button className="auth-btn" onClick={handleContinue}>
-                        Lanjutkan
+                    <button
+                        className="auth-btn"
+                        onClick={() => navigate("/login")}
+                    >
+                        Lanjut ke Login
                     </button>
 
                     <div className="auth-link">
-                        <span onClick={() => navigate("/login")}>← Kembali ke login</span>
+                        <span onClick={() => navigate("/login")}>
+                            ← Kembali ke login
+                        </span>
                     </div>
                 </div>
             </div>

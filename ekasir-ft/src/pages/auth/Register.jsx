@@ -8,13 +8,35 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function Register() {
     const navigate = useNavigate();
-    const [showOtp, setShowOtp] = useState(false);
     const { register } = useAuth();
+
+    const [showOtp, setShowOtp] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [form, setForm] = useState({
         email: "",
         phone: "",
     });
+
+    const handleRegister = async () => {
+        if (!form.email || !form.phone) {
+            alert("Email dan nomor telepon wajib diisi");
+            return;
+        }
+
+        setLoading(true);
+
+        const result = await register(form);
+
+        setLoading(false);
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        setShowOtp(true);
+    };
 
     return (
         <div className="auth-wrapper">
@@ -26,7 +48,7 @@ export default function Register() {
                 <img src={logo} alt="logo" className="auth-logo" />
                 <div className="auth-card">
                     <h2>Buat Akun Anda</h2>
-                    <p>Selamat datang! Silakan masukkan informasi Anda</p>
+                    <p>Masukkan email dan nomor telepon untuk verifikasi</p>
 
                     <div className="auth-group">
                         <label>Email</label>
@@ -42,72 +64,39 @@ export default function Register() {
 
                     <div className="auth-group">
                         <label>Nomor Telepon</label>
-
-                        <div className="auth-otp-row">
-                            <input
-                                type="text"
-                                placeholder="Nomor Telepon"
-                                value={form.phone}
-                                onChange={(e) =>
-                                    setForm({ ...form, phone: e.target.value })
-                                }
-                            />
-                            <button
-                                className="auth-otp-btn"
-                                onClick={() => {
-                                    if (!form.email || !form.phone) {
-                                        alert("Email dan nomor telepon wajib diisi");
-                                        return;
-                                    }
-
-                                    const result = register({
-                                        email: form.email,
-                                        phone: form.phone,
-                                        name: "Owner",
-                                    });
-
-                                    if (!result.success) {
-                                        alert(result.message);
-                                        return;
-                                    }
-
-                                    setShowOtp(true);
-                                }}
-                            >
-                                Kirim OTP
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <div className="auth-checkbox">
-                        <input type="checkbox" id="agree" />
-                        <label htmlFor="agree">
-                            Dengan mendaftar, saya menyetujui{" "}
-                            <span>Ketentuan Layanan</span> &{" "}
-                            <span>Kebijakan Privasi</span>
-                        </label>
+                        <input
+                            type="text"
+                            placeholder="Nomor telepon"
+                            value={form.phone}
+                            onChange={(e) =>
+                                setForm({ ...form, phone: e.target.value })
+                            }
+                        />
                     </div>
 
                     <button
                         className="auth-btn"
-                        onClick={() => {
-                            alert("Silakan verifikasi OTP terlebih dahulu");
-                        }}
+                        onClick={handleRegister}
+                        disabled={loading}
                     >
-                        Daftar
+                        {loading ? "Memproses..." : "Kirim OTP"}
                     </button>
 
                     <div className="auth-link">
-                        Sudah punya akun? <span onClick={() => navigate("/login")}>Masuk</span>
+                        Sudah punya akun?{" "}
+                        <span onClick={() => navigate("/login")}>
+                            Masuk
+                        </span>
                     </div>
 
-                    {showOtp && <OtpModal onClose={() => setShowOtp(false)} />}
+                    {showOtp && (
+                        <OtpModal
+                            email={form.email}
+                            onClose={() => setShowOtp(false)}
+                        />
+                    )}
                 </div>
             </div>
         </div>
     );
 }
-
-
-

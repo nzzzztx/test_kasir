@@ -27,9 +27,31 @@ const Dashboard = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const { changePassword, authData } = useAuth();
     const navigate = useNavigate();
-    const { namaToko, lokasi } = getInfoToko();
     const role = authData?.role;
-    const [user, setUser] = useState(null);
+    const user = {
+        name: authData?.nama,
+        email: authData?.email,
+        role: authData?.role,
+    };
+
+    const [namaToko, setNamaToko] = useState("");
+    const [lokasi, setLokasi] = useState("");
+
+    useEffect(() => {
+        const loadToko = () => {
+            const data = getInfoToko();
+            setNamaToko(data.namaToko);
+            setLokasi(data.lokasi);
+        };
+
+        loadToko();
+
+        window.addEventListener("storage", loadToko);
+
+        return () => {
+            window.removeEventListener("storage", loadToko);
+        };
+    }, []);
 
     const menuData = [
         {
@@ -93,17 +115,6 @@ const Dashboard = () => {
         unreadCount,
         markAllAsRead,
     } = useNotifications();
-
-    useEffect(() => {
-        if (!authData) return;
-
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const currentUser = users.find(u => u.id === authData.id);
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
 
     const filteredMenu = menuData.filter(item => {
         if (role === "owner") return true;

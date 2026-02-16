@@ -42,6 +42,8 @@ const InformasiToko = () => {
 
         setToko(draft);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+
+        window.dispatchEvent(new Event("storage"));
         setIsEdit(false);
     };
 

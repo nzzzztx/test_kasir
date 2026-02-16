@@ -7,13 +7,29 @@ export default function EditUser({ user, onClose, onUpdate }) {
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = () => {
-        if (!form.username) {
+        if (!form.username.trim()) {
             alert("Username wajib diisi");
             return;
         }
 
         if (form.password && form.password.length < 8) {
             alert("Password minimal 8 karakter");
+            return;
+        }
+
+        const ownerId = user.ownerId;
+        const STORAGE_KEY = `users_owner_${ownerId}`;
+        const existingUsers =
+            JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const usernameExists = existingUsers.some(
+            u =>
+                u.username.toLowerCase() === form.username.toLowerCase() &&
+                u.id !== user.id
+        );
+
+        if (usernameExists) {
+            alert("Username sudah digunakan user lain");
             return;
         }
 

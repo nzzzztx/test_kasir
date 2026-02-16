@@ -1,115 +1,129 @@
 import { useState, useEffect } from "react";
-import AddPembelianItemModal from "./AddPembelianItemModal";
-import { getCurrentOwnerId } from "../../utils/owner";
 
-const PembelianItems = ({ items, setItems }) => {
-    const [openModal, setOpenModal] = useState(false);
-    const [products, setProducts] = useState([]);
-
-    const ownerId = getCurrentOwnerId();
+const AddPembelianItemModal = ({
+    open,
+    onClose,
+    onSubmit,
+    products = []
+}) => {
+    const [selectedId, setSelectedId] = useState("");
+    const [qty, setQty] = useState(1);
+    const [price, setPrice] = useState("");
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!open) {
+            setSelectedId("");
+            setQty(0);
+            setPrice("");
+        }
+    }, [open]);
 
-        const saved =
-            JSON.parse(localStorage.getItem(`products_${ownerId}`)) || [];
+    if (!open) return null;
 
-        setProducts(saved);
-    }, [ownerId]);
+    const selectedProduct = products.find(
+        (p) => String(p.id) === String(selectedId)
+    );
 
-    const handleAddItem = (newItem) => {
-        setItems((prev) => {
-            const existing = prev.find(
-                (p) => p.productId === newItem.productId
-            );
+    const handleSubmit = () => {
+        if (!selectedProduct) {
+            alert("Pilih produk terlebih dahulu");
+            return;
+        }
 
-            if (existing) {
-                return prev.map((p) =>
-                    p.productId === newItem.productId
-                        ? { ...p, qty: p.qty + newItem.qty }
-                        : p
-                );
-            }
+        if (!qty || qty <= 0) {
+            alert("Qty tidak valid");
+            return;
+        }
 
-            return [...prev, newItem];
-        });
+        if (!price || price <= 0) {
+            alert("Harga tidak valid");
+            return;
+        }
+
+        const newItem = {
+            productId: selectedProduct.id,
+            name: selectedProduct.name,
+            unit: selectedProduct.unit || "Pcs",
+            qty: Number(qty),
+            price: Number(price),
+        };
+
+        onSubmit(newItem);
+        onClose();
     };
 
     return (
-        <div className="pembelian-card">
-            <h4 className="card-title">Detail Barang</h4>
+        <div className="modal-overlay">
+            <div className="modal-card">
+                <h3>Tambah Barang Pembelian</h3>
 
-            <table className="pembelian-table">
-                <thead>
-                    <tr>
-                        <th>Nama Barang</th>
-                        <th>Qty</th>
-                        <th>Satuan</th>
-                        <th>Harga</th>
-                        <th>Total</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.length === 0 && (
-                        <tr>
-                            <td colSpan="6" className="table-empty">
-                                Belum ada barang
-                            </td>
-                        </tr>
-                    )}
+                <div className="form-group">
+                    <label>Pilih Produk</label>
+                    <select
+                        value={selectedId}
+                        onChange={(e) => {
+                            setSelectedId(e.target.value);
+                            const product = products.find(
+                                (p) =>
+                                    String(p.id) ===
+                                    String(e.target.value)
+                            );
+                            if (product) {
+                                setPrice(product.price || "");
+                            }
+                        }}
+                    >
+                        <option value="">-- Pilih Produk --</option>
+                        {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                                {p.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                    {items.map((item) => (
-                        <tr key={item.productId}>
-                            <td>{item.name}</td>
-                            <td>{item.qty}</td>
-                            <td>{item.unit}</td>
-                            <td>
-                                Rp{" "}
-                                {Number(item.price).toLocaleString("id-ID")}
-                            </td>
-                            <td>
-                                Rp{" "}
-                                {(
-                                    item.qty * item.price
-                                ).toLocaleString("id-ID")}
-                            </td>
-                            <td>
-                                <button
-                                    className="btn-delete-item"
-                                    onClick={() =>
-                                        setItems((prev) =>
-                                            prev.filter(
-                                                (p) =>
-                                                    p.productId !==
-                                                    item.productId
-                                            )
-                                        )
-                                    }
-                                >
-                                    Hapus
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                <div className="form-group">
+                    <label>Qty</label>
+                    <input
+                        type="number"
+                        min="1"
+                        value={qty}
+                        onChange={(e) =>
+                            setQty(Number(e.target.value))
+                        }
+                    />
+                </div>
 
-            <button
-                className="btn-add-item add-item"
-                onClick={() => setOpenModal(true)}
-            >
-                + Tambah Barang
-            </button>
+                <div className="form-group">
+                    <label>Harga Beli</label>
+                    <input
+                        type="number"
+                        min="0"
+                        value={price}
+                        onChange={(e) =>
+                            setPrice(Number(e.target.value))
+                        }
+                    />
+                </div>
 
-            <AddPembelianItemModal
-                open={openModal}
-                onClose={() => setOpenModal(false)}
-                onSubmit={handleAddItem}
-                products={products}
-            />
+                <div className="modal-actions">
+                    <button
+                        className="btn-primary"
+                        onClick={handleSubmit}
+                    >
+                        Tambah
+                    </button>
+
+                    <button
+                        className="btn-outline"
+                        onClick={onClose}
+                    >
+                        Batal
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
 
-export default PembelianItems;
+export default AddPembelianItemModal;

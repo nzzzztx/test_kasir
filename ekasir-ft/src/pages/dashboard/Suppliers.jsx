@@ -116,8 +116,19 @@ const Suppliers = () => {
     useEffect(() => {
         if (!authData) return;
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const currentUser = users.find(u => u.id === authData.id);
+        const ownerId =
+            authData.role === "owner"
+                ? authData.id
+                : authData.ownerId;
+
+        const USERS_KEY = `users_owner_${ownerId}`;
+
+        const users =
+            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+
+        const currentUser = users.find(
+            u => u.id === authData.id
+        );
 
         if (currentUser) {
             setUser(currentUser);

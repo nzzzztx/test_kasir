@@ -36,7 +36,7 @@ const ProfileEditModal = ({ user, onClose, onSave }) => {
 
                 <div className="akun-edit-body">
                     <div className="akun-edit-avatar">
-                        <img src={form.avatar} alt="avatar" />
+                        <img src={form.avatar || userDummy} alt="avatar" />
                         <label className="akun-edit-avatar-btn">
                             Ganti Foto
                             <input type="file" hidden accept="image/*" onChange={handleAvatar} />
@@ -50,7 +50,7 @@ const ProfileEditModal = ({ user, onClose, onSave }) => {
 
                     <div className="akun-edit-group">
                         <label>Role</label>
-                        <input name="role" value={form.role} onChange={handleChange} />
+                        <input value={form.role} disabled />
                     </div>
 
                     <div className="akun-edit-group">

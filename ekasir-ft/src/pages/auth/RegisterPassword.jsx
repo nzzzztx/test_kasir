@@ -1,6 +1,6 @@
 import "../../assets/css/auth.css";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 
 import illustration from "../../assets/img/depan.png";
@@ -10,15 +10,26 @@ import eyeClose from "../../assets/icons/hidden.png";
 
 export default function RegisterPassword() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { setPasswordAfterOtp } = useAuth();
 
-    const [password, setPassword] = useState("");
+    const email = location.state?.email;
+
+    const [password, setPasswordInput] = useState("");
     const [confirm, setConfirm] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-    const { pendingUser, setPasswordAfterOtp } = useAuth();
 
-    const handleSubmit = () => {
+    // Kalau masuk tanpa email → redirect
+    useEffect(() => {
+        if (!email) {
+            navigate("/register");
+        }
+    }, [email, navigate]);
+
+    const handleSubmit = async () => {
         if (!password || !confirm) {
             alert("Password wajib diisi");
             return;
@@ -29,14 +40,19 @@ export default function RegisterPassword() {
             return;
         }
 
-        const result = setPasswordAfterOtp(password);
+        setLoading(true);
+
+        const result = await setPasswordAfterOtp(password);
+
+        setLoading(false);
 
         if (!result.success) {
             alert(result.message);
             return;
         }
 
-        navigate("/dashboard");
+        alert("Akun berhasil dibuat, silakan login");
+        navigate("/login");
     };
 
     return (
@@ -49,17 +65,12 @@ export default function RegisterPassword() {
                 <img src={logo} alt="logo" className="auth-logo" />
 
                 <div className="auth-card">
-                    <h2>Buat Akun Anda</h2>
+                    <h2>Buat Password</h2>
                     <p>Lengkapi kata sandi untuk menyelesaikan pendaftaran</p>
 
                     <div className="auth-group">
                         <label>Email</label>
-                        <input type="email" value={pendingUser?.email || ""} disabled />
-                    </div>
-
-                    <div className="auth-group">
-                        <label>Nomor Telepon</label>
-                        <input type="text" value={pendingUser?.phone || ""} disabled />
+                        <input type="email" value={email} disabled />
                     </div>
 
                     <div className="auth-group">
@@ -69,7 +80,7 @@ export default function RegisterPassword() {
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan kata sandi"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => setPasswordInput(e.target.value)}
                             />
                             <img
                                 src={showPassword ? eyeOpen : eyeClose}
@@ -96,13 +107,19 @@ export default function RegisterPassword() {
                         </div>
                     </div>
 
-                    <button className="auth-btn" onClick={handleSubmit}>
-                        Daftar
+                    <button
+                        className="auth-btn"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? "Memproses..." : "Daftar"}
                     </button>
 
                     <div className="auth-link">
                         Sudah punya akun?{" "}
-                        <span onClick={() => navigate("/login")}>Masuk</span>
+                        <span onClick={() => navigate("/login")}>
+                            Masuk
+                        </span>
                     </div>
                 </div>
             </div>

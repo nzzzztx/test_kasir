@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/Sidebar';
 import '../../../assets/css/dashboard.css';
 import { useAuth } from "../../../context/AuthContext";
@@ -34,14 +34,37 @@ const GudangDashboard = () => {
     } = useNotifications();
 
     useEffect(() => {
-        if (!authData) return;
+        const loadUser = () => {
+            if (!authData) return;
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const currentUser = users.find(u => u.id === authData.id);
+            const ownerId =
+                authData.role === "owner"
+                    ? authData.id
+                    : authData.ownerId;
 
-        if (currentUser) {
-            setUser(currentUser);
-        }
+            if (!ownerId) return;
+
+            const USERS_KEY = `users_owner_${ownerId}`;
+
+            const users =
+                JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+
+            const currentUser = users.find(
+                u => u.id === authData.id
+            );
+
+            if (currentUser) {
+                setUser(currentUser);
+            }
+        };
+
+        loadUser();
+
+        window.addEventListener("storage", loadUser);
+
+        return () => {
+            window.removeEventListener("storage", loadUser);
+        };
     }, [authData]);
 
     const menuData = [
@@ -96,7 +119,10 @@ const GudangDashboard = () => {
 
     return (
         <div className="dashboard-container">
-            <Sidebar isOpen={sidebarOpen} />
+            <Sidebar
+                isOpen={sidebarOpen}
+                toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            />
 
             <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
                 <header className="content-header">
@@ -245,7 +271,7 @@ const GudangDashboard = () => {
                                             Edit Profile
                                         </button>
 
-                                        <button
+                                        {/* <button
                                             className="profile-menu-item"
                                             onClick={() => {
                                                 setProfileOpen(false);
@@ -253,7 +279,7 @@ const GudangDashboard = () => {
                                             }}
                                         >
                                             Ganti Password
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </div>
                             )}

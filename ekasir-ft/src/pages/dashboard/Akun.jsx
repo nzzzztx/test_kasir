@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { getCurrentOwnerId } from "../../utils/owner";
 import Sidebar from "../../components/Sidebar";
 import ProfileEditModal from "../../components/Akun/ProfileEditModal";
 
@@ -13,30 +14,73 @@ const Akun = () => {
     const { authData } = useAuth();
     const [user, setUser] = useState(null);
 
-    useEffect(() => {
-        if (!authData) return;
+    // const ownerId =
+    //     authData?.role === "owner"
+    //         ? authData.id
+    //         : authData?.ownerId;
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const currentUser = users.find(u => u.id === authData.id);
+    const ownerId = getCurrentOwnerId();
+
+    const USERS_KEY = ownerId
+        ? `users_owner_${ownerId}`
+        : null;
+
+    useEffect(() => {
+        if (!authData || !USERS_KEY) return;
+
+        const users =
+            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+
+        let currentUser = users.find(
+            u => u.id === authData.id
+        );
+
+        if (!currentUser && authData.role === "owner") {
+            currentUser = {
+                ...authData,
+                avatar: authData.avatar || userDummy,
+            };
+
+            localStorage.setItem(
+                USERS_KEY,
+                JSON.stringify([currentUser, ...users])
+            );
+        }
 
         if (currentUser) {
             setUser(currentUser);
         }
-    }, [authData]);
+    }, [authData, USERS_KEY]);
 
     const handleSaveProfile = (updated) => {
+        if (!USERS_KEY) return;
+
         const newUser = {
             ...updated,
             avatar: updated.avatar || user.avatar || userDummy,
         };
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const users =
+            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
 
         const updatedUsers = users.map(u =>
             u.id === authData.id ? newUser : u
         );
 
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        localStorage.setItem(
+            USERS_KEY,
+            JSON.stringify(updatedUsers)
+        );
+
+        localStorage.setItem(
+            "current_user",
+            JSON.stringify(newUser)
+        );
+
+        if (authData?.id === newUser.id) {
+            window.location.reload();
+        }
+
         setUser(newUser);
         setShowEdit(false);
     };

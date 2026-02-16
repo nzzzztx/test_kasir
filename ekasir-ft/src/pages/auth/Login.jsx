@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import "../../assets/css/auth.css";
 import illustration from "../../assets/img/depan.png";
 import logo from "../../assets/img/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import eyeOpen from "../../assets/icons/view.png";
 import eyeClose from "../../assets/icons/hidden.png";
-import { useState } from "react";
 
 export default function Login() {
+    const [loading, setLoading] = useState(false);
     const { login, authData } = useAuth();
     const navigate = useNavigate();
 
@@ -16,15 +17,25 @@ export default function Login() {
         password: "",
     });
 
+    useEffect(() => {
+        if (authData?.token) {
+            navigate("/dashboard");
+        }
+    }, [authData]);
+
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!form.identifier || !form.password) {
             alert("Username/Email dan password wajib diisi");
             return;
         }
 
-        const result = login(form.identifier, form.password);
+        setLoading(true);
+
+        const result = await login(form.identifier, form.password);
+
+        setLoading(false);
 
         if (!result.success) {
             alert(result.message);
@@ -33,7 +44,6 @@ export default function Login() {
 
         navigate("/dashboard");
     };
-
 
     return (
         <div className="auth-wrapper">
@@ -86,8 +96,8 @@ export default function Login() {
                         </span>
                     </div>
 
-                    <button className="auth-btn" onClick={handleLogin}>
-                        Masuk
+                    <button className="auth-btn" onClick={handleLogin} disabled={loading}>
+                        {loading ? "Memproses..." : "Masuk"}
                     </button>
 
                     <div className="auth-link">

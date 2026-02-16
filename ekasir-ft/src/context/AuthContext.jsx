@@ -1,174 +1,168 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
 
 const AuthContext = createContext();
+const API = "http://localhost:5000/api/auth";
 
 export const AuthProvider = ({ children }) => {
 
-    // ===============================
-    // USER LOGIN
-    // ===============================
+    // ✅ HARUS DI DALAM COMPONENT
     const [authData, setAuthData] = useState(() => {
         const saved = localStorage.getItem("auth");
         return saved ? JSON.parse(saved) : null;
     });
 
+    const [pendingUser, setPendingUser] = useState(null);
+
     useEffect(() => {
-        if (authData) {
+        if (authData?.token) {
             localStorage.setItem("auth", JSON.stringify(authData));
+            axios.defaults.headers.common["Authorization"] =
+                `Bearer ${authData.token}`;
         } else {
             localStorage.removeItem("auth");
+            delete axios.defaults.headers.common["Authorization"];
         }
     }, [authData]);
 
-    // ===============================
-    // PENDING USER (SEBELUM OTP + PASSWORD)
-    // ===============================
-    const [pendingUser, setPendingUser] = useState(null);
-
-    // ===============================
-    // STEP 1 - REGISTER (KIRIM OTP)
-    // ===============================
-    const register = ({ name, email, phone }) => {
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-
-        const emailExist = users.find(u => u.email === email);
-        if (emailExist) {
-            return { success: false, message: "Email sudah terdaftar" };
-        }
-
-        const tempUser = {
-            id: Date.now(),
-            name: name || "Owner",
-            email,
-            username: email,
-            phone,
-            role: "owner",
-            otpVerified: false
-        };
-
-        setPendingUser(tempUser);
-
-        return { success: true };
-    };
-
-    // ===============================
-    // STEP 2 - VERIFY OTP
-    // ===============================
-    const verifyOtp = (otpInput) => {
-        if (!pendingUser) {
-            return { success: false, message: "Tidak ada proses registrasi" };
-        }
-
-        if (otpInput !== "1234") {
-            return { success: false, message: "OTP salah" };
-        }
-
-        setPendingUser(prev => ({
-            ...prev,
-            otpVerified: true
-        }));
-
-        return { success: true };
-    };
-
-    // ===============================
-    // STEP 3 - SET PASSWORD & SIMPAN USER
-    // ===============================
-    const setPasswordAfterOtp = (password) => {
-        if (!pendingUser || !pendingUser.otpVerified) {
-            return { success: false, message: "OTP belum diverifikasi" };
-        }
-
-        if (password.length < 8) {
-            return { success: false, message: "Password minimal 8 karakter" };
-        }
-
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-
-        const newUser = {
-            ...pendingUser,
-            password,
-            otpVerified: true
-        };
-
-        users.push(newUser);
-        localStorage.setItem("users", JSON.stringify(users));
-
-        setAuthData({
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            phone: newUser.phone,
-            role: newUser.role,
-            otpVerified: true,
-            isLoggedIn: true
-        });
-
-        setPendingUser(null);
-
-        return { success: true };
-    };
-
-    // ===============================
-    // LOGIN
-    // ===============================
-    const login = (identifier, password) => {
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-
-        const user = users.find(
-            (u) =>
-                (u.email === identifier || u.username === identifier) &&
-                u.password === password
+    useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            (res) => res,
+            (err) => {
+                if (err.response?.status === 401) {
+                    setAuthData(null);
+                    window.location.href = "/login";
+                }
+                return Promise.reject(err);
+            }
         );
 
-        if (!user) {
-            return { success: false, message: "Email atau password salah" };
+        return () => axios.interceptors.response.eject(interceptor);
+    }, []);
+
+    const register = async ({ email, phone }) => {
+        try {
+            const res = await axios.post(`${API}/register-owner`, {
+                email,
+                phone,
+            });
+
+            if (res.data.success) {
+                setPendingUser({ email, phone });
+            }
+
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "Register gagal",
+            };
         }
+    };
 
-        setAuthData({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            role: user.role,
-            otpVerified: user.otpVerified,
-            isLoggedIn: true
-        });
+    const verifyOtp = async ({ email, otp }) => {
+        try {
+            const res = await axios.post(`${API}/verify-otp`, {
+                email,
+                otp,
+            });
 
-        return { success: true, user };
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "OTP salah",
+            };
+        }
+    };
+
+    const setPasswordAfterOtp = async (password) => {
+        try {
+            if (!pendingUser?.email) {
+                return {
+                    success: false,
+                    message: "Session OTP tidak ditemukan",
+                };
+            }
+
+            const res = await axios.post(`${API}/set-password`, {
+                email: pendingUser.email,
+                password,
+            });
+
+            if (res.data.success) {
+                setPendingUser(null);
+            }
+
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "Gagal set password",
+            };
+        }
+    };
+
+    const login = async (identifier, password) => {
+        try {
+            const res = await axios.post(`${API}/login`, {
+                identifier,
+                password,
+            });
+
+            const { token, user } = res.data;
+
+            const finalAuth = {
+                token,
+                id: user.id,
+                nama: user.nama,
+                role: user.role,
+                ownerId: user.ownerId,
+                isLoggedIn: true,
+            };
+
+            setAuthData(finalAuth);
+
+            return { success: true };
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "Login gagal",
+            };
+        }
     };
 
     const logout = () => {
         setAuthData(null);
+        window.location.href = "/login";
     };
 
-    // ===============================
-    // CHANGE PASSWORD
-    // ===============================
-    const changePassword = (oldPassword, newPassword) => {
-        if (!authData || !authData.isLoggedIn) {
-            return { success: false, message: "Belum login" };
+    const forgotPassword = async (email) => {
+        try {
+            const res = await axios.post(`${API}/forgot-password`, { email });
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "Gagal kirim OTP",
+            };
         }
+    };
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const userIndex = users.findIndex(u => u.id === authData.id);
-
-        if (userIndex === -1) {
-            return { success: false, message: "User tidak ditemukan" };
+    const resetPassword = async ({ email, otp, newPassword }) => {
+        try {
+            const res = await axios.post(`${API}/reset-password`, {
+                email,
+                otp,
+                newPassword,
+            });
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || "Reset gagal",
+            };
         }
-
-        if (users[userIndex].password !== oldPassword) {
-            return { success: false, message: "Password lama salah" };
-        }
-
-        if (newPassword.length < 8) {
-            return { success: false, message: "Password minimal 8 karakter" };
-        }
-
-        users[userIndex].password = newPassword;
-        localStorage.setItem("users", JSON.stringify(users));
-
-        return { success: true };
     };
 
     return (
@@ -181,7 +175,8 @@ export const AuthProvider = ({ children }) => {
                 setPasswordAfterOtp,
                 login,
                 logout,
-                changePassword
+                forgotPassword,
+                resetPassword,
             }}
         >
             {children}

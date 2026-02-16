@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext";
 export default function RoleRedirect() {
     const { authData } = useAuth();
 
-    if (!authData || !authData.isLoggedIn) {
+    // Cek berdasarkan token, bukan isLoggedIn
+    if (!authData?.token) {
         return <Navigate to="/login" replace />;
     }
 

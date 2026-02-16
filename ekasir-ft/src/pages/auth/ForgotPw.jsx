@@ -3,37 +3,36 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../assets/img/logo.png";
 import illustration from "../../assets/img/password.png";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ForgotPw() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const { forgotPassword } = useAuth();
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (!email) {
             setError("Email wajib diisi");
             setMessage("");
             return;
         }
 
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const user = users.find((u) => u.email === email);
+        const result = await forgotPassword(email);
 
-        if (!user) {
-            setError("Email tidak ditemukan");
+        if (!result.success) {
+            setError(result.message);
             setMessage("");
             return;
         }
 
-        if (user.role !== "owner") {
-            setError("");
-            setMessage("Silakan hubungi pemilik toko untuk reset password");
-            return;
-        }
+        setError("");
+        setMessage("OTP reset dikirim ke email Anda");
 
-        localStorage.setItem("reset_email", email);
-        navigate("/password-notification");
+        navigate("/password-notification", {
+            state: { email },
+        });
     };
 
     return (

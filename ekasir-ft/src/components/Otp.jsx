@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 
-export default function OtpModal({ onClose }) {
+export default function OtpModal({ email, onClose }) {
     const navigate = useNavigate();
-    const { verifyOtp, pendingUser } = useAuth();
+    const { verifyOtp } = useAuth();
 
     const [otp, setOtp] = useState(["", "", "", ""]);
-    const [timeLeft, setTimeLeft] = useState(60);
+    const [timeLeft, setTimeLeft] = useState(300);
     const [canResend, setCanResend] = useState(false);
+
+    const inputsRef = useRef([]);
 
     useEffect(() => {
         if (timeLeft <= 0) {
@@ -29,12 +31,22 @@ export default function OtpModal({ onClose }) {
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
+
+        // auto focus ke input berikutnya
+        if (value && index < 3) {
+            inputsRef.current[index + 1].focus();
+        }
     };
 
-    const handleVerify = () => {
+    const handleVerify = async () => {
         const code = otp.join("");
 
-        const result = verifyOtp(code);
+        if (code.length !== 4) {
+            alert("OTP harus 4 digit");
+            return;
+        }
+
+        const result = await verifyOtp({ email, otp: code });
 
         if (!result.success) {
             alert(result.message);
@@ -42,31 +54,26 @@ export default function OtpModal({ onClose }) {
         }
 
         onClose();
-        navigate("/register-password");
+
+        navigate("/register-password", { state: { email } });
     };
 
-    const handleResend = () => {
-        setOtp(["", "", "", ""]);
-        setTimeLeft(60);
-        setCanResend(false);
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
 
-        alert("OTP dikirim ulang (dummy: 1234)");
-    };
-
-    const formatTime = (s) => {
-        const m = Math.floor(s / 60);
-        const sec = s % 60;
-        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+        return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+            .toString()
+            .padStart(2, "0")}`;
     };
 
     return (
         <div className="otp-overlay">
             <div className="otp-card">
-                <h3>Verifikasi Nomor</h3>
+                <h3>Verifikasi Email</h3>
 
                 <p className="otp-desc">
-                    Masukkan 4 digit kode verifikasi yang dikirim ke{" "}
-                    <b>{pendingUser?.phone || "-"}</b>
+                    Masukkan 4 digit kode yang dikirim ke <b>{email}</b>
                 </p>
 
                 <div className="otp-inputs">
@@ -75,6 +82,7 @@ export default function OtpModal({ onClose }) {
                             key={i}
                             maxLength="1"
                             value={v}
+                            ref={(el) => (inputsRef.current[i] = el)}
                             onChange={(e) =>
                                 handleChange(e.target.value, i)
                             }
@@ -83,16 +91,9 @@ export default function OtpModal({ onClose }) {
                 </div>
 
                 <p className="otp-resend">
-                    {canResend ? (
-                        <>
-                            Belum menerima kode?{" "}
-                            <span onClick={handleResend}>Kirim ulang</span>
-                        </>
-                    ) : (
-                        <>
-                            Belum menerima kode? Kirim ulang ({formatTime(timeLeft)})
-                        </>
-                    )}
+                    {canResend
+                        ? "OTP kadaluarsa, silakan daftar ulang."
+                        : `Berlaku selama ${formatTime(timeLeft)}`}
                 </p>
 
                 <div className="otp-actions">
