@@ -31,38 +31,27 @@ const KasirDashboard = () => {
     } = useNotifications();
 
     useEffect(() => {
-        const loadUser = () => {
-            if (!authData) return;
+        if (!authData?.token) return;
 
-            const ownerId =
-                authData.role === "owner"
-                    ? authData.id
-                    : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-            if (!ownerId) return;
-
-            const USERS_KEY = `users_owner_${ownerId}`;
-
-            const users =
-                JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-            const currentUser = users.find(
-                u => u.id === authData.id
-            );
-
-            if (currentUser) {
-                setUser(currentUser);
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
             }
         };
 
-        loadUser();
-
-        window.addEventListener("storage", loadUser);
-
-        return () => {
-            window.removeEventListener("storage", loadUser);
-        };
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     const menuData = [
         {
@@ -231,7 +220,7 @@ const KasirDashboard = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-fullname">{user?.nama}</div>
                                             <div className="profile-email">{user?.email}</div>
                                             <div className={`profile-role-badge ${authData?.role}`}>
                                                 {authData?.role?.toUpperCase()}

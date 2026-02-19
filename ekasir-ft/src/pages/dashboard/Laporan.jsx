@@ -20,7 +20,7 @@ const Laporan = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const { authData, changePassword } = useAuth();
+    const { authData } = useAuth();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const role = authData?.role;
@@ -66,25 +66,29 @@ const Laporan = () => {
     });
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch(
+                    "http://localhost:5000/api/profile",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                    }
+                );
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
+        fetchProfile();
     }, [authData]);
 
     const {
@@ -233,7 +237,7 @@ const Laporan = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-fullname">{user?.nama}</div>
                                             <div className="profile-email">{user?.email}</div>
                                             <div className={`profile-role-badge ${authData?.role}`}>
                                                 {authData?.role?.toUpperCase()}
@@ -252,15 +256,17 @@ const Laporan = () => {
                                             Edit Profile
                                         </button>
 
-                                        <button
-                                            className="profile-menu-item"
-                                            onClick={() => {
-                                                setProfileOpen(false);
-                                                setShowPasswordModal(true);
-                                            }}
-                                        >
-                                            Ganti Password
-                                        </button>
+                                        {authData?.role === "owner" && (
+                                            <button
+                                                className="profile-menu-item"
+                                                onClick={() => {
+                                                    setProfileOpen(false);
+                                                    setShowPasswordModal(true);
+                                                }}
+                                            >
+                                                Ganti Password
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -290,6 +296,7 @@ const Laporan = () => {
                         </div>
                     ))}
                 </div>
+
                 {showPasswordModal && (
                     <div className="password-modal-overlay">
                         <div className="password-modal">
@@ -305,7 +312,7 @@ const Laporan = () => {
 
                             <form
                                 className="password-modal-body"
-                                onSubmit={(e) => {
+                                onSubmit={async (e) => {
                                     e.preventDefault();
 
                                     const oldPass = e.target.old_password.value;
@@ -317,16 +324,41 @@ const Laporan = () => {
                                         return;
                                     }
 
-                                    const result = changePassword(oldPass, newPass);
-
-                                    if (!result.success) {
-                                        alert(result.message);
+                                    if (newPass.length < 8) {
+                                        alert("Password minimal 8 karakter");
                                         return;
                                     }
 
-                                    alert("Password berhasil diganti");
-                                    setShowPasswordModal(false);
-                                    e.target.reset();
+                                    try {
+                                        const res = await fetch(
+                                            "http://localhost:5000/api/profile/change-password",
+                                            {
+                                                method: "PUT",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                    Authorization: `Bearer ${authData.token}`,
+                                                },
+                                                body: JSON.stringify({
+                                                    oldPassword: oldPass,
+                                                    newPassword: newPass,
+                                                }),
+                                            }
+                                        );
+
+                                        const data = await res.json();
+
+                                        if (!res.ok) {
+                                            alert(data.message);
+                                            return;
+                                        }
+
+                                        alert("Password berhasil diganti");
+                                        setShowPasswordModal(false);
+                                        e.target.reset();
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert("Terjadi kesalahan server");
+                                    }
                                 }}
                             >
                                 <div className="form-group">

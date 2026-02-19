@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import userDummy from "../../assets/img/Profile.png";
 
 const ProfileEditModal = ({ user, onClose, onSave }) => {
     const [form, setForm] = useState({ ...user });
@@ -45,7 +46,11 @@ const ProfileEditModal = ({ user, onClose, onSave }) => {
 
                     <div className="akun-edit-group">
                         <label>Nama</label>
-                        <input name="name" value={form.name} onChange={handleChange} />
+                        <input
+                            name="nama"
+                            value={form.nama || ""}
+                            onChange={handleChange}
+                        />
                     </div>
 
                     <div className="akun-edit-group">
@@ -55,17 +60,21 @@ const ProfileEditModal = ({ user, onClose, onSave }) => {
 
                     <div className="akun-edit-group">
                         <label>Email</label>
-                        <input name="email" value={form.email} onChange={handleChange} />
+                        <input name="email" value={form.email || ""} onChange={handleChange} />
                     </div>
 
                     <div className="akun-edit-group">
                         <label>Telepon</label>
-                        <input name="phone" value={form.phone} onChange={handleChange} />
+                        <input name="phone" value={form.phone || ""} onChange={handleChange} />
                     </div>
 
                     <div className="akun-edit-group">
                         <label>Alamat</label>
-                        <textarea name="address" value={form.address} onChange={handleChange} />
+                        <textarea
+                            name="address"
+                            value={form.address || ""}
+                            onChange={handleChange}
+                        />
                     </div>
                 </div>
 

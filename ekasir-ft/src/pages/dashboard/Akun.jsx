@@ -1,88 +1,62 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getCurrentOwnerId } from "../../utils/owner";
 import Sidebar from "../../components/Sidebar";
 import ProfileEditModal from "../../components/Akun/ProfileEditModal";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/akun.css";
-
 import userDummy from "../../assets/img/Profile.png";
+
+const API = "http://localhost:5000/api";
 
 const Akun = () => {
     const [showEdit, setShowEdit] = useState(false);
     const { authData } = useAuth();
     const [user, setUser] = useState(null);
 
-    // const ownerId =
-    //     authData?.role === "owner"
-    //         ? authData.id
-    //         : authData?.ownerId;
-
-    const ownerId = getCurrentOwnerId();
-
-    const USERS_KEY = ownerId
-        ? `users_owner_${ownerId}`
-        : null;
-
     useEffect(() => {
-        if (!authData || !USERS_KEY) return;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch(`${API}/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        let currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (!currentUser && authData.role === "owner") {
-            currentUser = {
-                ...authData,
-                avatar: authData.avatar || userDummy,
-            };
-
-            localStorage.setItem(
-                USERS_KEY,
-                JSON.stringify([currentUser, ...users])
-            );
-        }
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData, USERS_KEY]);
-
-    const handleSaveProfile = (updated) => {
-        if (!USERS_KEY) return;
-
-        const newUser = {
-            ...updated,
-            avatar: updated.avatar || user.avatar || userDummy,
+                const data = await res.json();
+                setUser(data);
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
         };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const updatedUsers = users.map(u =>
-            u.id === authData.id ? newUser : u
-        );
-
-        localStorage.setItem(
-            USERS_KEY,
-            JSON.stringify(updatedUsers)
-        );
-
-        localStorage.setItem(
-            "current_user",
-            JSON.stringify(newUser)
-        );
-
-        if (authData?.id === newUser.id) {
-            window.location.reload();
+        if (authData?.token) {
+            fetchProfile();
         }
+    }, [authData]);
 
-        setUser(newUser);
-        setShowEdit(false);
+    const handleSaveProfile = async (updated) => {
+        try {
+            const res = await fetch(`${API}/profile/update-profile`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
+                },
+                body: JSON.stringify(updated),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setUser({ ...user, ...updated });
+                setShowEdit(false);
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error("Gagal update profile:", err);
+        }
     };
 
     if (!user) {
@@ -113,12 +87,7 @@ const Akun = () => {
                         <div className="akun-info">
                             <div className="akun-row">
                                 <span>Nama</span>
-                                <b>{user.name}</b>
-                            </div>
-
-                            <div className="akun-row">
-                                <span>Kode Referral</span>
-                                <b>{user.referralCode}</b>
+                                <b>{user.nama}</b>
                             </div>
 
                             <div className="akun-row">

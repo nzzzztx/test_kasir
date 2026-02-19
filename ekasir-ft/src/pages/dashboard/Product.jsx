@@ -18,14 +18,14 @@ import trashIcon from '../../assets/icons/trash.png';
 const Product = () => {
     const { authData } = useAuth();
     const [products, setProducts] = useState([]);
-
-    useEffect(() => {
-        if (!authData?.id) return;
-
-        const saved = localStorage.getItem(`products_${authData.id}`);
-        setProducts(saved ? JSON.parse(saved) : []);
-        setIsLoaded(true);
-    }, [authData]);
+    const formatProducts = (data) => {
+        return data.map((p) => ({
+            ...p,
+            priceMin: Number(p.price_min),
+            priceMax: Number(p.price_max),
+            minStock: p.min_stock,
+        }));
+    };
 
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -53,19 +53,12 @@ const Product = () => {
     }, [authData]);
 
     useEffect(() => {
-        if (!selectedProduct && products.length > 0) {
+        if (products.length > 0) {
             setSelectedProduct(products[0]);
+        } else {
+            setSelectedProduct(null);
         }
     }, [products]);
-
-    useEffect(() => {
-        if (!authData?.id || !isLoaded) return;
-
-        localStorage.setItem(
-            `products_${authData.id}`,
-            JSON.stringify(products)
-        );
-    }, [products, authData, isLoaded]);
 
     const filteredProducts = products.filter((p) => {
         const matchSearch = (p.name || "")
@@ -77,12 +70,34 @@ const Product = () => {
     });
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData) return;
 
-        const saved = localStorage.getItem(`categories_${authData.id}`);
-        const parsed = saved ? JSON.parse(saved) : [];
+        const ownerId = authData.role === "owner" ? authData.id : authData.ownerId;
 
-        setCategories(['Semua', ...parsed.map((c) => c.name)]);
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/categories/${ownerId}`);
+                const data = await res.json();
+                const categoryNames = data.map(cat => cat.name);
+                setCategories(['Semua', ...categoryNames]);
+            } catch (err) {
+                console.error("Gagal mengambil kategori:", err);
+            }
+        };
+
+        const fetchProducts = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/products/${ownerId}`);
+                const data = await res.json();
+
+                setProducts(formatProducts(data));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchCategories();
+        fetchProducts();
     }, [authData]);
 
     useEffect(() => {
@@ -107,62 +122,105 @@ const Product = () => {
         }
     }, [authData]);
 
+    const handleSaveProduct = async (data) => {
+        try {
+            const ownerId =
+                authData.role === "owner"
+                    ? authData.id
+                    : authData.ownerId;
 
-    const handleSaveProduct = (data) => {
-        const exists = products.some(
-            (p) => p.code?.trim() === data.code?.trim()
-        );
+            const res = await fetch("http://localhost:5000/api/products", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ...data,
+                    ownerId
+                }),
+            });
 
-        if (exists) {
-            alert("Barcode sudah terdaftar!");
-            return;
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.message);
+                return;
+            }
+
+            alert("Produk berhasil ditambahkan");
+
+            const refresh = await fetch(
+                `http://localhost:5000/api/products/${ownerId}`
+            );
+            const newData = await refresh.json();
+            setProducts(formatProducts(newData));
+
+            setShowAddModal(false);
+
+        } catch (err) {
+            console.error(err);
         }
+    };
 
-        if (!data.name?.trim()) {
-            alert("Nama barang wajib diisi");
-            return;
+    const handleUpdateProduct = async (updated) => {
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/products/${updated.id}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updated),
+                }
+            );
+
+            if (!res.ok) {
+                const err = await res.json();
+                alert(err.message);
+                return;
+            }
+
+            alert("Produk berhasil diupdate");
+
+            const ownerId =
+                authData.role === "owner"
+                    ? authData.id
+                    : authData.ownerId;
+
+            const refresh = await fetch(
+                `http://localhost:5000/api/products/${ownerId}`
+            );
+            const newData = await refresh.json();
+            setProducts(formatProducts(newData));
+
+            setShowEditModal(false);
+
+        } catch (err) {
+            console.error(err);
         }
+    };
 
-        if (
-            data.priceMax &&
-            data.priceMin &&
-            Number(data.priceMax) < Number(data.priceMin)
-        ) {
-            alert("Harga jual tidak boleh lebih kecil dari harga dasar");
-            return;
-        }
+    useEffect(() => {
+        if (!authData?.token) return;
 
-        const newProduct = {
-            ...data,
-            ownerId: authData.id,
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
         };
 
-        const next = [...products, newProduct];
-        setProducts(next);
-        setSelectedProduct(newProduct);
-        setShowAddModal(false);
-    };
-
-    const handleUpdateProduct = (updated) => {
-        const duplicate = products.some(
-            (p) =>
-                p.code?.trim() === updated.code?.trim() &&
-                p.id !== updated.id
-        );
-
-        if (duplicate) {
-            alert("Barcode sudah digunakan produk lain!");
-            return;
-        }
-
-        const next = products.map((p) =>
-            p.id === updated.id ? updated : p
-        );
-
-        setProducts(next);
-        setSelectedProduct(updated);
-        setShowEditModal(false);
-    };
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -494,14 +552,32 @@ const Product = () => {
 
                                 <button
                                     className="btn-confirm-delete"
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!selectedProduct) return;
 
-                                        setProducts((prev) =>
-                                            prev.filter((p) => p.id !== selectedProduct.id)
-                                        );
-                                        setSelectedProduct(null);
-                                        setShowDeleteModal(false);
+                                        try {
+                                            await fetch(
+                                                `http://localhost:5000/api/products/${selectedProduct.id}`,
+                                                { method: "DELETE" }
+                                            );
+
+                                            const ownerId =
+                                                authData.role === "owner"
+                                                    ? authData.id
+                                                    : authData.ownerId;
+
+                                            const refresh = await fetch(
+                                                `http://localhost:5000/api/products/${ownerId}`
+                                            );
+                                            const newData = await refresh.json();
+
+                                            setProducts(formatProducts(newData));
+                                            setSelectedProduct(null);
+                                            setShowDeleteModal(false);
+
+                                        } catch (err) {
+                                            console.error(err);
+                                        }
                                     }}
                                 >
                                     Hapus

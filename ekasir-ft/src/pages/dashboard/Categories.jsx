@@ -15,34 +15,6 @@ import productDummy from '../../assets/img/product.png';
 import searchIcon from '../../assets/icons/search.png';
 import { useAuth } from '../../context/AuthContext';
 
-const defaultCategories = [
-    { id: 1, name: 'Kebutuhan Rumah Tangga' },
-    { id: 2, name: 'Peralatan Tulis dan Kantor' },
-];
-
-const dummyProducts = [
-    {
-        id: 1,
-        name: 'Tisu Paseo',
-        code: '000001',
-        category: 'Kebutuhan Rumah Tangga',
-        stock: 100,
-        priceMin: 5000,
-        priceMax: 8000,
-        image: productDummy,
-    },
-    {
-        id: 2,
-        name: 'Jetz Makanan Ringan Choco Viesta',
-        code: '000002',
-        category: 'Makanan dan Minuman',
-        stock: 200,
-        priceMin: 6000,
-        priceMax: 9000,
-        image: productDummy,
-    },
-];
-
 const Categories = () => {
     const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
@@ -52,18 +24,8 @@ const Categories = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
-    const { authData } = useAuth();
     const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        if (!authData?.id) return;
-
-        const savedCategories = localStorage.getItem(`categories_${authData.id}`);
-        const savedProducts = localStorage.getItem(`products_${authData.id}`);
-
-        setCategories(savedCategories ? JSON.parse(savedCategories) : []);
-        setProducts(savedProducts ? JSON.parse(savedProducts) : []);
-    }, [authData]);
+    const { authData } = useAuth();
 
     const getCategoryProducts = (categoryName) =>
         products.filter((p) => p.category === categoryName);
@@ -81,35 +43,32 @@ const Categories = () => {
         unreadCount,
         markAllAsRead, } = useNotifications();
 
-    const handleAddCategory = (name) => {
+    const handleAddCategory = async (name) => {
 
-        if (!name?.trim()) {
-            alert("Nama kategori wajib diisi");
+        const ownerId =
+            authData.role === "owner"
+                ? authData.id
+                : authData.ownerId;
+
+        const res = await fetch("http://localhost:5000/api/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ownerId, name })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            alert(result.message);
             return;
         }
 
-        if (
-            categories.some(
-                c => c.name.toLowerCase() === name.toLowerCase()
-            )
-        ) {
-            alert("Kategori sudah ada!");
-            return;
-        }
-
-        const newCategory = {
-            id: Date.now(),
-            ownerId: authData.id,
-            name: name.trim(),
-        };
-
-        const updatedCategories = [...categories, newCategory];
-
-        setCategories(updatedCategories);
-        localStorage.setItem(
-            `categories_${authData.id}`,
-            JSON.stringify(updatedCategories)
+        const refresh = await fetch(
+            `http://localhost:5000/api/categories/${ownerId}`
         );
+
+        const newData = await refresh.json();
+        setCategories(newData);
 
         setShowAdd(false);
     };
@@ -127,21 +86,51 @@ const Categories = () => {
                 ? authData.id
                 : authData.ownerId;
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+        const fetchCategories = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/categories/${ownerId}`
+            );
+            const data = await res.json();
+            setCategories(data);
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+        const fetchProducts = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/products/${ownerId}`
+            );
+            const data = await res.json();
+            setProducts(data);
+        };
 
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
+        fetchCategories();
+        fetchProducts();
 
-        if (currentUser) {
-            setUser(currentUser);
-        }
     }, [authData]);
 
-    if (!user) {
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
+
+        fetchProfile();
+    }, [authData?.token]);
+
+    if (!authData) {
         return (
             <div className="dashboard-container">
                 <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
@@ -337,30 +326,37 @@ const Categories = () => {
                         <DeleteCategoryModal
                             category={deleteTarget}
                             onCancel={() => setDeleteTarget(null)}
-                            onConfirm={(cat) => {
+                            onConfirm={async (cat) => {
 
-                                const relatedProducts = products.filter(
-                                    p => p.category === cat.name
+                                const ownerId =
+                                    authData.role === "owner"
+                                        ? authData.id
+                                        : authData.ownerId;
+
+                                const res = await fetch(
+                                    `http://localhost:5000/api/categories/${cat.id}`,
+                                    {
+                                        method: "DELETE",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ ownerId })
+                                    }
                                 );
 
-                                if (relatedProducts.length > 0) {
-                                    alert("Kategori masih memiliki produk!");
+                                const result = await res.json();
+
+                                if (!res.ok) {
+                                    alert(result.message);
                                     return;
                                 }
 
-                                const updated = categories.filter(c => c.id !== cat.id);
-
-                                setCategories(updated);
-                                localStorage.setItem(
-                                    `categories_${authData.id}`,
-                                    JSON.stringify(updated)
+                                const refresh = await fetch(
+                                    `http://localhost:5000/api/categories/${ownerId}`
                                 );
 
-                                setDeleteTarget(null);
+                                const newData = await refresh.json();
+                                setCategories(newData);
 
-                                if (selectedCategory?.id === cat.id) {
-                                    setSelectedCategory(null);
-                                }
+                                setDeleteTarget(null);
                             }}
                         />
                     )}

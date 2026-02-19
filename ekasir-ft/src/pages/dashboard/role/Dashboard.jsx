@@ -25,14 +25,10 @@ const Dashboard = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const { changePassword, authData } = useAuth();
+    const { authData } = useAuth();
     const navigate = useNavigate();
     const role = authData?.role;
-    const user = {
-        name: authData?.nama,
-        email: authData?.email,
-        role: authData?.role,
-    };
+    const [user, setUser] = useState(null);
 
     const [namaToko, setNamaToko] = useState("");
     const [lokasi, setLokasi] = useState("");
@@ -140,6 +136,29 @@ const Dashboard = () => {
         return false;
     });
 
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
+
+        fetchProfile();
+    }, [authData?.token]);
+
     if (!user) {
         return (
             <div className="dashboard-container">
@@ -241,7 +260,7 @@ const Dashboard = () => {
                             onClick={() => setProfileOpen(!profileOpen)}
                         >
                             <img
-                                src={user?.avatar || userDummy}
+                                src={user?.avatar ? user.avatar : userDummy}
                                 alt="profile"
                                 className="header-avatar"
                             />
@@ -283,7 +302,7 @@ const Dashboard = () => {
                                         </div>
 
                                         <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user?.name}</div>
+                                            <div className="profile-fullname">{user?.nama}</div>
                                             <div className="profile-email">{user?.email}</div>
                                             <div className={`profile-role-badge ${authData?.role}`}>
                                                 {authData?.role?.toUpperCase()}
@@ -355,7 +374,7 @@ const Dashboard = () => {
 
                             <form
                                 className="password-modal-body"
-                                onSubmit={(e) => {
+                                onSubmit={async (e) => {
                                     e.preventDefault();
 
                                     const oldPass = e.target.old_password.value;
@@ -367,16 +386,33 @@ const Dashboard = () => {
                                         return;
                                     }
 
-                                    const result = changePassword(oldPass, newPass);
+                                    try {
+                                        const res = await fetch("http://localhost:5000/api/profile/change-password", {
+                                            method: "PUT",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                Authorization: `Bearer ${authData.token}`,
+                                            },
+                                            body: JSON.stringify({
+                                                oldPassword: oldPass,
+                                                newPassword: newPass,
+                                            }),
+                                        });
 
-                                    if (!result.success) {
-                                        alert(result.message);
-                                        return;
+                                        const data = await res.json();
+
+                                        if (!res.ok) {
+                                            alert(data.message);
+                                            return;
+                                        }
+
+                                        alert("Password berhasil diganti");
+                                        setShowPasswordModal(false);
+                                        e.target.reset();
+                                    } catch (err) {
+                                        console.error("Gagal ganti password:", err);
+                                        alert("Terjadi kesalahan server");
                                     }
-
-                                    alert("Password berhasil diganti");
-                                    setShowPasswordModal(false);
-                                    e.target.reset();
                                 }}
                             >
                                 <div className="form-group">
