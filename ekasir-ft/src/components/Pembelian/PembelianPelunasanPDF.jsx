@@ -76,7 +76,9 @@ const PembelianPelunasanPDF = ({ data }) => {
                         {`INV-PEL-${data.invoiceNumber}-${lastPayment.id}`}
                     </div>
                     <div>
-                        {new Date(lastPayment.date).toLocaleDateString("id-ID")}
+                        {lastPayment?.date
+                            ? new Date(lastPayment.date).toLocaleDateString("id-ID")
+                            : "-"}
                     </div>
                 </div>
             </div>

@@ -28,7 +28,9 @@ const Categories = () => {
     const { authData } = useAuth();
 
     const getCategoryProducts = (categoryName) =>
-        products.filter((p) => p.category === categoryName);
+        Array.isArray(products)
+            ? products.filter((p) => p.category === categoryName)
+            : [];
 
     const filteredProducts = selectedCategory
         ? getCategoryProducts(selectedCategory.name).filter((p) =>
@@ -96,9 +98,22 @@ const Categories = () => {
 
         const fetchProducts = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/products/${ownerId}`
+                `http://localhost:5000/api/products`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
             );
+
             const data = await res.json();
+
+            if (!Array.isArray(data)) {
+                console.error("Produk error:", data);
+                setProducts([]);
+                return;
+            }
+
             setProducts(data);
         };
 

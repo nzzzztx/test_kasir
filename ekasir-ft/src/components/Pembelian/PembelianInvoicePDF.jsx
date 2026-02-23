@@ -25,7 +25,7 @@ const PembelianInvoicePDF = ({ data }) => {
                 position: "relative"
             }}
         >
-            {data.status === "SELESAI" && (
+            {data.status === "lunas" && (
                 <div
                     style={{
                         position: "absolute",
@@ -108,10 +108,10 @@ const PembelianInvoicePDF = ({ data }) => {
                             <td style={{ border: "1px solid #000" }}>{item.qty}</td>
                             <td style={{ border: "1px solid #000" }}>{item.unit}</td>
                             <td style={{ border: "1px solid #000" }}>
-                                Rp {item.price.toLocaleString("id-ID")}
+                                Rp {(item.price || 0).toLocaleString("id-ID")}
                             </td>
                             <td style={{ border: "1px solid #000" }}>
-                                Rp {(item.qty * item.price).toLocaleString("id-ID")}
+                                Rp {((item.qty || 0) * (item.price || 0)).toLocaleString("id-ID")}
                             </td>
                         </tr>
                     ))}
@@ -145,7 +145,7 @@ const PembelianInvoicePDF = ({ data }) => {
                 <p>
                     Status:{" "}
                     <strong>
-                        {data.status === "SELESAI" ? "LUNAS" : "BELUM LUNAS"}
+                        {data.status === "lunas" ? "LUNAS" : "BELUM LUNAS"}
                     </strong>
                 </p>
             </div>

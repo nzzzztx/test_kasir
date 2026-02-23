@@ -1,31 +1,51 @@
 import { useState, useEffect } from "react";
 import AddPembelianItemModal from "./AddPembelianItemModal";
 import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
 
 const PembelianItems = ({ items, setItems }) => {
+    const { authData } = useAuth();
     const [openModal, setOpenModal] = useState(false);
     const [products, setProducts] = useState([]);
-
     const ownerId = getCurrentOwnerId();
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!authData?.token) return;
 
-        const saved =
-            JSON.parse(localStorage.getItem(`products_${ownerId}`)) || [];
+        const fetchProducts = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/products", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`
+                    }
+                });
 
-        setProducts(saved);
-    }, [ownerId]);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    console.error("Fetch products error:", data);
+                    return;
+                }
+
+                setProducts(data);
+
+            } catch (err) {
+                console.error("Error fetch products:", err);
+            }
+        };
+
+        fetchProducts();
+    }, [authData?.token]);
 
     const handleAddItem = (newItem) => {
         setItems((prev) => {
             const existing = prev.find(
-                (p) => p.productId === newItem.productId
+                (p) => p.product_id === newItem.product_id
             );
 
             if (existing) {
                 return prev.map((p) =>
-                    p.productId === newItem.productId
+                    p.product_id === newItem.product_id
                         ? { ...p, qty: p.qty + newItem.qty }
                         : p
                 );
@@ -60,7 +80,7 @@ const PembelianItems = ({ items, setItems }) => {
                     )}
 
                     {items.map((item) => (
-                        <tr key={item.productId}>
+                        <tr key={item.product_id}>
                             <td>{item.name}</td>
                             <td>{item.qty}</td>
                             <td>{item.unit}</td>
@@ -78,8 +98,7 @@ const PembelianItems = ({ items, setItems }) => {
                                         setItems((prev) =>
                                             prev.filter(
                                                 (p) =>
-                                                    p.productId !==
-                                                    item.productId
+                                                    p.product_id !== item.product_id
                                             )
                                         )
                                     }

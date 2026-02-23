@@ -27,34 +27,51 @@ const Customers = () => {
     const { authData } = useAuth();
 
     const [customers, setCustomers] = useState([]);
-    useEffect(() => {
-        if (!authData?.id) return;
+    const fetchCustomers = async () => {
+        try {
+            const res = await fetch("http://localhost:5000/api/customers", {
+                headers: {
+                    Authorization: `Bearer ${authData.token}`,
+                },
+            });
 
-        const saved = localStorage.getItem(`customers_${authData.id}`);
-        setCustomers(saved ? JSON.parse(saved) : []);
-    }, [authData]);
+            if (!res.ok) throw new Error("Gagal fetch");
 
-    useEffect(() => {
-        if (!authData) return;
+            const data = await res.json();
+            setCustomers(data);
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
-
-        const USERS_KEY = `users_owner_${ownerId}`;
-
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
+        } catch (err) {
+            console.error(err);
         }
+    };
+
+    useEffect(() => {
+        if (!authData?.token) return;
+        fetchCustomers();
     }, [authData]);
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
+
+        fetchProfile();
+    }, [authData?.token]);
 
     useEffect(() => {
         setSelectedCustomer(null);
@@ -97,48 +114,50 @@ const Customers = () => {
         XLSX.writeFile(workbook, "customers.xlsx");
     };
 
-    const handleImport = (e) => {
+    const handleImport = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
 
-        reader.onload = (evt) => {
+        reader.onload = async (evt) => {
             const data = new Uint8Array(evt.target.result);
             const workbook = XLSX.read(data, { type: "array" });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet);
 
-            const imported = rows.map((row) => ({
-                id: Date.now() + Math.random(),
-                ownerId: authData.id,
-                name: row.name || "",
-                email: row.email || "-",
-                phone: row.phone || "",
-                address: row.address || "",
-                point: Number(row.point || 0),
-                code:
-                    row.code ||
-                    Math.floor(100000 + Math.random() * 900000).toString(),
-            }));
+            try {
+                for (const row of rows) {
+                    await fetch("http://localhost:5000/api/customers", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                        body: JSON.stringify({
+                            name: row.name || "",
+                            phone: row.phone || "",
+                            address: row.address || "",
+                            email: row.email || "",
+                        }),
+                    });
+                }
 
-            const merged = [
-                ...imported.filter(
-                    newCust =>
-                        !customers.some(
-                            c => c.phone?.trim() === newCust.phone?.trim()
-                        )
+                // Reload setelah import selesai
+                const reload = await fetch("http://localhost:5000/api/customers", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-                ),
-                ...customers
-            ];
+                const customersData = await reload.json();
+                setCustomers(customersData);
 
-            setCustomers(merged);
-            localStorage.setItem(
-                `customers_${authData.id}`,
-                JSON.stringify(merged)
-            );
+                alert("Import berhasil");
 
+            } catch (err) {
+                console.error(err);
+            }
         };
 
         reader.readAsArrayBuffer(file);
@@ -352,38 +371,39 @@ const Customers = () => {
             <AddCustomersModal
                 open={openModal}
                 onClose={() => setOpenModal(false)}
-                onSubmit={(data) => {
-                    if (!data.name?.trim()) {
-                        alert("Nama pelanggan wajib diisi");
-                        return;
+                onSubmit={async (data) => {
+                    try {
+                        const res = await fetch("http://localhost:5000/api/customers", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${authData.token}`,
+                            },
+                            body: JSON.stringify(data),
+                        });
+
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            alert(result.message);
+                            return;
+                        }
+
+                        // Reload data dari server
+                        const reload = await fetch("http://localhost:5000/api/customers", {
+                            headers: {
+                                Authorization: `Bearer ${authData.token}`,
+                            },
+                        });
+
+                        const customersData = await reload.json();
+                        setCustomers(customersData);
+
+                        setOpenModal(false);
+
+                    } catch (err) {
+                        console.error(err);
                     }
-
-                    if (customers.some(c => c.phone?.trim() === data.phone?.trim()
-                    )) {
-                        alert("Nomor telepon sudah terdaftar");
-                        return;
-                    }
-
-                    const newCustomer = {
-                        id: Date.now(),
-                        ownerId: authData.id,
-                        name: data.name,
-                        phone: data.phone,
-                        address: data.address,
-                        email: data.email || "-",
-                        point: 0,
-                        code: Math.floor(100000 + Math.random() * 900000).toString(),
-                    };
-
-                    const updated = [newCustomer, ...customers];
-
-                    setCustomers(updated);
-                    localStorage.setItem(
-                        `customers_${authData.id}`,
-                        JSON.stringify(updated)
-                    );
-
-                    setOpenModal(false);
                 }}
             />
 
@@ -391,30 +411,42 @@ const Customers = () => {
                 open={editModalOpen}
                 customer={selectedCustomer}
                 onClose={() => setEditModalOpen(false)}
-                onSubmit={(updated) => {
-                    if (
-                        customers.some(
-                            c =>
-                                c.phone?.trim() === updated.phone?.trim() &&
-                                c.id !== updated.id
-                        )
-                    ) {
-                        alert("Nomor telepon sudah digunakan pelanggan lain");
-                        return;
+                onSubmit={async (updated) => {
+                    try {
+                        const res = await fetch(
+                            `http://localhost:5000/api/customers/${updated.id}`,
+                            {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${authData.token}`,
+                                },
+                                body: JSON.stringify(updated),
+                            }
+                        );
+
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            alert(result.message);
+                            return;
+                        }
+
+                        const reload = await fetch("http://localhost:5000/api/customers", {
+                            headers: {
+                                Authorization: `Bearer ${authData.token}`,
+                            },
+                        });
+
+                        const customersData = await reload.json();
+                        setCustomers(customersData);
+
+                        setEditModalOpen(false);
+                        setSelectedCustomer(null);
+
+                    } catch (err) {
+                        console.error(err);
                     }
-
-                    const newData = customers.map((c) =>
-                        c.id === updated.id ? { ...c, ...updated } : c
-                    );
-
-                    setCustomers(newData);
-                    localStorage.setItem(
-                        `customers_${authData.id}`,
-                        JSON.stringify(newData)
-                    );
-                    setEditModalOpen(false);
-                    setSelectedCustomer(null);
-
                 }}
             />
 
@@ -422,17 +454,33 @@ const Customers = () => {
                 open={deleteModalOpen}
                 customer={selectedCustomer}
                 onClose={() => setDeleteModalOpen(false)}
-                onConfirm={(id) => {
-                    const updated = customers.filter((c) => c.id !== id);
+                onConfirm={async (id) => {
+                    try {
+                        await fetch(
+                            `http://localhost:5000/api/customers/${id}`,
+                            {
+                                method: "DELETE",
+                                headers: {
+                                    Authorization: `Bearer ${authData.token}`,
+                                },
+                            }
+                        );
 
-                    setCustomers(updated);
-                    localStorage.setItem(
-                        `customers_${authData.id}`,
-                        JSON.stringify(updated)
-                    );
+                        const reload = await fetch("http://localhost:5000/api/customers", {
+                            headers: {
+                                Authorization: `Bearer ${authData.token}`,
+                            },
+                        });
 
-                    setDeleteModalOpen(false);
-                    setSelectedCustomer(null);
+                        const customersData = await reload.json();
+                        setCustomers(customersData);
+
+                        setDeleteModalOpen(false);
+                        setSelectedCustomer(null);
+
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }}
             />
         </div>

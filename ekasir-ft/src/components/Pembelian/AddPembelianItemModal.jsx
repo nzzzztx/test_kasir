@@ -13,7 +13,7 @@ const AddPembelianItemModal = ({
     useEffect(() => {
         if (!open) {
             setSelectedId("");
-            setQty(0);
+            setQty(1);
             setPrice("");
         }
     }, [open]);
@@ -41,7 +41,7 @@ const AddPembelianItemModal = ({
         }
 
         const newItem = {
-            productId: selectedProduct.id,
+            product_id: selectedProduct.id,
             name: selectedProduct.name,
             unit: selectedProduct.unit || "Pcs",
             qty: Number(qty),
@@ -69,7 +69,7 @@ const AddPembelianItemModal = ({
                                     String(e.target.value)
                             );
                             if (product) {
-                                setPrice(product.price || "");
+                                setPrice(product.purchase_price || "");
                             }
                         }}
                     >
@@ -101,7 +101,7 @@ const AddPembelianItemModal = ({
                         min="0"
                         value={price}
                         onChange={(e) =>
-                            setPrice(Number(e.target.value))
+                            setPrice(e.target.value ? Number(e.target.value) : "")
                         }
                     />
                 </div>

@@ -1,5 +1,5 @@
 import html2pdf from "html2pdf.js";
-import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
 
 const PembelianActions = ({
     items,
@@ -8,30 +8,16 @@ const PembelianActions = ({
     total,
     setPaidAmount,
     paymentStatus,
+    tanggal,
     onSaved
 }) => {
     const sisa = Math.max(total - paidAmount, 0);
-    const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
 
     const handleExportDraftPDF = () => {
-        const draft = {
-            supplier,
-            items,
-            paidAmount,
-            total,
-            status: "DRAFT",
-            date: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        localStorage.setItem(
-            `pembelian_draft_owner_${ownerId}`,
-            JSON.stringify(draft)
-        );
-
-        const element = document.getElementById("pembelian-pdf");
+        const element = document.getElementById("draft-pdf");
         if (!element) {
-            alert("Data belum siap");
+            alert("Draft belum siap");
             return;
         }
 
@@ -41,75 +27,70 @@ const PembelianActions = ({
             html2canvas: { scale: 2 },
             jsPDF: { format: "a4", orientation: "portrait" }
         }).save();
-
-        alert("Draft pembelian disimpan");
     };
 
-    const handleSavePembelian = () => {
+    const handleSavePembelian = async () => {
+        if (!authData?.token) {
+            alert("Session expired");
+            return;
+        }
+
         if (!supplier) return alert("Pilih supplier");
         if (items.length === 0) return alert("Tambahkan barang");
 
         if (paymentStatus === "lunas" && paidAmount < total) {
-            return alert("Pembayaran belum lunas");
+            return alert("Pembayaran belum lunas!");
         }
 
-        const pembelian = {
-            id: Date.now(),
-            invoiceNumber: `INV-PB-${Date.now()}`,
-            supplier,
-            items,
-            total,
-            tanggal,
-            paidAmount,
-            status: paymentStatus === "lunas" ? "SELESAI" : "BELUM_LUNAS",
-            createdAt: new Date().toISOString(),
-            payments: [
-                {
-                    id: Date.now(),
-                    type: paymentStatus === "lunas" ? "PELUNASAN" : "DP",
-                    amount: paidAmount,
-                    date: new Date().toISOString()
-                }
-            ]
-        };
+        const sisa = Math.max(total - paidAmount, 0);
 
-        const existing =
-            JSON.parse(localStorage.getItem(`pembelian_list_owner_${ownerId}`)) || [];
+        try {
+            const res = await fetch("http://localhost:5000/api/purchases", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`
+                },
+                body: JSON.stringify({
+                    supplier_id: supplier.id,
+                    purchase_date: tanggal,
+                    paid_amount: paidAmount,
+                    payment_status: paymentStatus,
+                    items: items.map(i => ({
+                        product_id: i.product_id,
+                        qty: Number(i.qty),
+                        price: Number(i.price)
+                    }))
+                })
+            });
 
-        const products =
-            JSON.parse(localStorage.getItem(`products_${ownerId}`)) || [];
+            const result = await res.json();
 
-        const updatedProducts = products.map((prod) => {
-            const totalQty = items
-                .filter(i => i.productId === prod.id)
-                .reduce((sum, item) => sum + Number(item.qty), 0);
+            if (!res.ok) {
+                alert(result.message);
+                return;
+            }
 
-            if (totalQty === 0) return prod;
+            onSaved({
+                id: result.id || Date.now(),
+                invoiceNumber: result.invoiceNumber,
+                supplier,
+                items,
+                total,
+                paidAmount,
+                sisa,
+                status: paymentStatus,
+                tanggal: tanggal,
+                createdAt: new Date().toISOString()
+            });
 
-            return {
-                ...prod,
-                stock: Number(prod.stock) + totalQty
-            };
-        });
+            alert("Pembelian berhasil disimpan ✅");
 
-        localStorage.setItem(
-            `products_${ownerId}`,
-            JSON.stringify(updatedProducts)
-        );
-
-        localStorage.setItem(
-            `pembelian_list_owner_${ownerId}`,
-            JSON.stringify([...existing, pembelian])
-        );
-
-        localStorage.removeItem(`pembelian_draft_owner_${ownerId}`);
-
-        onSaved(pembelian);
-
-        alert("Pembelian berhasil disimpan ✅");
+        } catch (err) {
+            console.error(err);
+            alert("Gagal simpan pembelian");
+        }
     };
-
-
 
     return (
         <div className="pembelian-actions">

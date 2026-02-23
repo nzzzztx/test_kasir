@@ -30,11 +30,35 @@ const Suppliers = () => {
     const [suppliers, setSuppliers] = useState([]);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
+        fetchSuppliers();
+    }, [authData?.token]);
 
-        const saved = localStorage.getItem(`suppliers_${authData.id}`);
-        setSuppliers(saved ? JSON.parse(saved) : []);
-    }, [authData]);
+    const fetchSuppliers = async () => {
+        try {
+            const res = await fetch(
+                "http://localhost:5000/api/suppliers",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            if (!res.ok) {
+                const error = await res.json();
+                console.error("Supplier error:", error);
+                setSuppliers([]);
+                return;
+            }
+
+            const data = await res.json();
+            setSuppliers(data);
+
+        } catch (err) {
+            console.error("Gagal ambil suppliers:", err);
+        }
+    };
 
     const {
         notifications,
@@ -46,7 +70,7 @@ const Suppliers = () => {
         setSelectedSupplier(null);
         setSearch("");
         setPage(1);
-    }, [authData]);
+    }, [authData?.token]);
 
     const filtered = suppliers.filter((s) =>
         (s.name || "").toLowerCase().includes(search.toLowerCase())
@@ -62,78 +86,96 @@ const Suppliers = () => {
     );
 
     const handleExport = () => {
-        if (!suppliers.length) return;
-        const worksheet = XLSX.utils.json_to_sheet(suppliers);
+        if (!suppliers.length) {
+            alert("Tidak ada data untuk diexport");
+            return;
+        }
+
+        const cleanData = suppliers.map(s => ({
+            Nama: s.name,
+            Alamat: s.address,
+            Email: s.email,
+            Telepon: s.phone,
+            Kode: s.code,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(cleanData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Suppliers");
-        XLSX.writeFile(workbook, "suppliers.xlsx");
+
+        XLSX.writeFile(workbook, `suppliers_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
-    const handleImport = (e) => {
+    const handleImport = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (evt) => {
+
+        reader.onload = async (evt) => {
             const data = new Uint8Array(evt.target.result);
             const workbook = XLSX.read(data, { type: "array" });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet);
 
-            const imported = rows.map((row) => ({
-                id: Date.now() + Math.random(),
-                ownerId: authData.id,
-                name: row.name || "",
-                address: row.address || "",
-                email: row.email || "-",
-                phone: row.phone || "",
-                code:
-                    row.code ||
-                    Math.floor(100000 + Math.random() * 900000).toString(),
-            }));
+            try {
+                for (const row of rows) {
+                    const res = await fetch("http://localhost:5000/api/suppliers", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                        body: JSON.stringify({
+                            name: row.Nama || row.name,
+                            address: row.Alamat || row.address,
+                            email: row.Email || row.email,
+                            phone: row.Telepon || row.phone,
+                        }),
+                    });
 
-            const merged = [
-                ...imported.filter(
-                    newSup =>
-                        !suppliers.some(
-                            s => s.phone?.trim() === updated.phone?.trim() &&
-                                s.id !== updated.id
-                        )
-                ),
-                ...suppliers
-            ];
+                    if (!res.ok) {
+                        const error = await res.json();
+                        console.error("Import error:", error);
+                    }
+                }
 
-            setSuppliers(merged);
-            localStorage.setItem(
-                `suppliers_${authData.id}`,
-                JSON.stringify(merged)
-            );
+                await fetchSuppliers();
+                alert("Import selesai");
+                e.target.value = "";
+
+            } catch (err) {
+                console.error(err);
+                alert("Gagal import data");
+            }
+
         };
 
         reader.readAsArrayBuffer(file);
     };
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -360,33 +402,34 @@ const Suppliers = () => {
             <AddSupplierModal
                 open={openModal}
                 onClose={() => setOpenModal(false)}
-                onSubmit={(data) => {
-                    if (!data.name?.trim()) {
-                        alert("Nama supplier wajib diisi");
-                        return;
+                onSubmit={async (data) => {
+                    try {
+                        const res = await fetch(
+                            "http://localhost:5000/api/suppliers",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${authData.token}`,
+                                },
+                                body: JSON.stringify(data),
+                            }
+                        );
+
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            alert(result.message);
+                            return;
+                        }
+
+                        await fetchSuppliers();
+                        setOpenModal(false);
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("Gagal tambah supplier");
                     }
-
-                    if (suppliers.some(
-                        s => s.phone?.trim() === data.phone?.trim()
-                    )) {
-                        alert("Nomor telepon sudah terdaftar");
-                        return;
-                    }
-
-                    const newSupplier = {
-                        id: Date.now(),
-                        ownerId: authData.id,
-                        ...data,
-                        code: Math.floor(100000 + Math.random() * 900000).toString(),
-                    };
-
-                    const updated = [newSupplier, ...suppliers];
-                    setSuppliers(updated);
-                    localStorage.setItem(
-                        `suppliers_${authData.id}`,
-                        JSON.stringify(updated)
-                    );
-                    setOpenModal(false);
                 }}
             />
 
@@ -394,29 +437,35 @@ const Suppliers = () => {
                 open={editModalOpen}
                 supplier={selectedSupplier}
                 onClose={() => setEditModalOpen(false)}
-                onSubmit={(updated) => {
-                    if (
-                        suppliers.some(
-                            s =>
-                                s.phone?.trim() === updated.phone?.trim() &&
-                                s.id !== updated.id
-                        )
-                    ) {
-                        alert("Nomor telepon sudah digunakan supplier lain");
-                        return;
+                onSubmit={async (updated) => {
+                    try {
+                        const res = await fetch(
+                            `http://localhost:5000/api/suppliers/${updated.id}`,
+                            {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${authData.token}`,
+                                },
+                                body: JSON.stringify(updated),
+                            }
+                        );
+
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            alert(result.message);
+                            return;
+                        }
+
+                        await fetchSuppliers();
+                        setEditModalOpen(false);
+                        setSelectedSupplier(null);
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("Gagal update supplier");
                     }
-
-                    const newData = suppliers.map((s) =>
-                        s.id === updated.id ? { ...s, ...updated } : s
-                    );
-                    setSuppliers(newData);
-                    localStorage.setItem(
-                        `suppliers_${authData.id}`,
-                        JSON.stringify(newData)
-                    );
-                    setEditModalOpen(false);
-                    setSelectedSupplier(null);
-
                 }}
             />
 
@@ -424,15 +473,33 @@ const Suppliers = () => {
                 open={deleteModalOpen}
                 supplier={selectedSupplier}
                 onClose={() => setDeleteModalOpen(false)}
-                onConfirm={(id) => {
-                    const updated = suppliers.filter((s) => s.id !== id);
-                    setSuppliers(updated);
-                    localStorage.setItem(
-                        `suppliers_${authData.id}`,
-                        JSON.stringify(updated)
-                    );
-                    setDeleteModalOpen(false);
-                    setSelectedSupplier(null);
+                onConfirm={async (id) => {
+                    try {
+                        const res = await fetch(
+                            `http://localhost:5000/api/suppliers/${id}`,
+                            {
+                                method: "DELETE",
+                                headers: {
+                                    Authorization: `Bearer ${authData.token}`,
+                                },
+                            }
+                        );
+
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            alert(result.message);
+                            return;
+                        }
+
+                        await fetchSuppliers();
+                        setDeleteModalOpen(false);
+                        setSelectedSupplier(null);
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("Gagal hapus supplier");
+                    }
                 }}
             />
         </div>

@@ -45,6 +45,7 @@ const PembelianForm = ({
                     <label>Tanggal Pembelian</label>
                     <input
                         type="date"
+                        className="input-date"
                         value={tanggal}
                         onChange={(e) => setTanggal(e.target.value)}
                     />
@@ -54,13 +55,13 @@ const PembelianForm = ({
                     <label>Status Pembayaran</label>
                     <select
                         value={paymentStatus}
-                        disabled={!isSupplierLocked}
+                        // disabled={!isSupplierLocked}
                         onChange={(e) =>
                             setPaymentStatus(e.target.value)
                         }
                     >
                         <option value="lunas">Lunas</option>
-                        <option value="belum">Belum Lunas</option>
+                        <option value="belum_lunas">Belum Lunas</option>
                     </select>
                 </div>
             </div>

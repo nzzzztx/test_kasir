@@ -87,7 +87,14 @@ const Product = () => {
 
         const fetchProducts = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/products/${ownerId}`);
+                const res = await fetch(
+                    `http://localhost:5000/api/products`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                    }
+                );
                 const data = await res.json();
 
                 setProducts(formatProducts(data));
@@ -133,13 +140,10 @@ const Product = () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
                 },
-                body: JSON.stringify({
-                    ...data,
-                    ownerId
-                }),
+                body: JSON.stringify(data),
             });
-
             const result = await res.json();
 
             if (!res.ok) {
@@ -150,7 +154,12 @@ const Product = () => {
             alert("Produk berhasil ditambahkan");
 
             const refresh = await fetch(
-                `http://localhost:5000/api/products/${ownerId}`
+                `http://localhost:5000/api/products`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
             );
             const newData = await refresh.json();
             setProducts(formatProducts(newData));
@@ -558,9 +567,13 @@ const Product = () => {
                                         try {
                                             await fetch(
                                                 `http://localhost:5000/api/products/${selectedProduct.id}`,
-                                                { method: "DELETE" }
+                                                {
+                                                    method: "DELETE",
+                                                    headers: {
+                                                        Authorization: `Bearer ${authData.token}`,
+                                                    },
+                                                }
                                             );
-
                                             const ownerId =
                                                 authData.role === "owner"
                                                     ? authData.id
