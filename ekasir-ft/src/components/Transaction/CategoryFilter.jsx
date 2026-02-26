@@ -1,7 +1,11 @@
 const CategoryFilter = ({ products = [], active, setActive }) => {
     const categories = [
         "Semua",
-        ...new Set(products.map((p) => p.category).filter(Boolean)),
+        ...new Set(
+            products
+                .map((p) => p.category_name)
+                .filter(Boolean)
+        ),
     ];
 
     return (
@@ -10,7 +14,8 @@ const CategoryFilter = ({ products = [], active, setActive }) => {
                 <button
                     key={cat}
                     type="button"
-                    className={`category-chip ${cat === active ? "active" : ""}`}
+                    className={`category-chip ${cat === active ? "active" : ""
+                        }`}
                     onClick={() => setActive(cat)}
                 >
                     {cat}

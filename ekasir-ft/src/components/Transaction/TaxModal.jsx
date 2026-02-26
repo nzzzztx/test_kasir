@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const TaxModal = ({
+    taxes = [],
     onClose,
     onSelect,
-    storageKey = "taxes"
 }) => {
-    const [taxes, setTaxes] = useState([]);
     const [selected, setSelected] = useState(null);
-
-    useEffect(() => {
-        const saved = JSON.parse(
-            localStorage.getItem(storageKey) || "[]"
-        );
-        setTaxes(saved);
-    }, [storageKey]);
 
     const handleSave = () => {
         if (!selected) return;
@@ -36,14 +28,18 @@ const TaxModal = ({
                         <button
                             key={t.id}
                             type="button"
-                            className={`discount-item ${selected?.id === t.id ? "active" : ""}`}
+                            className={`discount-item ${selected?.id === t.id ? "active" : ""
+                                }`}
                             onClick={() => setSelected(t)}
                         >
                             <div className="name">{t.name}</div>
+
                             <div className="value">
                                 {t.type === "percent"
                                     ? `${t.value}%`
-                                    : `Rp ${Number(t.value).toLocaleString("id-ID")}`}
+                                    : `Rp ${Number(t.value).toLocaleString(
+                                        "id-ID"
+                                    )}`}
                             </div>
                         </button>
                     ))}

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { isStockEnough, reduceStock } from "../../utils/stock";
 import { getInfoToko } from "../../utils/toko";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { getCurrentOwnerId } from "../../utils/owner";
+import { useNavigate } from "react-router-dom";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
@@ -16,7 +16,7 @@ import ReceiptPreview from "../../components/Payment/ReceiptPreview";
 const Payment = () => {
     const ownerId = getCurrentOwnerId();
     const { authData } = useAuth();
-
+    const navigate = useNavigate();
     const [transaction, setTransaction] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ const Payment = () => {
         }
 
         const saved = localStorage.getItem(
-            `current_transaction_owner_${ownerId}`
+            `pending_transaction_owner_${ownerId}`
         );
 
         if (!saved) {
@@ -51,12 +51,27 @@ const Payment = () => {
             if (parsed?.items?.length) {
                 setTransaction(parsed);
             }
-        } catch { }
+        } catch (err) {
+            console.error("Gagal parse transaksi:", err);
+        }
 
         setLoading(false);
     }, [ownerId]);
 
-    const handleKeyPress = (key) => {
+    useEffect(() => {
+        if (!ownerId) return;
+
+        const activeShift = JSON.parse(
+            localStorage.getItem(`active_shift_${ownerId}`)
+        );
+
+        if (!activeShift?.isOpen) {
+            alert("Shift belum dimulai");
+            navigate("/dashboard/shift");
+        }
+    }, [ownerId]);
+
+    const handleKeyPress = async (key) => {
         if (!transaction) return;
 
         const finalTotal = Number(transaction.finalTotal || 0);
@@ -70,12 +85,12 @@ const Payment = () => {
                 localStorage.getItem(`active_shift_${ownerId}`)
             );
 
-            if (!activeShift) {
+            if (!activeShift?.isOpen) {
                 alert("Shift belum dimulai");
                 return;
             }
 
-            if (method === "EDC" && !subMethod) {
+            if (["EDC", "TRANSFER", "EWALLET"].includes(method) && !subMethod) {
                 alert("Pilih metode detail terlebih dahulu");
                 return;
             }
@@ -92,83 +107,76 @@ const Payment = () => {
 
             const change = paid - finalTotal;
 
-            const products = JSON.parse(
-                localStorage.getItem(`products_${ownerId}`) || "[]"
-            );
+            try {
+                const response = await fetch(
+                    "http://localhost:5000/api/transactions",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                        body: JSON.stringify({
+                            shift_id: activeShift.id,
+                            payment_method: method,
+                            payment_sub_method: subMethod,
+                            paid_amount: paid,
+                            discount_total: transaction.discountTotal || 0,
+                            tax_total: transaction.taxTotal || 0,
+                            items: transaction.items.map(i => ({
+                                product_id: i.id,
+                                qty: i.qty,
+                            })),
+                        }),
+                    }
+                );
 
-            const cartItems = transaction.items.map(item => ({
-                productKey: item.code,
-                qty: item.qty,
-            }));
+                const data = await response.json();
 
-            if (!isStockEnough(products, cartItems)) {
-                alert("Stok berubah / tidak mencukupi");
-                return;
+                if (!response.ok) {
+                    alert(data.message || "Transaksi gagal");
+                    return;
+                }
+
+                const updatedTransaction = {
+                    ...transaction,
+                    invoiceNumber: data.invoice,
+                    paidAmount: paid,
+                    change,
+                    paymentMethod: method,
+                    paymentSubMethod: subMethod,
+                    paidAt: new Date().toISOString(),
+                    status: "paid",
+                    cashier:
+                        transaction.cashier ||
+                        activeShift.cashier ||
+                        "Kasir",
+                    shiftStartedAt: activeShift.startedAt,
+                };
+
+                localStorage.removeItem(
+                    `pending_transaction_owner_${ownerId}`
+                );
+
+                pushNotification({
+                    type: "payment",
+                    title: "Pembayaran Berhasil",
+                    message: `Transaksi ${data.invoice} berhasil`,
+                });
+
+                setTransaction(updatedTransaction);
+                setReceiptData(updatedTransaction);
+                setKembalian(change);
+                setShowValidasi(true);
+
+                setPaidAmount("");
+                setMethod("TUNAI");
+                setSubMethod(null);
+
+            } catch (err) {
+                console.error(err);
+                alert("Terjadi kesalahan koneksi");
             }
-
-            const updatedProducts = reduceStock(products, cartItems);
-
-            localStorage.setItem(
-                `products_${ownerId}`,
-                JSON.stringify(updatedProducts)
-            );
-
-            const invoiceKey = `invoice_counter_owner_${ownerId}`;
-            const lastNumber =
-                Number(localStorage.getItem(invoiceKey) || 0) + 1;
-
-            localStorage.setItem(invoiceKey, lastNumber);
-
-            const invoiceNumber =
-                `INV-${ownerId}-${String(lastNumber).padStart(5, "0")}`;
-
-            const updatedTransaction = {
-                ...transaction,
-                invoiceNumber,
-                paidAmount: paid,
-                change,
-                paymentMethod: method,
-                paymentSubMethod: subMethod,
-                paidAt: new Date().toISOString(),
-                status: "paid",
-                cashier:
-                    transaction.cashier ||
-                    activeShift.cashier ||
-                    "Kasir",
-                shiftStartedAt: activeShift.startedAt,
-            };
-
-            const transactionsKey = `transactions_owner_${ownerId}`;
-            const history = JSON.parse(
-                localStorage.getItem(transactionsKey) || "[]"
-            );
-
-            history.unshift(updatedTransaction);
-
-            localStorage.setItem(
-                transactionsKey,
-                JSON.stringify(history)
-            );
-
-            localStorage.removeItem(
-                `current_transaction_owner_${ownerId}`
-            );
-
-            pushNotification({
-                type: "payment",
-                title: "Pembayaran Berhasil",
-                message: `Transaksi ${invoiceNumber} berhasil`,
-                ref: updatedTransaction.id,
-            });
-
-            setTransaction(updatedTransaction);
-            setReceiptData(updatedTransaction);
-            setKembalian(change);
-            setShowValidasi(true);
-
-            setPaidAmount("");
-            setMethod("TUNAI");
-            setSubMethod(null);
 
             return;
         }

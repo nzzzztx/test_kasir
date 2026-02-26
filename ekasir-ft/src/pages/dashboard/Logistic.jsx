@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { useLocation } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
@@ -32,14 +33,19 @@ const Logistics = () => {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
 
-        const STORAGE_KEY = `logistics_${authData.id}`;
+        const fetchLogs = async () => {
+            try {
+                const res = await api.get("/stock/logs");
+                setLogs(res.data);
+            } catch (err) {
+                console.error("Gagal ambil stock logs:", err);
+            }
+        };
 
-        const saved = localStorage.getItem(STORAGE_KEY);
-
-        setLogs(saved ? JSON.parse(saved) : []);
-    }, [authData]);
+        fetchLogs();
+    }, [authData?.token]);
 
     const isInRange = (date) => {
         const now = new Date();
@@ -69,13 +75,16 @@ const Logistics = () => {
 
     const filtered = logs.filter((l) => {
         const matchSearch =
-            (l.email || "").toLowerCase().includes(search.toLowerCase()) ||
-            (l.mode || "").toLowerCase().includes(search.toLowerCase());
+            (l.note || "").toLowerCase().includes(search.toLowerCase()) ||
+            String(l.created_by || "")
+                .toLowerCase()
+                .includes(search.toLowerCase());
 
         const matchProduct = selectedCode
-            ? String(l.code) === String(selectedCode)
+            ? String(l.product_id) === String(selectedCode)
             : true;
-        const matchDate = isInRange(l.date);
+
+        const matchDate = isInRange(l.created_at);
 
         return matchSearch && matchProduct && matchDate;
     });
@@ -226,14 +235,14 @@ const Logistics = () => {
                             <tbody>
                                 {paginated.map((item) => (
                                     <tr key={item.id}>
-                                        <td>{item.date}</td>
-                                        <td>{item.in}</td>
-                                        <td>{item.out}</td>
-                                        <td>{item.stock}</td>
-                                        <td>{item.basePrice.toLocaleString("id-ID")}</td>
-                                        <td>{item.sellPrice.toLocaleString("id-ID")}</td>
-                                        <td>{item.email}</td>
-                                        <td>{item.mode}</td>
+                                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                                        <td>{item.type === "in" ? item.qty : 0}</td>
+                                        <td>{item.type === "out" ? item.qty : 0}</td>
+                                        <td>{item.stock_after}</td>
+                                        <td>{item.base_price.toLocaleString("id-ID")}</td>
+                                        <td>{item.sell_price.toLocaleString("id-ID")}</td>
+                                        <td>{item.created_by}</td>
+                                        <td>{item.note}</td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -40,31 +40,39 @@ const Transaction = () => {
     useEffect(() => {
         if (!ownerId) return;
 
-        const saved = localStorage.getItem(`products_${ownerId}`);
-
-        if (saved) {
-            const parsed = JSON.parse(saved);
-
-            const formatted = parsed.map(prod => ({
-                ...prod,
-                priceMax: prod.priceMax ?? 0,
-                priceMin: prod.priceMin ?? 0,
-                stock: prod.stock ?? 0,
-            }));
-
-            setProducts(formatted);
-        }
+        fetch("http://localhost:5000/api/products", {
+            headers: {
+                Authorization: `Bearer ${authData.token}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                setProducts(data);
+            });
     }, [ownerId]);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
 
-        const savedDiscounts = localStorage.getItem(`discounts_${ownerId}`);
-        const savedTaxes = localStorage.getItem(`taxes_${ownerId}`);
+        const fetchExtras = async () => {
+            const [discRes, taxRes] = await Promise.all([
+                fetch("http://localhost:5000/api/discounts", {
+                    headers: { Authorization: `Bearer ${authData.token}` }
+                }),
+                fetch("http://localhost:5000/api/taxes", {
+                    headers: { Authorization: `Bearer ${authData.token}` }
+                })
+            ]);
 
-        setDiscounts(savedDiscounts ? JSON.parse(savedDiscounts) : []);
-        setTaxes(savedTaxes ? JSON.parse(savedTaxes) : []);
-    }, [authData]);
+            const discountsData = await discRes.json();
+            const taxesData = await taxRes.json();
+
+            setDiscounts(discountsData);
+            setTaxes(taxesData);
+        };
+
+        fetchExtras();
+    }, [authData?.token]);
 
     const {
         notifications,
@@ -86,12 +94,12 @@ const Transaction = () => {
 
         const stock = Number(product.stock) || 0;
 
-        if (product.showInTransaction === false) {
+        if (product.show_in_transaction === false) {
             alert("Produk tidak ditampilkan di transaksi");
             return;
         }
 
-        if (product.useStock !== false && stock <= 0) {
+        if (product.use_stock && stock <= 0) {
             alert("Stok produk habis");
             return;
         }
@@ -100,7 +108,7 @@ const Transaction = () => {
             const exist = prev.find((i) => i.code === product.code);
 
             if (exist) {
-                if (product.useStock !== false && exist.qty >= stock) {
+                if (product.use_stock && exist.qty >= stock) {
                     return prev;
                 }
 
@@ -112,11 +120,11 @@ const Transaction = () => {
             return [
                 ...prev,
                 {
+                    id: product.id,   // WAJIB
                     code: product.code,
                     name: product.name,
-                    sellPrice: product.priceMax ?? 0,
-                    image: product.image,
-                    qty: 1,
+                    sellPrice: product.price_max,
+                    qty: 1
                 },
             ];
         });
@@ -125,26 +133,27 @@ const Transaction = () => {
     };
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (

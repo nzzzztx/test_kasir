@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const EditCartModal = ({ item, maxQty = item.qty, onClose, onSave }) => {
+const EditCartModal = ({ item, maxQty, onClose, onSave }) => {
+    if (!item) return null;
     const [qty, setQty] = useState(item.qty);
     // const [discountType, setDiscountType] = useState("%");
     // const [discountValue, setDiscountValue] = useState(0);
@@ -17,16 +18,7 @@ const EditCartModal = ({ item, maxQty = item.qty, onClose, onSave }) => {
     // };
 
     const getFinalPrice = () => {
-        let base = item.sellPrice * qty;
-
-        if (discountValue > 0) {
-            base =
-                discountType === "%"
-                    ? base - base * (discountValue / 100)
-                    : base - discountValue;
-        }
-
-        return Math.max(base, 0);
+        return item.sellPrice * qty;
     };
 
     return (

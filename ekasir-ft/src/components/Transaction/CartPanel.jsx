@@ -44,7 +44,7 @@ const CartPanel = ({
             return subtotal - subtotal * (discount.value / 100);
         }
 
-        return subtotal - discount.value;
+        return Math.max(subtotal - discount.value, 0);
     })();
 
     const taxAmount = (() => {
@@ -75,47 +75,46 @@ const CartPanel = ({
     const handlePay = () => {
         if (!cart.length) return;
 
-        const activeShift = JSON.parse(
-            localStorage.getItem(`active_shift_${ownerId}`)
-        );
-
-        if (!activeShift) {
-            alert("Belum ada shift aktif");
-            return;
-        }
-
-        const payload = {
-            id: Date.now(),
-            items: [...cart],
-            customer: {
-                name: customer.name?.trim() || "Umum",
-                phone: customer.phone?.trim() || "-",
-                address: customer.address?.trim() || "-",
-            },
-            subtotal,
-            discount,
-            discountAmount: Math.max(subtotal - afterDiscount, 0),
-            tax,
-            taxAmount,
-            finalTotal,
-            cashier:
-                cashierName ||
-                activeShift.cashier ||
-                "Kasir",
-            shiftStartedAt: activeShift.startedAt,
-            status: "pending",
-            createdAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem(
-            `current_transaction_owner_${ownerId}`,
-            JSON.stringify(payload)
-        );
-
         if (!ownerId) {
             alert("Owner tidak ditemukan");
             return;
         }
+
+        // 🔥 CEK SHIFT AKTIF
+        const activeShift = JSON.parse(
+            localStorage.getItem(`active_shift_${ownerId}`)
+        );
+
+        if (!activeShift || !activeShift.isOpen) {
+            alert("Shift belum dimulai. Silakan mulai shift terlebih dahulu.");
+            navigate("/dashboard/shift");
+            return;
+        }
+
+        // 🔥 GENERATE PENDING TRANSACTION
+        const payload = {
+            items: cart.map(item => ({
+                id: item.id,
+                product_id: item.id,
+                product_name: item.name,
+                price: item.sellPrice,
+                qty: item.qty
+            })),
+            subtotal,
+            discount,
+            discountTotal: Math.max(subtotal - afterDiscount, 0),
+            tax,
+            taxTotal: taxAmount,
+            finalTotal,
+            cashier: cashierName || activeShift.cashier || "Kasir",
+            shift_id: activeShift.id,
+            shiftStartedAt: activeShift.startedAt
+        };
+
+        localStorage.setItem(
+            `pending_transaction_owner_${ownerId}`,
+            JSON.stringify(payload)
+        );
 
         navigate("/dashboard/transaction/payment");
     };
@@ -231,7 +230,9 @@ const CartPanel = ({
             {editItem && (
                 <EditCartModal
                     item={editItem}
-                    maxQty={editItem.stock ?? editItem.qty}
+                    maxQty={
+                        products.find(p => p.id === editItem.id)?.stock || editItem.qty
+                    }
                     onClose={() => setEditItem(null)}
                     onSave={(updated) => {
                         setCart(prev =>
@@ -247,7 +248,7 @@ const CartPanel = ({
             {showDiscount && (
                 <DiscountModal
                     title="Pilih Diskon"
-                    storageKey={`discounts_${ownerId}`}
+                    discounts={discounts}
                     onClose={() => setShowDiscount(false)}
                     onSelect={(d) => {
                         setDiscount(d);
@@ -256,11 +257,10 @@ const CartPanel = ({
                 />
             )}
 
-
             {showTax && (
                 <TaxModal
                     title="Pilih Pajak"
-                    storageKey={`taxes_${ownerId}`}
+                    taxes={taxes}
                     onClose={() => setShowTax(false)}
                     onSelect={(t) => {
                         setTax(t);

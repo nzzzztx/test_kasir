@@ -20,9 +20,9 @@ const PaymentContent = ({
         items = [],
         subtotal = 0,
         discount = null,
-        discountAmount = 0,
+        discountTotal = 0,
         tax = null,
-        taxAmount = 0,
+        taxTotal = 0,
         finalTotal = 0,
     } = transaction;
 
@@ -73,18 +73,18 @@ const PaymentContent = ({
 
                 <div className="payment-receipt-list">
                     {items.map((item) => (
-                        <div key={item.code} className="payment-receipt-item">
+                        <div key={item.id} className="payment-receipt-item">
                             <div className="qty">{item.qty}</div>
 
                             <div className="item-info">
-                                <div className="name">{item.name}</div>
+                                <div className="name">{item.product_name}</div>
                                 <div className="sub">
-                                    {item.qty} x Rp {item.sellPrice.toLocaleString("id-ID")}
+                                    {item.qty} x Rp {Number(item.price).toLocaleString("id-ID")}
                                 </div>
                             </div>
 
                             <div className="price">
-                                Rp {(item.sellPrice * item.qty).toLocaleString("id-ID")}
+                                Rp {(item.price * item.qty).toLocaleString("id-ID")}
                             </div>
                         </div>
                     ))}
@@ -96,7 +96,7 @@ const PaymentContent = ({
                         <span>Rp {subtotal.toLocaleString("id-ID")}</span>
                     </div>
 
-                    {discount && discountAmount > 0 && (
+                    {discount && discountTotal > 0 && (
                         <div className="row discount">
                             <span>
                                 Diskon
@@ -104,11 +104,11 @@ const PaymentContent = ({
                                 {discount?.type === "percent" ? ` ${discount.value}%` : ""}
                                 {discount?.name ? ")" : ""}
                             </span>
-                            <span>Rp -{discountAmount.toLocaleString("id-ID")}</span>
+                            <span>Rp -{discountTotal.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 
-                    {tax && taxAmount > 0 && (
+                    {tax && taxTotal > 0 && (
                         <div className="row">
                             <span>
                                 Pajak
@@ -116,7 +116,7 @@ const PaymentContent = ({
                                 {tax?.type === "percent" ? ` ${tax.value}%` : ""}
                                 {tax?.name ? ")" : ""}
                             </span>
-                            <span>Rp {taxAmount.toLocaleString("id-ID")}</span>
+                            <span>Rp {taxTotal.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 

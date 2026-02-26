@@ -3,6 +3,7 @@ import "../../assets/css/dashboard.css";
 import "../../assets/css/discount.css";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 import Sidebar from "../../components/Sidebar";
 import AddDiscountModal from "../../components/Discount/AddDiscountModal";
@@ -30,31 +31,35 @@ const Discount = () => {
     const [user, setUser] = useState(null);
 
     const [discounts, setDiscounts] = useState([]);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    if (authData?.role !== "owner") {
-        return null;
+    if (!authData) {
+        return <div>Loading session...</div>;
+    }
+
+    if (authData.role !== "owner") {
+        return <div>Akses hanya untuk Owner</div>;
     }
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
 
-        const saved = localStorage.getItem(
-            `discounts_${authData.id}`
-        );
+        fetchDiscounts();
+    }, [authData?.token]);
 
-        setDiscounts(saved ? JSON.parse(saved) : []);
-        setIsLoaded(true);
-    }, [authData]);
+    const fetchDiscounts = async () => {
+        try {
+            setLoading(true);
 
-    useEffect(() => {
-        if (!authData?.id || !isLoaded) return;
+            const res = await api.get("/discounts");
 
-        localStorage.setItem(
-            `discounts_${authData.id}`,
-            JSON.stringify(discounts)
-        );
-    }, [discounts, authData, isLoaded]);
+            setDiscounts(res.data);
+        } catch (err) {
+            console.error("Gagal ambil diskon:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filtered = discounts.filter((d) =>
         (d.name || "").toLowerCase().includes(search.toLowerCase())
@@ -66,26 +71,27 @@ const Discount = () => {
     }, [authData]);
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -206,50 +212,45 @@ const Discount = () => {
                 <AddDiscountModal
                     open={addOpen}
                     onClose={() => setAddOpen(false)}
-                    onSubmit={(data) => {
-                        const newDiscount = {
-                            id: Date.now(),
-                            ownerId: authData.ownerId,
-                            ...data,
-                        };
-                        setDiscounts((prev) => {
-                            const updated = [newDiscount, ...prev];
-                            return updated;
-                        });
+                    onSubmit={async (data) => {
+                        try {
+                            await api.post("/discounts", data);
 
-                        setAddOpen(false);
+                            fetchDiscounts();
+                            setAddOpen(false);
+                        } catch (err) {
+                            alert("Gagal tambah diskon");
+                        }
                     }}
                 />
                 <EditDiscountModal
                     open={editOpen}
                     discount={selectedDiscount}
                     onClose={() => setEditOpen(false)}
-                    onSubmit={(updated) => {
-                        setDiscounts((prev) => {
-                            const newData = prev.map((d) =>
-                                d.id === updated.id ? { ...d, ...updated } : d
-                            );
+                    onSubmit={async (updated) => {
+                        try {
+                            await api.put(`/discounts/${updated.id}`, updated);
 
-                            return newData;
-                        });
-
-                        setEditOpen(false);
-                        setSelectedDiscount(null);
+                            fetchDiscounts();
+                            setEditOpen(false);
+                        } catch (err) {
+                            alert("Gagal update diskon");
+                        }
                     }}
                 />
                 <DeleteDiscountModal
                     open={deleteOpen}
                     discount={selectedDiscount}
                     onClose={() => setDeleteOpen(false)}
-                    onConfirm={(id) => {
-                        setDiscounts((prev) => {
-                            const updated = prev.filter((d) => d.id !== id);
+                    onConfirm={async (id) => {
+                        try {
+                            await api.delete(`/discounts/${id}`);
 
-                            return updated;
-                        });
-
-                        setDeleteOpen(false);
-                        setSelectedDiscount(null);
+                            fetchDiscounts();
+                            setDeleteOpen(false);
+                        } catch (err) {
+                            alert("Gagal hapus diskon");
+                        }
                     }}
                 />
             </div>

@@ -7,6 +7,7 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
   const stoppedRef = useRef(false);
 
   const startScan = async () => {
+    if (readerRef.current) return;
     try {
       stoppedRef.current = false;
       readerRef.current = new BrowserMultiFormatReader();
@@ -52,8 +53,17 @@ const BarcodeScannerModal = ({ onClose, onDetected }) => {
 
   const stopScan = () => {
     stoppedRef.current = true;
-    readerRef.current?.reset();
-    readerRef.current = null;
+
+    if (readerRef.current) {
+      readerRef.current.reset();
+      readerRef.current = null;
+    }
+
+    if (videoRef.current?.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
   };
 
   useEffect(() => {

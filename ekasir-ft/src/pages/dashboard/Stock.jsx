@@ -5,6 +5,7 @@ import "../../assets/css/dashboard.css";
 import "../../assets/css/stock.css";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 import Sidebar from "../../components/Sidebar";
 import EditStockModal from "../../components/Stock/EditStockModal";
@@ -29,7 +30,6 @@ const Stock = () => {
     const [stocks, setStocks] = useState([]);
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const [isLoaded, setIsLoaded] = useState(false);
 
     const filtered = stocks.filter((item) =>
         (item.name || "").toLowerCase().includes(search.toLowerCase())
@@ -96,69 +96,42 @@ const Stock = () => {
     };
 
     useEffect(() => {
-        if (!authData?.id || !isLoaded) return;
+        if (!authData?.token) return;
 
-        const normalized = stocks.map(item => ({
-            id: item.id,
-            name: item.name,
-            code: item.code,
-            category: item.category,
-            stock: item.stock,
-            priceMax: item.sellPrice,
-            priceMin: item.basePrice,
-            image: item.image
-        }));
+        const fetchStock = async () => {
+            try {
+                const res = await api.get("/stock");
+                setStocks(res.data);
+            } catch (err) {
+                console.error("Gagal ambil stock:", err);
+            }
+        };
 
-        localStorage.setItem(
-            `products_${authData.id}`,
-            JSON.stringify(normalized)
-        );
-
-    }, [stocks, authData, isLoaded]);
+        fetchStock();
+    }, [authData?.token]);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
 
-        const savedProducts = JSON.parse(
-            localStorage.getItem(`products_${authData.id}`) || "[]"
-        );
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const formatted = savedProducts.map(prod => ({
-            id: prod.id,
-            name: prod.name,
-            code: prod.code,
-            category: prod.category,
-            stock: prod.stock ?? 0,
-            sellPrice: prod.priceMax ?? 0,
-            basePrice: prod.priceMin ?? 0,
-            image: prod.image ?? productImg,
-        }));
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        setStocks(formatted);
-        setIsLoaded(true);
-    }, [authData]);
-
-    useEffect(() => {
-        if (!authData) return;
-
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
-
-        const USERS_KEY = `users_owner_${ownerId}`;
-
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -342,18 +315,22 @@ const Stock = () => {
                     open={editOpen}
                     stock={selectedStock}
                     onClose={() => setEditOpen(false)}
-                    onSubmit={(data) => {
-                        setStocks((prev) =>
-                            prev.map((s) =>
-                                s.id === data.id
-                                    ? {
-                                        ...s,
-                                        stock: s.stock + Number(data.qty),
-                                        basePrice: Number(data.basePrice),
-                                    }
-                                    : s
-                            )
-                        );
+                    onSubmit={async (data) => {
+                        try {
+                            await api.post("/stock/add", {
+                                product_id: data.id,
+                                qty: data.qty,
+                                base_price: data.basePrice,
+                                note: "Manajemen Stok Barang",
+                            });
+
+                            const res = await api.get("/stock");
+                            setStocks(res.data);
+
+                            setEditOpen(false);
+                        } catch (err) {
+                            console.error("Gagal update stock:", err);
+                        }
                     }}
                 />
             </div>

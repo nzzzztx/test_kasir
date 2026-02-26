@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const DiscountModal = ({
+    discounts = [],
     onClose,
     onSelect,
-    storageKey = "discounts"
 }) => {
-    const [discounts, setDiscounts] = useState([]);
     const [selected, setSelected] = useState(null);
-
-    useEffect(() => {
-        const saved = JSON.parse(
-            localStorage.getItem(storageKey) || "[]"
-        );
-        setDiscounts(saved);
-    }, [storageKey]);
 
     const handleSave = () => {
         if (!selected) return;
@@ -41,10 +33,13 @@ const DiscountModal = ({
                             onClick={() => setSelected(d)}
                         >
                             <div className="name">{d.name}</div>
+
                             <div className="value">
                                 {d.type === "percent"
                                     ? `${d.value}%`
-                                    : `Rp ${Number(d.value).toLocaleString("id-ID")}`}
+                                    : `Rp ${Number(d.value).toLocaleString(
+                                        "id-ID"
+                                    )}`}
                             </div>
                         </button>
                     ))}

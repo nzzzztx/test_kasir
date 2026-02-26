@@ -3,6 +3,7 @@ import "../../assets/css/dashboard.css";
 import "../../assets/css/discount.css";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from '../../context/AuthContext';
+import api from "../../services/api";
 
 import Sidebar from "../../components/Sidebar";
 import AddPajakModal from "../../components/Pajak/AddPajakModal";
@@ -31,24 +32,15 @@ const Pajak = () => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        if (!authData?.id) return;
+        if (!authData?.token) return;
 
-        const saved = localStorage.getItem(
-            `taxes_${authData.id}`
-        );
+        const fetchTaxes = async () => {
+            const res = await api.get("/taxes");
+            setTaxes(res.data);
+        };
 
-        setTaxes(saved ? JSON.parse(saved) : []);
-        setIsLoaded(true);
-    }, [authData]);
-
-    useEffect(() => {
-        if (!authData?.id || !isLoaded) return;
-
-        localStorage.setItem(
-            `taxes_${authData.id}`,
-            JSON.stringify(taxes)
-        );
-    }, [taxes, authData, isLoaded]);
+        fetchTaxes();
+    }, [authData?.token]);
 
     const filtered = taxes.filter((t) =>
         t.name.toLowerCase().includes(search.toLowerCase())
@@ -57,29 +49,30 @@ const Pajak = () => {
     useEffect(() => {
         setSearch("");
         setSelectedTax(null);
-    }, [authData]);
+    }, [authData?.token]);
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -200,16 +193,10 @@ const Pajak = () => {
                 <AddPajakModal
                     open={addOpen}
                     onClose={() => setAddOpen(false)}
-                    onSubmit={(data) => {
-                        const newTax = {
-                            id: Date.now(),
-                            ...data
-                        };
-                        setTaxes((prev) => {
-                            const updated = [newTax, ...prev];
-                            return updated;
-                        });
-                        setAddOpen(false);
+                    onSubmit={async (data) => {
+                        await api.post("/taxes", data);
+                        const res = await api.get("/taxes");
+                        setTaxes(res.data);
                     }}
                 />
 
@@ -217,13 +204,10 @@ const Pajak = () => {
                     open={editOpen}
                     tax={selectedTax}
                     onClose={() => setEditOpen(false)}
-                    onSubmit={(updated) => {
-                        setTaxes((prev) => {
-                            const data = prev.map((t) =>
-                                t.id === updated.id ? { ...t, ...updated } : t
-                            );
-                            return data;
-                        });
+                    onSubmit={async (updated) => {
+                        await api.put(`/taxes/${updated.id}`, updated);
+                        const res = await api.get("/taxes");
+                        setTaxes(res.data);
                         setEditOpen(false);
                         setSelectedTax(null);
                     }}
@@ -233,11 +217,10 @@ const Pajak = () => {
                     open={deleteOpen}
                     tax={selectedTax}
                     onClose={() => setDeleteOpen(false)}
-                    onConfirm={(id) => {
-                        setTaxes((prev) => {
-                            const updated = prev.filter((t) => t.id !== id);
-                            return updated;
-                        });
+                    onConfirm={async (id) => {
+                        await api.delete(`/taxes/${id}`);
+                        const res = await api.get("/taxes");
+                        setTaxes(res.data);
                         setDeleteOpen(false);
                         setSelectedTax(null);
                     }}

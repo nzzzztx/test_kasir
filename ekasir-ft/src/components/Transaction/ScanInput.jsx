@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import searchIcon from "../../assets/icons/search.png";
 import barcodeIcon from "../../assets/icons/barcode.png";
 import scanIcon from "../../assets/icons/scan.png";
@@ -9,6 +10,19 @@ const ScanInput = ({
     setScanMode,
     onScanOnce,
 }) => {
+    const inputRef = useRef(null);
+
+    const handleToggleScan = () => {
+        setSearch("");
+        setScanMode((prev) => {
+            const next = !prev;
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+            return next;
+        });
+    };
+
     return (
         <div className={`scan-wrapper ${scanMode ? "scan-active" : ""}`}>
             <div className="scan-icon search">
@@ -18,13 +32,14 @@ const ScanInput = ({
             <button
                 type="button"
                 className={`scan-icon barcode ${scanMode ? "active" : ""}`}
-                onClick={() => setScanMode(!scanMode)}
+                onClick={handleToggleScan}
                 title="Mode Scanner"
             >
                 <img src={barcodeIcon} alt="barcode" />
             </button>
 
             <input
+                ref={inputRef}
                 type="text"
                 placeholder={
                     scanMode
@@ -34,7 +49,7 @@ const ScanInput = ({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && search.trim()) {
                         e.preventDefault();
                         onScanOnce();
                     }
@@ -44,7 +59,9 @@ const ScanInput = ({
             <button
                 type="button"
                 className="scan-btn"
-                onClick={onScanOnce}
+                onClick={() => {
+                    if (search.trim()) onScanOnce();
+                }}
                 title="Scan Sekali"
             >
                 <img src={scanIcon} alt="scan" />
