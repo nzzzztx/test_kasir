@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
 import { useNotifications } from "../../context/NotificationContext";
-import { getCurrentOwnerId } from "../../utils/owner";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/shift.css";
@@ -39,7 +38,6 @@ const DRAWER_CONFIG = {
 
 const Shift = () => {
     const today = new Date();
-    const ownerId = getCurrentOwnerId();
     const { authData, changePassword } = useAuth();
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -65,45 +63,46 @@ const Shift = () => {
 
     const [selectedShift, setSelectedShift] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
+    const [history, setHistory] = useState([]);
+
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!authData?.token) return;
 
-        const active = JSON.parse(
-            localStorage.getItem(`active_shift_${ownerId}`)
-        );
-
-        setActiveShift(active);
-    }, [ownerId]);
-
-
-    const [history, setHistory] = useState(() =>
-        ownerId
-            ? JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || []
-            : []
-    );
+        fetch("http://localhost:5000/api/shifts/active", {
+            headers: {
+                Authorization: `Bearer ${authData.token}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                setActiveShift(data);
+            })
+            .catch(err => console.error(err));
+    }, [authData?.token]);
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     const {
         notifications,
@@ -112,20 +111,25 @@ const Shift = () => {
     } = useNotifications();
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!authData?.token) return;
 
-        const data = JSON.parse(
-            localStorage.getItem(`shift_history_${ownerId}`)
-        ) || [];
-
-        setHistory(data);
-    }, [ownerId]);
+        fetch("http://localhost:5000/api/shifts", {
+            headers: {
+                Authorization: `Bearer ${authData.token}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                setHistory(data);
+            })
+            .catch(err => console.error(err));
+    }, [authData?.token]);
 
     useEffect(() => {
-        if (!authData?.isLoggedIn) {
+        if (authData && !authData.isLoggedIn) {
             navigate("/login");
         }
-    }, [authData]);
+    }, [authData, navigate]);
 
     const isInRange = (date, range) => {
         if (!range || !date) return false;
@@ -141,108 +145,128 @@ const Shift = () => {
     };
 
     const filteredHistory = history.filter((h) => {
-        if (!h.startedAt) return false;
-        if (drawer && h.drawer !== drawer) return false;
-        return isInRange(h.startedAt, range);
+        if (!h.started_at) return false;
+        return isInRange(h.started_at, range);
     });
 
-    const savedProfile = JSON.parse(localStorage.getItem("user_profile") || "{}");
-
     const currentUser = {
-        name: savedProfile.name || authData?.email || "Kasir",
+        name: user?.name || authData?.email || "Kasir",
         role: authData?.role || "Kasir",
     };
 
-    const allTransactions =
-        JSON.parse(
-            localStorage.getItem(`transactions_owner_${ownerId}`)
-        );
+    const [transactions, setTransactions] = useState([]);
 
-    const transactions = activeShift
-        ? allTransactions.filter(
-            (t) => t.shiftStartedAt === activeShift.startedAt
+    useEffect(() => {
+        if (!activeShift || !authData?.token) return;
+
+        fetch(
+            `http://localhost:5000/api/transactions?shift_id=${activeShift.id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${authData.token}`,
+                },
+            }
         )
-        : [];
-
-    const expenses =
-        JSON.parse(
-            localStorage.getItem(`expenses_${ownerId}`) || "[]"
-        );
+            .then((res) => res.json())
+            .then((data) => {
+                setTransactions(data);
+            })
+            .catch((err) => console.error(err));
+    }, [activeShift, authData?.token]);
 
     const saldoSistem = activeShift
         ? hitungSaldoSistem({
-            saldoAwal: activeShift.saldoAwal,
+            saldoAwal: activeShift.saldo_awal,
             transactions,
-            expenses,
+            expenses: [],
             notes: activeShift.notes || [],
             activeShift,
         })
         : 0;
 
-    const handleMulaiShift = () => {
+    const handleMulaiShift = async () => {
         if (!saldoAwal) {
             alert("Saldo awal wajib diisi");
             return;
         }
 
-        const drawerInfo = DRAWER_CONFIG[drawer] || {
-            label: "Custom",
-            start: null,
-            end: null,
-        };
+        const drawerInfo = DRAWER_CONFIG[drawer];
 
-        const shiftData = {
-            cashier: currentUser.name,
-            drawer,
-            drawerLabel: drawerInfo.label,
-            shiftStartTime: drawerInfo.start,
-            shiftEndTime: drawerInfo.end,
-            saldoAwal: Number(saldoAwal),
-            startedAt: new Date().toISOString(),
-            status: "ACTIVE",
-        };
+        try {
+            const res = await fetch("http://localhost:5000/api/shifts/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`
+                },
+                body: JSON.stringify({
+                    drawer,
+                    drawer_label: drawerInfo.label,
+                    saldo_awal: Number(saldoAwal)
+                })
+            });
 
-        localStorage.setItem(
-            `active_shift_${ownerId}`,
-            JSON.stringify(shiftData)
-        );
-        setActiveShift(shiftData);
-        setShowMulai(false);
+            const data = await res.json();
 
-        alert("Shift berhasil dimulai ✅");
+            if (!res.ok) {
+                alert(data.message);
+                return;
+            }
+
+            alert("Shift berhasil dimulai ✅");
+
+            // ambil ulang active shift
+            const activeRes = await fetch("http://localhost:5000/api/shifts/active", {
+                headers: {
+                    Authorization: `Bearer ${authData.token}`
+                }
+            });
+
+            const activeData = await activeRes.json();
+            setActiveShift(activeData);
+
+            setShowMulai(false);
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan");
+        }
     };
 
-    const handleAkhiriShift = ({ saldoAkhir, note }) => {
-        const active = JSON.parse(
-            localStorage.getItem(`active_shift_${ownerId}`)
-        );
-        if (!active) return;
+    const handleAkhiriShift = async ({ saldoAkhir, note }) => {
+        if (!activeShift) return;
 
-        const finishedShift = {
-            ...active,
-            saldoAkhir: Number(saldoAkhir),
-            note,
-            endedAt: new Date().toISOString(),
-            status: "DONE",
-        };
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/shifts/end/${activeShift.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`
+                    },
+                    body: JSON.stringify({
+                        saldo_akhir: Number(saldoAkhir),
+                        note
+                    })
+                }
+            );
 
-        const prevHistory =
-            JSON.parse(localStorage.getItem(`shift_history_${ownerId}`)) || [];
+            const data = await res.json();
 
-        const newHistory = [...prevHistory, finishedShift];
+            if (!res.ok) {
+                alert(data.message);
+                return;
+            }
 
-        localStorage.setItem(
-            `shift_history_${ownerId}`,
-            JSON.stringify(newHistory)
-        );
+            alert("Shift berhasil diakhiri ✅");
 
-        localStorage.removeItem(`active_shift_${ownerId}`);
+            setActiveShift(null);
+            setShowAkhiri(false);
 
-        setHistory(newHistory);
-        setActiveShift(null);
-        setShowAkhiri(false);
-
-        alert("Shift berhasil diakhiri ✅");
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan");
+        }
     };
 
     const handleViewDetail = (shift) => {
@@ -250,24 +274,46 @@ const Shift = () => {
         setShowDetail(true);
     };
 
-    const handleAddNote = (note) => {
+    const handleAddNote = async (note) => {
         if (!selectedShift) return;
 
-        const updatedShift = {
-            ...selectedShift,
-            notes: [...(selectedShift.notes || []), note],
-        };
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/shifts/${selectedShift.id}/note`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                    body: JSON.stringify({ note }),
+                }
+            );
 
-        const newHistory = history.map((h) =>
-            h.startedAt === selectedShift.startedAt ? updatedShift : h
-        );
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.message);
+                return;
+            }
 
-        localStorage.setItem(
-            `shift_history_${ownerId}`,
-            JSON.stringify(newHistory)
-        );
-        setHistory(newHistory);
-        setSelectedShift(updatedShift);
+            // refresh history
+            const historyRes = await fetch(
+                "http://localhost:5000/api/shifts",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const historyData = await historyRes.json();
+            setHistory(historyData);
+
+            setShowAddNote(false);
+        } catch (err) {
+            console.error(err);
+            alert("Gagal menambahkan catatan");
+        }
     };
 
     const getShiftWarning = () => {
@@ -613,7 +659,7 @@ const Shift = () => {
                                             </td>
                                             <td>{item.status === "DONE" ? "Selesai" : "Berjalan"}</td>
                                             <td>
-                                                {new Date(item.startedAt).toLocaleTimeString("id-ID", {
+                                                {new Date(item.started_at).toLocaleTimeString("id-ID", {
                                                     hour: "2-digit",
                                                     minute: "2-digit",
                                                 })}
@@ -675,18 +721,19 @@ const Shift = () => {
 
                             <RekapShift
                                 shift={selectedShift}
-                                onUpdate={(updatedShift) => {
-                                    const newHistory = history.map((h) =>
-                                        h.startedAt === updatedShift.startedAt ? updatedShift : h
+                                transactions={transactions}
+                                onUpdate={async () => {
+                                    const historyRes = await fetch(
+                                        "http://localhost:5000/api/shifts",
+                                        {
+                                            headers: {
+                                                Authorization: `Bearer ${authData.token}`,
+                                            },
+                                        }
                                     );
 
-                                    setHistory(newHistory);
-                                    setSelectedShift(updatedShift);
-
-                                    localStorage.setItem(
-                                        `shift_history_${ownerId}`,
-                                        JSON.stringify(newHistory)
-                                    );
+                                    const historyData = await historyRes.json();
+                                    setHistory(historyData);
                                 }}
                             />
                             {/* <button

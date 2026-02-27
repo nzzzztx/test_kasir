@@ -9,26 +9,31 @@ const TambahCatatanModal = ({ open, onClose, onSubmit }) => {
     if (!open) return null;
 
     const handleSubmit = () => {
-        if (!amount) return alert("Jumlah wajib diisi");
+        const numericAmount = Number(amount);
+
+        if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
+            return alert("Jumlah harus berupa angka lebih dari 0");
+        }
 
         onSubmit({
             type,
-            amount: Number(amount),
-            note,
-            createdAt: new Date().toISOString(),
+            amount: numericAmount,
+            note: note || null,
         });
 
+        // reset form saja, jangan close modal di sini
         setAmount("");
         setNote("");
-        onClose();
     };
 
     return (
         <div className="modal-overlay">
             <div className="catatan-modal">
                 <div className="modal-header">
-                    <h4>Tambah catatan</h4>
-                    <button className="modal-close" onClick={onClose}>×</button>
+                    <h4>Tambah Catatan</h4>
+                    <button className="modal-close" onClick={onClose}>
+                        ×
+                    </button>
                 </div>
 
                 <div className="catatan-tabs">
@@ -36,19 +41,21 @@ const TambahCatatanModal = ({ open, onClose, onSubmit }) => {
                         className={type === "IN" ? "active" : ""}
                         onClick={() => setType("IN")}
                     >
-                        Saldo masuk lain
+                        Saldo Masuk Lain
                     </button>
                     <button
                         className={type === "OUT" ? "active" : ""}
                         onClick={() => setType("OUT")}
                     >
-                        Saldo keluar lain
+                        Saldo Keluar Lain
                     </button>
                 </div>
 
                 <div className="form-group">
                     <label>Jumlah</label>
                     <input
+                        type="number"
+                        min="1"
                         placeholder="Rp 0"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
@@ -56,9 +63,9 @@ const TambahCatatanModal = ({ open, onClose, onSubmit }) => {
                 </div>
 
                 <div className="form-group">
-                    <label>Tambahkan catatan singkat</label>
+                    <label>Catatan</label>
                     <textarea
-                        placeholder="Tambah keterangan"
+                        placeholder="Tambahkan keterangan"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                     />

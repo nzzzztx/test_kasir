@@ -14,7 +14,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
     return (
         <div className="product-grid">
             {filteredProducts.map((product, index) => {
-                const code = getProductKey(product, index);
+                const code = product.code || product.id || index;
                 const name = product.name || "Tanpa Nama";
                 const price = Number(product.price_max ?? 0);
                 const stock = Number(product.stock) || 0;
@@ -91,3 +91,5 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
         </div>
     );
 };
+
+export default ProductGrid;

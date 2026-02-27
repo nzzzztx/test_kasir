@@ -1,122 +1,121 @@
 import { useState, useEffect } from "react";
 import TambahCatatanModal from "../Shift/TambahCatatanModal";
 import "../../assets/css/shift-modal.css";
-import { getCurrentOwnerId } from "../../utils/owner";
 
-const RekapShift = ({ shift, onUpdate }) => {
-    const ownerId = getCurrentOwnerId();
+const RekapShift = ({ shift, transactions = [], onUpdate }) => {
     const [showCatatan, setShowCatatan] = useState(false);
     const [notes, setNotes] = useState([]);
 
     useEffect(() => {
-        setNotes(shift.notes || []);
+        setNotes(shift?.notes || []);
     }, [shift]);
 
-    const handleAddNote = (data) => {
-        const updatedNotes = [...notes, data];
-        setNotes(updatedNotes);
+    const handleAddNote = async (data) => {
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/shifts/${shift.id}/note`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    body: JSON.stringify(data),
+                }
+            );
 
-        const updatedShift = {
-            ...shift,
-            notes: updatedNotes,
-        };
+            const result = await res.json();
+            if (!res.ok) {
+                alert(result.message);
+                return;
+            }
 
-        if (!ownerId) return;
+            setNotes(result.notes || []);
+            setShowCatatan(false);
 
-        const history =
-            JSON.parse(
-                localStorage.getItem(`shift_history_${ownerId}`)
-            ) || [];
-
-        const newHistory = history.map((s) =>
-            s.startedAt === shift.startedAt ? updatedShift : s
-        );
-
-        localStorage.setItem(
-            `shift_history_${ownerId}`,
-            JSON.stringify(newHistory)
-        );
-
-        onUpdate(updatedShift);
+            if (onUpdate) onUpdate();
+        } catch (err) {
+            console.error(err);
+            alert("Gagal menambahkan catatan");
+        }
     };
 
-    const allTransactions = ownerId
-        ? JSON.parse(localStorage.getItem(`transaction_history_${ownerId}`)) || []
-        : [];
+    // 🔥 hitung dari transaksi API
+    const totalPenjualanTunai = transactions
+        .filter(
+            (t) =>
+                t.payment_method === "TUNAI" &&
+                t.status === "paid"
+        )
+        .reduce((sum, t) => sum + Number(t.grand_total || 0), 0);
 
-    const shiftTransactions = allTransactions.filter(
-        (t) =>
-            t.shiftStartedAt === shift.startedAt &&
-            t.metode === "TUNAI" &&
-            t.status === "paid"
-    );
+    const kasMasuk = notes
+        .filter((n) => n.type === "IN")
+        .reduce((s, n) => s + Number(n.amount || 0), 0);
 
-    const totalPenjualanTunai = shiftTransactions.reduce(
-        (sum, t) => sum + Number(t.total || 0),
-        0
-    );
+    const kasKeluar = notes
+        .filter((n) => n.type === "OUT")
+        .reduce((s, n) => s + Number(n.amount || 0), 0);
 
     const saldoSistem =
-        Number(shift.saldoAwal || 0) +
+        Number(shift?.saldo_awal || 0) +
         totalPenjualanTunai +
-        notes
-            .filter((n) => n.type === "IN")
-            .reduce((s, n) => s + Number(n.amount || 0), 0) -
-        notes
-            .filter((n) => n.type === "OUT")
-            .reduce((s, n) => s + Number(n.amount || 0), 0);
+        kasMasuk -
+        kasKeluar;
 
     return (
         <div className="rekap-page">
             <div className="rekap-left">
                 <div className="rekap-card">
-                    <h4>Saat ini</h4>
+                    <h4>Rekap Shift</h4>
 
                     <div className="rekap-row">
-                        <span>Nama</span>
+                        <span>Kasir</span>
                         <b>{shift.cashier}</b>
                     </div>
 
                     <div className="rekap-row">
-                        <span>Sebagai</span>
-                        <b>Kasir</b>
+                        <span>Mulai</span>
+                        <b>{shift.started_at}</b>
                     </div>
 
                     <div className="rekap-row">
-                        <span>Mulai shift</span>
-                        {shift.startedAt}
-                    </div>
-
-                    <div className="rekap-row">
-                        <span>Shift berakhir</span>
-                        {shift.endedAt}
+                        <span>Selesai</span>
+                        <b>{shift.ended_at || "-"}</b>
                     </div>
 
                     <hr />
 
                     <div className="rekap-row">
-                        Penjualan tunai{" "}
+                        Penjualan tunai
                         <b>Rp {totalPenjualanTunai.toLocaleString()}</b>
                     </div>
 
                     <div className="rekap-row">
-                        Pengeluaran <b className="red">Rp 0</b>
+                        Kas masuk lain
+                        <b className="green">
+                            Rp {kasMasuk.toLocaleString()}
+                        </b>
+                    </div>
+
+                    <div className="rekap-row">
+                        Kas keluar lain
+                        <b className="red">
+                            Rp {kasKeluar.toLocaleString()}
+                        </b>
                     </div>
 
                     <hr />
 
-                    <div className="rekap-row highlight">
-                        Subtotal{" "}
-                        <b>Rp {totalPenjualanTunai.toLocaleString()}</b>
-                    </div>
-
                     <div className="rekap-row">
-                        Saldo awal{" "}
-                        <b>Rp {Number(shift.saldoAwal).toLocaleString()}</b>
+                        Saldo awal
+                        <b>
+                            Rp {Number(shift?.saldo_awal || 0).toLocaleString()}
+                        </b>
                     </div>
 
                     <div className="rekap-row highlight">
-                        Diterima sistem{" "}
+                        Saldo sistem
                         <b>Rp {saldoSistem.toLocaleString()}</b>
                     </div>
                 </div>
@@ -124,26 +123,31 @@ const RekapShift = ({ shift, onUpdate }) => {
 
             <div className="rekap-right">
                 <div className="rekap-card rekap-detail-card">
-                    <h4>Detail rekap shift</h4>
+                    <h4>Catatan Shift</h4>
 
                     <div className="rekap-detail-scroll">
                         {notes.length === 0 && (
-                            <div className="empty-note">Belum ada catatan</div>
+                            <div className="empty-note">
+                                Belum ada catatan
+                            </div>
                         )}
 
                         {notes.map((n, i) => (
-                            <div key={i} className={`rekap-detail-item ${n.type === "IN" ? "in" : "out"}`}>
-                                <div className="rekap-detail-left">
+                            <div
+                                key={i}
+                                className={`rekap-detail-item ${n.type === "IN" ? "in" : "out"
+                                    }`}
+                            >
+                                <div>
                                     <b>
-                                        {n.type === "IN" ? "Kas masuk lain" : "Kas keluar lain"}
+                                        {n.type === "IN"
+                                            ? "Kas masuk"
+                                            : "Kas keluar"}
                                     </b>
                                     <small>{n.note}</small>
-                                    <small>
-                                        {new Date(n.createdAt).toLocaleString("id-ID")}
-                                    </small>
                                 </div>
 
-                                <div className={`rekap-detail-right ${n.type === "IN" ? "in" : "out"}`}>
+                                <div>
                                     Rp {Number(n.amount).toLocaleString()}
                                 </div>
                             </div>
@@ -154,7 +158,7 @@ const RekapShift = ({ shift, onUpdate }) => {
                         className="btn-primary rekap-add-btn"
                         onClick={() => setShowCatatan(true)}
                     >
-                        Tambah catatan singkat
+                        Tambah Catatan
                     </button>
                 </div>
             </div>
