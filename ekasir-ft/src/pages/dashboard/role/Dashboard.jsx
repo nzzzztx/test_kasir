@@ -106,6 +106,12 @@ const Dashboard = () => {
         },
     ];
 
+    useEffect(() => {
+        if (!authData?.token) {
+            navigate("/login");
+        }
+    }, [authData, navigate]);
+
     const {
         notifications,
         unreadCount,

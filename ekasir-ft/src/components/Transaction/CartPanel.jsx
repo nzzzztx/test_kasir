@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useShift } from "../../context/ShiftContext";
 import trashIcon from "../../assets/icons/trash.png";
 import editIcon from "../../assets/icons/edit.png";
 
@@ -17,14 +19,14 @@ const CartPanel = ({
     discounts,
     taxes
 }) => {
-
+    const { authData } = useAuth();
     const navigate = useNavigate();
     const [discount, setDiscount] = useState(null);
     const [showDiscount, setShowDiscount] = useState(false);
     const [tax, setTax] = useState(null);
     const [showTax, setShowTax] = useState(false);
     const [editItem, setEditItem] = useState(null);
-    const [paidAmount, setPaidAmount] = useState(0);
+    const { activeShift, loadingShift } = useShift();
 
     const subtotal = cart.reduce(
         (sum, i) => sum + i.sellPrice * i.qty,
@@ -37,30 +39,22 @@ const CartPanel = ({
         address: "",
     });
 
-    const afterDiscount = (() => {
-        if (!discount) return subtotal;
+    const afterDiscount = discount
+        ? discount.type === "percent"
+            ? Math.round(subtotal - subtotal * (discount.value / 100))
+            : Math.max(subtotal - discount.value, 0)
+        : subtotal;
 
-        if (discount.type === "percent") {
-            return subtotal - subtotal * (discount.value / 100);
-        }
-
-        return Math.max(subtotal - discount.value, 0);
-    })();
-
-    const taxAmount = (() => {
-        if (!tax) return 0;
-
-        if (tax.type === "percent") {
-            return afterDiscount * (tax.value / 100);
-        }
-
-        return tax.value;
-    })();
+    const taxAmount = tax
+        ? tax.type === "percent"
+            ? Math.round(afterDiscount * (tax.value / 100))
+            : tax.value
+        : 0;
 
     const finalTotal = Math.max(afterDiscount + taxAmount, 0);
 
-    const removeItem = (code) => {
-        setCart((prev) => prev.filter((i) => i.code !== code));
+    const removeItem = (id) => {
+        setCart(prev => prev.filter(i => i.id !== id));
     };
 
     const handleOpenDiscount = () => {
@@ -72,26 +66,28 @@ const CartPanel = ({
         setShowDiscount(true);
     };
 
-    const handlePay = () => {
+    const handlePay = async () => {
         if (!cart.length) return;
 
-        if (!ownerId) {
-            alert("Owner tidak ditemukan");
+        // kalau belum selesai fetch
+        if (loadingShift) {
+            alert("Memuat shift...");
             return;
         }
 
-        // 🔥 CEK SHIFT AKTIF
-        const activeShift = JSON.parse(
-            localStorage.getItem(`active_shift_${ownerId}`)
-        );
-
-        if (!activeShift || !activeShift.isOpen) {
-            alert("Shift belum dimulai. Silakan mulai shift terlebih dahulu.");
+        if (!activeShift) {
+            alert("Shift belum dimulai");
             navigate("/dashboard/shift");
             return;
         }
 
-        // 🔥 GENERATE PENDING TRANSACTION
+        // kalau status bukan ACTIVE
+        if (activeShift.status !== "ACTIVE") {
+            alert("Shift sudah ditutup");
+            navigate("/dashboard/shift");
+            return;
+        }
+
         const payload = {
             items: cart.map(item => ({
                 id: item.id,
@@ -102,13 +98,13 @@ const CartPanel = ({
             })),
             subtotal,
             discount,
-            discountTotal: Math.max(subtotal - afterDiscount, 0),
+            discountTotal: subtotal - afterDiscount,
             tax,
             taxTotal: taxAmount,
             finalTotal,
-            cashier: cashierName || activeShift.cashier || "Kasir",
-            shift_id: activeShift.id,
-            shiftStartedAt: activeShift.startedAt
+            customer,
+            cashier: cashierName || activeShift.cashier,
+            shift_id: activeShift.id
         };
 
         localStorage.setItem(
@@ -125,7 +121,7 @@ const CartPanel = ({
 
             <div className="cart-list">
                 {cart.map((item) => (
-                    <div key={item.code} className="cart-item">
+                    <div key={item.id} className="cart-item">
                         <div className="cart-qty">{item.qty}</div>
 
                         <div className="cart-info">
@@ -145,7 +141,7 @@ const CartPanel = ({
 
                             <button
                                 className="cart-remove"
-                                onClick={() => removeItem(item.code)}
+                                onClick={() => removeItem(item.id)}
                             >
                                 <img src={trashIcon} alt="hapus" />
                             </button>
@@ -236,9 +232,7 @@ const CartPanel = ({
                     onClose={() => setEditItem(null)}
                     onSave={(updated) => {
                         setCart(prev =>
-                            prev.map(i =>
-                                i.code === updated.code ? updated : i
-                            )
+                            prev.map(i => i.id === updated.id ? updated : i)
                         );
                         setEditItem(null);
                     }}

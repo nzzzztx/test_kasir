@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
 import { useNotifications } from "../../context/NotificationContext";
+import { useShift } from "../../context/ShiftContext";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/shift.css";
@@ -48,6 +49,8 @@ const Shift = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const role = authData?.role;
+    const { activeShift, fetchActiveShift, loadingShift } = useShift();
+    const [detailTransactions, setDetailTransactions] = useState([]);
 
     const [range, setRange] = useState({
         startDate: today,
@@ -59,27 +62,10 @@ const Shift = () => {
 
     const [saldoAwal, setSaldoAwal] = useState("");
     const [drawer, setDrawer] = useState("Cash Drawer 1");
-    const [activeShift, setActiveShift] = useState(null);
 
     const [selectedShift, setSelectedShift] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [history, setHistory] = useState([]);
-
-
-    useEffect(() => {
-        if (!authData?.token) return;
-
-        fetch("http://localhost:5000/api/shifts/active", {
-            headers: {
-                Authorization: `Bearer ${authData.token}`
-            }
-        })
-            .then(res => res.json())
-            .then(data => {
-                setActiveShift(data);
-            })
-            .catch(err => console.error(err));
-    }, [authData?.token]);
 
     useEffect(() => {
         if (!authData?.token) return;
@@ -113,7 +99,7 @@ const Shift = () => {
     useEffect(() => {
         if (!authData?.token) return;
 
-        fetch("http://localhost:5000/api/shifts", {
+        fetch("http://localhost:5000/api/shifts/history", {
             headers: {
                 Authorization: `Bearer ${authData.token}`
             }
@@ -216,14 +202,7 @@ const Shift = () => {
             alert("Shift berhasil dimulai ✅");
 
             // ambil ulang active shift
-            const activeRes = await fetch("http://localhost:5000/api/shifts/active", {
-                headers: {
-                    Authorization: `Bearer ${authData.token}`
-                }
-            });
-
-            const activeData = await activeRes.json();
-            setActiveShift(activeData);
+            await fetchActiveShift();
 
             setShowMulai(false);
         } catch (err) {
@@ -260,7 +239,7 @@ const Shift = () => {
 
             alert("Shift berhasil diakhiri ✅");
 
-            setActiveShift(null);
+            await fetchActiveShift();
             setShowAkhiri(false);
 
         } catch (err) {
@@ -269,9 +248,27 @@ const Shift = () => {
         }
     };
 
-    const handleViewDetail = (shift) => {
+    const handleViewDetail = async (shift) => {
         setSelectedShift(shift);
         setShowDetail(true);
+
+        try {
+            const shiftId = shift.shift_id || shift.id;
+
+            const res = await fetch(
+                `http://localhost:5000/api/transactions?shift_id=${shiftId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+            setDetailTransactions(data);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleAddNote = async (note) => {
@@ -286,7 +283,7 @@ const Shift = () => {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${authData.token}`,
                     },
-                    body: JSON.stringify({ note }),
+                    body: JSON.stringify(note),
                 }
             );
 
@@ -298,7 +295,7 @@ const Shift = () => {
 
             // refresh history
             const historyRes = await fetch(
-                "http://localhost:5000/api/shifts",
+                "http://localhost:5000/api/shifts/history",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -721,10 +718,18 @@ const Shift = () => {
 
                             <RekapShift
                                 shift={selectedShift}
-                                transactions={transactions}
-                                onUpdate={async () => {
+                                transactions={detailTransactions}
+                                onUpdate={async (updatedShift) => {
+
+                                    // 1️⃣ Update selectedShift
+                                    setSelectedShift(updatedShift);
+
+                                    // 2️⃣ Refresh active shift (kalau shift masih ACTIVE)
+                                    await fetchActiveShift();
+
+                                    // 3️⃣ Refresh history
                                     const historyRes = await fetch(
-                                        "http://localhost:5000/api/shifts",
+                                        "http://localhost:5000/api/shifts/history",
                                         {
                                             headers: {
                                                 Authorization: `Bearer ${authData.token}`,

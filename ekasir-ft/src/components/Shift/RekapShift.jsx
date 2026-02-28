@@ -1,13 +1,29 @@
 import { useState, useEffect } from "react";
 import TambahCatatanModal from "../Shift/TambahCatatanModal";
 import "../../assets/css/shift-modal.css";
+import { useAuth } from "../../context/AuthContext";
 
 const RekapShift = ({ shift, transactions = [], onUpdate }) => {
+    const { authData } = useAuth();
     const [showCatatan, setShowCatatan] = useState(false);
     const [notes, setNotes] = useState([]);
 
     useEffect(() => {
-        setNotes(shift?.notes || []);
+        if (!shift?.notes) {
+            setNotes([]);
+            return;
+        }
+
+        // kalau backend kirim string JSON
+        if (typeof shift.notes === "string") {
+            try {
+                setNotes(JSON.parse(shift.notes));
+            } catch {
+                setNotes([]);
+            }
+        } else {
+            setNotes(shift.notes);
+        }
     }, [shift]);
 
     const handleAddNote = async (data) => {
@@ -18,7 +34,7 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${authData?.token}`,
                     },
                     body: JSON.stringify(data),
                 }
@@ -33,7 +49,9 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
             setNotes(result.notes || []);
             setShowCatatan(false);
 
-            if (onUpdate) onUpdate();
+            if (onUpdate) {
+                await onUpdate(result.updatedShift);
+            }
         } catch (err) {
             console.error(err);
             alert("Gagal menambahkan catatan");
@@ -42,11 +60,11 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
 
     // 🔥 hitung dari transaksi API
     const totalPenjualanTunai = transactions
-        .filter(
-            (t) =>
-                t.payment_method === "TUNAI" &&
-                t.status === "paid"
-        )
+        .filter((t) => t.payment_method === "TUNAI")
+        .reduce((sum, t) => sum + Number(t.grand_total || 0), 0);
+
+    const totalNonTunai = transactions
+        .filter((t) => t.payment_method !== "TUNAI")
         .reduce((sum, t) => sum + Number(t.grand_total || 0), 0);
 
     const kasMasuk = notes
@@ -139,11 +157,9 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
                                     }`}
                             >
                                 <div>
-                                    <b>
-                                        {n.type === "IN"
-                                            ? "Kas masuk"
-                                            : "Kas keluar"}
-                                    </b>
+                                    <div className="note-title">
+                                        {n.type === "IN" ? "Kas masuk lain" : "Kas keluar lain"}
+                                    </div>
                                     <small>{n.note}</small>
                                 </div>
 

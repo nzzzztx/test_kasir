@@ -4,6 +4,7 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { getCurrentOwnerId } from "../../utils/owner";
 import { useNavigate } from "react-router-dom";
+import { useShift } from "../../context/ShiftContext";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
@@ -30,6 +31,7 @@ const Payment = () => {
     const [receiptData, setReceiptData] = useState(null);
     const store = getInfoToko();
     const { pushNotification } = useNotifications();
+    const { activeShift, loadingShift } = useShift();
 
     useEffect(() => {
         if (!ownerId) {
@@ -58,19 +60,6 @@ const Payment = () => {
         setLoading(false);
     }, [ownerId]);
 
-    useEffect(() => {
-        if (!ownerId) return;
-
-        const activeShift = JSON.parse(
-            localStorage.getItem(`active_shift_${ownerId}`)
-        );
-
-        if (!activeShift?.isOpen) {
-            alert("Shift belum dimulai");
-            navigate("/dashboard/shift");
-        }
-    }, [ownerId]);
-
     const handleKeyPress = async (key) => {
         if (!transaction) return;
 
@@ -81,12 +70,18 @@ const Payment = () => {
 
         if (key === "✓") {
 
-            const activeShift = JSON.parse(
-                localStorage.getItem(`active_shift_${ownerId}`)
-            );
+            if (loadingShift) {
+                alert("Memuat shift...");
+                return;
+            }
 
-            if (!activeShift?.isOpen) {
+            if (!activeShift) {
                 alert("Shift belum dimulai");
+                return;
+            }
+
+            if (activeShift.status?.toUpperCase() !== "ACTIVE") {
+                alert("Shift sudah ditutup");
                 return;
             }
 
@@ -114,7 +109,7 @@ const Payment = () => {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                            Authorization: `Bearer ${authData?.token}`,
                         },
                         body: JSON.stringify({
                             shift_id: activeShift.id,
@@ -184,6 +179,18 @@ const Payment = () => {
         setPaidAmount(prev => prev + key);
     };
 
+    const handleFinishTransaction = () => {
+        setShowValidasi(false);
+        setShowReceipt(false);
+        setTransaction(null);
+        setReceiptData(null);
+        setPaidAmount("");
+        setMethod("TUNAI");
+        setSubMethod(null);
+
+        navigate("/dashboard/transaction");
+    };
+
     if (!ownerId) {
         console.error("OWNER ID NOT FOUND");
         return null;
@@ -211,6 +218,7 @@ const Payment = () => {
                     <PaymentContent
                         transaction={transaction}
                         paidAmount={paidAmount}
+                        setPaidAmount={setPaidAmount}
                         onKeyPress={handleKeyPress}
                         method={method}
                         setMethod={setMethod}
@@ -230,7 +238,7 @@ const Payment = () => {
             {showValidasi && (
                 <PaymentValidasi
                     kembalian={kembalian}
-                    onClose={() => setShowValidasi(false)}
+                    onClose={handleFinishTransaction}
                     onViewReceipt={() => setShowReceipt(true)}
                 />
             )}

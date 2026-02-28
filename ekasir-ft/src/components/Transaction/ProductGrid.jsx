@@ -13,8 +13,8 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
 
     return (
         <div className="product-grid">
-            {filteredProducts.map((product, index) => {
-                const code = product.code || product.id || index;
+            {filteredProducts.map((product) => {
+                const id = product.id;
                 const name = product.name || "Tanpa Nama";
                 const price = Number(product.price_max ?? 0);
                 const stock = Number(product.stock) || 0;
@@ -22,11 +22,11 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                 const outOfStock =
                     product.use_stock && stock <= 0;
 
-                const inCart = cart.find((i) => i.code === code);
+                const inCart = cart.find((i) => i.id === id);
 
                 return (
                     <div
-                        key={code}
+                        key={id}
                         className={`product-card 
                             ${inCart ? "active" : ""} 
                             ${outOfStock ? "disabled" : ""}
@@ -35,7 +35,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                             if (outOfStock) return;
 
                             setCart((prev) => {
-                                const exist = prev.find((i) => i.code === code);
+                                const exist = prev.find((i) => i.id === id);
 
                                 if (exist) {
                                     if (
@@ -45,7 +45,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                                         return prev;
 
                                     return prev.map((i) =>
-                                        i.code === code
+                                        i.id === id
                                             ? { ...i, qty: i.qty + 1 }
                                             : i
                                     );
@@ -54,8 +54,7 @@ const ProductGrid = ({ products = [], category, search, cart, setCart }) => {
                                 return [
                                     ...prev,
                                     {
-                                        id: product.id, // WAJIB
-                                        code,
+                                        id,
                                         name,
                                         sellPrice: price,
                                         image: product.image,

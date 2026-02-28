@@ -8,9 +8,9 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
         items = [],
         subtotal = 0,
         discount = null,
-        discountAmount = 0,
+        discountTotal = 0,
+        taxTotal = 0,
         tax = null,
-        taxAmount = 0,
         finalTotal = 0,
         paidAmount = 0,
         change = 0,
@@ -94,21 +94,26 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
 
                     <div className="receipt-line" />
 
-                    {items.map((item) => (
-                        <div key={item.code} className="receipt-item">
-                            <div className="receipt-item-name">
-                                {item.name}
+                    {items.map((item) => {
+                        const name = item.name ?? item.product_name ?? "-";
+                        const price = item.sellPrice ?? item.price ?? 0;
+
+                        return (
+                            <div key={item.id} className="receipt-item">
+                                <div className="receipt-item-name">
+                                    {name}
+                                </div>
+                                <div className="receipt-row">
+                                    <span>
+                                        {item.qty} x Rp {Number(price).toLocaleString("id-ID")}
+                                    </span>
+                                    <span>
+                                        Rp {(Number(price) * item.qty).toLocaleString("id-ID")}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="receipt-row">
-                                <span>
-                                    {item.qty} x Rp {item.sellPrice.toLocaleString("id-ID")}
-                                </span>
-                                <span>
-                                    Rp {(item.sellPrice * item.qty).toLocaleString("id-ID")}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     <div className="receipt-line" />
 
@@ -117,7 +122,7 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         <strong>Rp {subtotal.toLocaleString("id-ID")}</strong>
                     </div>
 
-                    {discount && discountAmount > 0 && (
+                    {discount && discountTotal > 0 && (
                         <div className="receipt-row">
                             <span>
                                 Diskon
@@ -125,11 +130,11 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                                 {discount?.type === "percent" ? ` ${discount.value}%` : ""}
                                 {discount?.name ? ")" : ""}
                             </span>
-                            <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                            <span>- Rp {discountTotal.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 
-                    {tax && taxAmount > 0 && (
+                    {tax && taxTotal > 0 && (
                         <div className="receipt-row">
                             <span>
                                 Pajak
@@ -137,7 +142,7 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                                 {tax?.type === "percent" ? ` ${tax.value}%` : ""}
                                 {tax?.name ? ")" : ""}
                             </span>
-                            <span>Rp {taxAmount.toLocaleString("id-ID")}</span>
+                            <span>Rp {taxTotal.toLocaleString("id-ID")}</span>
                         </div>
                     )}
 
@@ -180,7 +185,7 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         Barang yang sudah dibeli tidak dapat dikembalikan
                     </p>
                     <p className="receipt-footer small">
-                        {new Date().toLocaleDateString("id-ID")}
+                        {new Date(transaction.paidAt).toLocaleDateString("id-ID")}
                     </p>
                 </div>
 
@@ -188,7 +193,7 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                     Tutup
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 

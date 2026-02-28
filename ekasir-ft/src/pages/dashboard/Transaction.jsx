@@ -21,6 +21,7 @@ import cameraIcon from "../../assets/icons/camera.png";
 
 const Transaction = () => {
     const { authData } = useAuth();
+    const navigate = useNavigate();
     const ownerId = getCurrentOwnerId();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [products, setProducts] = useState([]);
@@ -38,18 +39,26 @@ const Transaction = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!ownerId || !authData?.token) return;
 
         fetch("http://localhost:5000/api/products", {
             headers: {
                 Authorization: `Bearer ${authData.token}`
             }
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Gagal ambil produk");
+                return res.json();
+            })
+
             .then(data => {
+                if (!Array.isArray(data)) {
+                    setProducts([]);
+                    return;
+                }
                 setProducts(data);
             });
-    }, [ownerId]);
+    }, [ownerId, authData?.token]);
 
     useEffect(() => {
         if (!authData?.token) return;
@@ -84,7 +93,7 @@ const Transaction = () => {
         if (!scannedCode) return;
 
         const product = products.find(
-            (p) => String(p.code) === String(scannedCode)
+            (p) => p.code && String(p.code) === String(scannedCode)
         );
 
         if (!product) {
@@ -105,7 +114,7 @@ const Transaction = () => {
         }
 
         setCart((prev) => {
-            const exist = prev.find((i) => i.code === product.code);
+            const exist = prev.find((i) => i.id === product.id);
 
             if (exist) {
                 if (product.use_stock && exist.qty >= stock) {
@@ -113,7 +122,7 @@ const Transaction = () => {
                 }
 
                 return prev.map((i) =>
-                    i.code === product.code ? { ...i, qty: i.qty + 1 } : i
+                    i.id === product.id ? { ...i, qty: i.qty + 1 } : i
                 );
             }
 
@@ -123,7 +132,7 @@ const Transaction = () => {
                     id: product.id,   // WAJIB
                     code: product.code,
                     name: product.name,
-                    sellPrice: product.price_max,
+                    sellPrice: Number(product.price_max || 0),
                     qty: 1
                 },
             ];

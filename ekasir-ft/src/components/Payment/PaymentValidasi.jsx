@@ -7,18 +7,30 @@ const PaymentValidasi = ({ kembalian = 0, onClose, onViewReceipt }) => {
     const [openPrint, setOpenPrint] = useState(false);
 
     const handleExportPDF = () => {
-        const element = document.getElementById("receipt-print");
-        if (!element) return alert("Struk belum siap");
+        // Pastikan receipt terbuka dulu
+        if (onViewReceipt) {
+            onViewReceipt();
+        }
 
-        html2pdf()
-            .set({
-                margin: 5,
-                filename: "struk-transaksi.pdf",
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: "mm", format: "a6", orientation: "portrait" }
-            })
-            .from(element)
-            .save();
+        // Tunggu render selesai
+        setTimeout(() => {
+            const element = document.getElementById("receipt-print");
+
+            if (!element) {
+                alert("Struk belum siap");
+                return;
+            }
+
+            html2pdf()
+                .set({
+                    margin: 5,
+                    filename: "struk-transaksi.pdf",
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: "mm", format: "a6", orientation: "portrait" }
+                })
+                .from(element)
+                .save();
+        }, 300);
     };
 
     return (
@@ -63,7 +75,7 @@ const PaymentValidasi = ({ kembalian = 0, onClose, onViewReceipt }) => {
                 <button
                     className="validasi-finish"
                     onClick={() => {
-                        localStorage.removeItem("current_transaction");
+                        // localStorage.removeItem("current_transaction");
                         onClose();
                     }}
                 >
