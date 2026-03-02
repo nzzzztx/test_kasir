@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
 
 import "../../assets/css/laporantransaksi.css";
 import Sidebar from "../../components/Sidebar";
@@ -51,6 +52,7 @@ const LaporanTransaksi = () => {
     const [search, setSearch] = useState("");
     const [transactions, setTransactions] = useState([]);
     const { namaToko, lokasi } = getInfoToko();
+    const { authData } = useAuth();
 
     // const dummyTransaksi = [
     //     {
@@ -75,30 +77,82 @@ const LaporanTransaksi = () => {
     //     },
     // ];
 
+    // useEffect(() => {
+    //     const ownerId = getCurrentOwnerId();
+    //     if (!ownerId) {
+    //         setTransactions([]);
+    //         return;
+    //     }
+
+    //     const history = JSON.parse(
+    //         localStorage.getItem(`transactions_owner_${ownerId}`) || "[]"
+    //     );
+
+    //     const parsed = history.map((t) => ({
+    //         nomor: t.invoiceNumber || "-",
+    //         waktu_order: t.createdAt ? new Date(t.createdAt) : null,
+    //         waktu_bayar: t.paidAt ? new Date(t.paidAt) : null,
+    //         outlet: namaToko,
+    //         jenis_order: "Lainnya",
+    //         penjualan: Number(t.finalTotal || 0),
+    //         metode: t.paymentMethod || "-",
+    //         status: t.status || "unpaid",
+    //     }));
+
+    //     setTransactions(parsed);
+    // }, [namaToko]);
+
     useEffect(() => {
-        const ownerId = getCurrentOwnerId();
-        if (!ownerId) {
-            setTransactions([]);
-            return;
-        }
+        if (!authData?.token) return;
 
-        const history = JSON.parse(
-            localStorage.getItem(`transactions_owner_${ownerId}`) || "[]"
-        );
+        const fetchReport = async () => {
+            try {
+                const queryParams = new URLSearchParams();
 
-        const parsed = history.map((t) => ({
-            nomor: t.invoiceNumber || "-",
-            waktu_order: t.createdAt ? new Date(t.createdAt) : null,
-            waktu_bayar: t.paidAt ? new Date(t.paidAt) : null,
-            outlet: namaToko,
-            jenis_order: "Lainnya",
-            penjualan: Number(t.finalTotal || 0),
-            metode: t.paymentMethod || "-",
-            status: t.status || "unpaid",
-        }));
+                if (range) {
+                    queryParams.append("startDate", range.startDate.toISOString());
+                    queryParams.append("endDate", range.endDate.toISOString());
+                }
 
-        setTransactions(parsed);
-    }, [namaToko]);
+                queryParams.append("status", statusFilter);
+                queryParams.append("waktuType", waktuType);
+
+                const res = await fetch(
+                    `http://localhost:5000/api/reports/transactions?${queryParams.toString()}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                    }
+                );
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    console.error(data.message);
+                    return;
+                }
+
+                const formatted = data.transactions.map((t) => ({
+                    nomor: t.invoice,
+                    waktu_order: t.waktu_order ? new Date(t.waktu_order) : null,
+                    waktu_bayar: t.waktu_bayar ? new Date(t.waktu_bayar) : null,
+                    outlet: namaToko,
+                    jenis_order: "Lainnya",
+                    penjualan: Number(t.penjualan),
+                    metode: t.payment_method,
+                    status: t.status,
+                }));
+
+                setTransactions(formatted);
+
+            } catch (err) {
+                console.error("Gagal ambil laporan:", err);
+            }
+        };
+
+        fetchReport();
+    }, [authData?.token, range, statusFilter, waktuType]);
 
     const formatDate = (date) =>
         date.toLocaleDateString("id-ID", {
@@ -120,33 +174,47 @@ const LaporanTransaksi = () => {
         }
     }, []);
 
-    const handleExport = () => {
-        const excelData = filteredTransaksi.map((t, i) => ({
-            No: i + 1,
-            "Nomor Transaksi": t.nomor,
-            "Waktu Order": t.waktu_order
-                ? t.waktu_order.toLocaleString("id-ID")
-                : "-",
-            "Waktu Bayar": t.waktu_bayar
-                ? t.waktu_bayar.toLocaleString("id-ID")
-                : "-",
-            Outlet: namaToko,
-            "Alamat Toko": lokasi,
-            "Jenis Order": t.jenis_order,
-            "Penjualan (Rp)": t.penjualan,
-            "Metode Pembayaran": t.metode,
-            Status: t.status === "paid" ? "Lunas" : "Belum Lunas",
-        }));
+    const handleExport = async () => {
+        try {
+            const queryParams = new URLSearchParams();
 
-        const worksheet = XLSX.utils.json_to_sheet(excelData);
-        const workbook = XLSX.utils.book_new();
+            if (range) {
+                queryParams.append("startDate", range.startDate.toISOString());
+                queryParams.append("endDate", range.endDate.toISOString());
+            }
 
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Transaksi");
+            queryParams.append("status", statusFilter);
+            queryParams.append("waktuType", waktuType);
 
-        XLSX.writeFile(
-            workbook,
-            `Laporan_Transaksi_${Date.now()}.xlsx`
-        );
+            const response = await fetch(
+                `http://localhost:5000/api/reports/transactions/export-pdf?${queryParams.toString()}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                alert("Gagal export PDF");
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Laporan_Transaksi_${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Export gagal:", error);
+        }
     };
 
     const filteredTransaksi = transactions.filter((t) => {

@@ -27,7 +27,7 @@ const Logistics = () => {
     const { authData } = useAuth();
     const [user, setUser] = useState(null);
 
-    const selectedCode = location.state?.code || null;
+    const selectedProductId = location.state?.productId || null;
     const selectedName = location.state?.name || null;
 
     const [logs, setLogs] = useState([]);
@@ -74,19 +74,21 @@ const Logistics = () => {
     };
 
     const filtered = logs.filter((l) => {
+
+        if (!selectedProductId) return false;
+
+        const matchProduct =
+            String(l.product_id) === String(selectedProductId);
+
         const matchSearch =
             (l.note || "").toLowerCase().includes(search.toLowerCase()) ||
             String(l.created_by || "")
                 .toLowerCase()
                 .includes(search.toLowerCase());
 
-        const matchProduct = selectedCode
-            ? String(l.product_id) === String(selectedCode)
-            : true;
-
         const matchDate = isInRange(l.created_at);
 
-        return matchSearch && matchProduct && matchDate;
+        return matchProduct && matchSearch && matchDate;
     });
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -104,26 +106,27 @@ const Logistics = () => {
     };
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -233,18 +236,35 @@ const Logistics = () => {
                             </thead>
 
                             <tbody>
-                                {paginated.map((item) => (
-                                    <tr key={item.id}>
-                                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
-                                        <td>{item.type === "in" ? item.qty : 0}</td>
-                                        <td>{item.type === "out" ? item.qty : 0}</td>
-                                        <td>{item.stock_after}</td>
-                                        <td>{item.base_price.toLocaleString("id-ID")}</td>
-                                        <td>{item.sell_price.toLocaleString("id-ID")}</td>
-                                        <td>{item.created_by}</td>
-                                        <td>{item.note}</td>
+                                {paginated.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                                            Tidak ada data log
+                                        </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    paginated.map((item) => (
+                                        <tr key={item.id}>
+                                            <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td>{item.type === "in" ? item.qty : 0}</td>
+                                            <td>{item.type === "out" ? item.qty : 0}</td>
+                                            <td>{item.stock_after}</td>
+                                            <td>{Number(item.base_price).toLocaleString("id-ID")}</td>
+                                            <td>{Number(item.sell_price).toLocaleString("id-ID")}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{item.email || "-"}</strong>
+                                                    <div style={{ fontSize: 12, opacity: 0.6 }}>
+                                                        {item.role}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {item.type === "in" ? "Stok Masuk" : "Stok Keluar"}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

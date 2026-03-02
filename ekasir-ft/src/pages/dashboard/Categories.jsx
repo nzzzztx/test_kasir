@@ -78,7 +78,7 @@ const Categories = () => {
     useEffect(() => {
         setSelectedCategory(null);
         setSearch('');
-    }, [authData]);
+    }, [authData?.token]);
 
     useEffect(() => {
         if (!authData) return;
@@ -120,7 +120,31 @@ const Categories = () => {
         fetchCategories();
         fetchProducts();
 
-    }, [authData]);
+    }, [authData?.token]);
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const handleStockUpdate = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/products`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+            setProducts(Array.isArray(data) ? data : []);
+        };
+
+        window.addEventListener("stockUpdated", handleStockUpdate);
+
+        return () => {
+            window.removeEventListener("stockUpdated", handleStockUpdate);
+        };
+    }, [authData?.token]);
 
     useEffect(() => {
         if (!authData?.token) return;
@@ -269,7 +293,10 @@ const Categories = () => {
                                     );
 
                                     const totalModal = catProducts.reduce(
-                                        (s, p) => s + Number(p.stock || 0) * Number(p.priceMin || 0),
+                                        (s, p) =>
+                                            s +
+                                            Number(p.stock || 0) *
+                                            Number(p.price_min ?? p.priceMin ?? 0),
                                         0
                                     );
 
@@ -323,7 +350,7 @@ const Categories = () => {
                                 </div>
                                 <div className="meta">
                                     <p>
-                                        Rp {item.priceMin} – Rp {item.priceMax}
+                                        Rp {item.price_min ?? item.priceMin} – Rp {item.price_max ?? item.priceMax}
                                     </p>
                                     <strong>{item.stock}</strong>
                                 </div>

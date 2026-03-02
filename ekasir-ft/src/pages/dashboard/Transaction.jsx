@@ -63,6 +63,27 @@ const Transaction = () => {
     useEffect(() => {
         if (!authData?.token) return;
 
+        const refreshProducts = async () => {
+            const res = await fetch("http://localhost:5000/api/products", {
+                headers: {
+                    Authorization: `Bearer ${authData.token}`
+                }
+            });
+
+            const data = await res.json();
+            setProducts(Array.isArray(data) ? data : []);
+        };
+
+        window.addEventListener("stockUpdated", refreshProducts);
+
+        return () => {
+            window.removeEventListener("stockUpdated", refreshProducts);
+        };
+    }, [authData?.token]);
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
         const fetchExtras = async () => {
             const [discRes, taxRes] = await Promise.all([
                 fetch("http://localhost:5000/api/discounts", {

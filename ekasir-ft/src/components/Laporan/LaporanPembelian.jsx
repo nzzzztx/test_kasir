@@ -4,10 +4,12 @@ import * as XLSX from "xlsx";
 import html2pdf from "html2pdf.js";
 import { getCurrentOwnerId } from "../../utils/owner";
 
+
 import "../../assets/css/laporanpembelian.css";
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../Laporan/KalenderTransaksi";
 import PembelianPelunasanPDF from "../Pembelian/PembelianPelunasanPDF";
+import { useAuth } from "../../context/AuthContext";
 
 import searchIcon from "../../assets/icons/search.png";
 import calendarIcon from "../../assets/icons/calendar.png";
@@ -16,6 +18,7 @@ import toggleIcon from "../../assets/icons/togglebutton.png";
 
 const LaporanPembelian = () => {
     const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -29,40 +32,50 @@ const LaporanPembelian = () => {
     const [pelunasanPDF, setPelunasanPDF] = useState(null);
 
     useEffect(() => {
-        if (!ownerId) {
-            setPembelian([]);
-            return;
-        }
+        if (!ownerId || !authData?.token) return;
 
-        const data = JSON.parse(
-            localStorage.getItem(`pembelian_list_${ownerId}`) || "[]"
-        );
+        const fetchData = async () => {
+            try {
+                const queryParams = new URLSearchParams();
 
-        const parsed = data.map((p) => {
-            const total = Number(p.total || 0);
-            const dibayar = Number(p.paidAmount || 0);
+                if (range) {
+                    queryParams.append("startDate", range.startDate.toISOString());
+                    queryParams.append("endDate", range.endDate.toISOString());
+                }
 
-            return {
-                id: p.id,
-                supplier: p.supplier?.name || "-",
-                namaBarang:
-                    p.items && p.items.length > 2
-                        ? `${p.items[0].name} +${p.items.length - 1} lainnya`
-                        : p.items?.map(i => i.name).join(", ") || "-",
-                tanggal: p.createdAt ? new Date(p.createdAt) : new Date(),
-                qty: p.items?.reduce((s, i) => s + i.qty, 0),
-                satuan: p.items?.[0]?.unit || "-",
-                totalHarga: total,
-                dibayar,
-                status: dibayar >= total ? "paid" : "unpaid",
-                payments: p.payments || [],
-                invoiceNumber: p.invoiceNumber || `INV-${p.id}`,
-            };
-        });
+                const res = await fetch(
+                    `http://localhost:5000/api/reports/purchases?${queryParams.toString()}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`
+                        }
+                    }
+                );
 
-        setPembelian(parsed);
+                const data = await res.json();
 
-    }, [ownerId]);
+                setPembelian(
+                    data.purchases.map(p => ({
+                        id: p.id,
+                        supplier: p.supplier_name || "-",
+                        namaBarang: "-",
+                        tanggal: new Date(p.purchase_date),
+                        qty: p.total_qty,
+                        satuan: "",
+                        totalHarga: Number(p.total_amount),
+                        dibayar: Number(p.paid_amount),
+                        status: p.paid_amount >= p.total_amount ? "paid" : "unpaid",
+                        invoiceNumber: p.invoice_number
+                    }))
+                );
+
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchData();
+    }, [ownerId, authData?.token, range]);
 
     useEffect(() => {
         if (!pelunasanPDF) return;
@@ -120,22 +133,49 @@ const LaporanPembelian = () => {
     const totalDibayar = filtered.reduce((s, p) => s + p.dibayar, 0);
     const totalPiutang = totalPembelian - totalDibayar;
 
-    const handleExport = () => {
-        const excel = filtered.map((p, i) => ({
-            No: i + 1,
-            Supplier: p.supplier,
-            Barang: p.namaBarang,
-            Tanggal: p.tanggal.toLocaleDateString("id-ID"),
-            Qty: p.qty,
-            Total: p.totalHarga,
-            Dibayar: p.dibayar,
-            Status: p.status === "paid" ? "Lunas" : "Belum Lunas",
-        }));
+    const handleExportPDF = async () => {
+        try {
+            if (!authData?.token) {
+                alert("Session expired");
+                return;
+            }
 
-        const ws = XLSX.utils.json_to_sheet(excel);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Laporan Pembelian");
-        XLSX.writeFile(wb, `Laporan_Pembelian_${Date.now()}.xlsx`);
+            const queryParams = new URLSearchParams();
+
+            if (range) {
+                queryParams.append("startDate", range.startDate.toISOString());
+                queryParams.append("endDate", range.endDate.toISOString());
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/reports/purchases/export-pdf?${queryParams.toString()}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Gagal export PDF");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Laporan_Pembelian_${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan saat export PDF");
+        }
     };
 
     return (
@@ -204,8 +244,8 @@ const LaporanPembelian = () => {
                             </div>
                         </div>
 
-                        <button className="btn-primary" onClick={handleExport}>
-                            Ekspor Laporan
+                        <button className="btn-primary" onClick={handleExportPDF}>
+                            Export PDF
                         </button>
                     </div>
 
@@ -313,82 +353,80 @@ const LaporanPembelian = () => {
                                 </button>
                                 <button
                                     className="btn-primary"
-                                    onClick={() => {
-                                        if (!Number(bayarNominal) || Number(bayarNominal) <= 0) {
-                                            alert("Nominal pembayaran tidak valid");
-                                            return;
-                                        }
-
-                                        const sisa =
-                                            selectedPembelian.totalHarga - selectedPembelian.dibayar;
-
-                                        if (bayarNominal > sisa) {
-                                            alert("Nominal melebihi sisa pembayaran");
-                                            return;
-                                        }
-                                        const list =
-                                            JSON.parse(
-                                                localStorage.getItem(`pembelian_list_${ownerId}`) || "[]"
-                                            );
-
-                                        let pelunasanData = null;
-
-                                        const updated = list.map((item) => {
-                                            if (item.id !== selectedPembelian.id) return item;
-
-                                            const newPaid = Number(item.paidAmount || 0) + bayarNominal;
-                                            const isLunas = newPaid >= Number(item.total || 0);
-
-                                            const updatedItem = {
-                                                ...item,
-                                                paidAmount: newPaid,
-                                                status: isLunas ? "paid" : "unpaid",
-                                                payments: [
-                                                    ...(item.payments || []),
-                                                    {
-                                                        amount: bayarNominal,
-                                                        date: new Date().toISOString(),
-                                                        type: isLunas ? "PELUNASAN" : "CICILAN",
-                                                    },
-                                                ],
-                                            };
-
-                                            if (isLunas) {
-                                                pelunasanData = updatedItem;
+                                    onClick={async () => {
+                                        try {
+                                            if (!Number(bayarNominal) || Number(bayarNominal) <= 0) {
+                                                alert("Nominal pembayaran tidak valid");
+                                                return;
                                             }
 
-                                            return updatedItem;
-                                        });
+                                            const sisa =
+                                                selectedPembelian.totalHarga - selectedPembelian.dibayar;
 
-                                        localStorage.setItem(
-                                            `pembelian_list_${ownerId}`,
-                                            JSON.stringify(updated)
-                                        );
+                                            if (bayarNominal > sisa) {
+                                                alert("Nominal melebihi sisa pembayaran");
+                                                return;
+                                            }
 
-                                        setPembelian((prev) =>
-                                            prev.map((p) =>
-                                                p.id === selectedPembelian.id
-                                                    ? {
-                                                        ...p,
-                                                        dibayar: p.dibayar + bayarNominal,
-                                                        status:
-                                                            p.dibayar + bayarNominal >= p.totalHarga
-                                                                ? "paid"
-                                                                : "unpaid",
-                                                    }
-                                                    : p
-                                            )
-                                        );
+                                            const response = await fetch(
+                                                "http://localhost:5000/api/reports/purchases/pay",
+                                                {
+                                                    method: "POST",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                        Authorization: `Bearer ${authData.token}`,
+                                                    },
+                                                    body: JSON.stringify({
+                                                        purchaseId: selectedPembelian.id,
+                                                        amount: bayarNominal,
+                                                    }),
+                                                }
+                                            );
 
-                                        if (pelunasanData) {
-                                            setPelunasanPDF(pelunasanData);
+                                            const result = await response.json();
+
+                                            if (!response.ok) {
+                                                alert(result.message);
+                                                return;
+                                            }
+
+                                            // Refresh data dari backend
+                                            const refresh = await fetch(
+                                                "http://localhost:5000/api/reports/purchases",
+                                                {
+                                                    headers: {
+                                                        Authorization: `Bearer ${authData.token}`,
+                                                    },
+                                                }
+                                            );
+
+                                            const data = await refresh.json();
+
+                                            setPembelian(
+                                                data.purchases.map(p => ({
+                                                    id: p.id,
+                                                    supplier: p.supplier_name || "-",
+                                                    namaBarang: "-",
+                                                    tanggal: new Date(p.purchase_date),
+                                                    qty: p.total_qty,
+                                                    satuan: "",
+                                                    totalHarga: Number(p.total_amount),
+                                                    dibayar: Number(p.paid_amount),
+                                                    status: p.paid_amount >= p.total_amount ? "paid" : "unpaid",
+                                                    invoiceNumber: p.invoice_number
+                                                }))
+                                            );
+
+                                            setBayarNominal(0);
+                                            setSelectedPembelian(null);
+                                            setOpenBayar(false);
+
+                                            alert("Pembayaran berhasil disimpan ✅");
+
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert("Terjadi kesalahan");
                                         }
-
-                                        setBayarNominal(0);
-                                        setSelectedPembelian(null);
-                                        setOpenBayar(false);
-
-                                        alert("Pembayaran berhasil disimpan ✅");
                                     }}
                                 >
                                     Simpan Pembayaran
@@ -400,14 +438,15 @@ const LaporanPembelian = () => {
 
                 {pelunasanPDF && (
                     <div
+                        id="invoice-pelunasan-pdf"
                         style={{
                             position: "fixed",
-                            top: "-2000px",
-                            left: "-2000px",
+                            top: 0,
+                            left: 0,
                             width: "800px",
-                            visibility: "hidden",
+                            opacity: 0,
                             pointerEvents: "none",
-                            zIndex: -1
+                            zIndex: 9999
                         }}
                     >
                         <PembelianPelunasanPDF data={pelunasanPDF} />

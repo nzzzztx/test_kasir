@@ -18,15 +18,6 @@ import trashIcon from '../../assets/icons/trash.png';
 const Product = () => {
     const { authData } = useAuth();
     const [products, setProducts] = useState([]);
-    const formatProducts = (data) => {
-        return data.map((p) => ({
-            ...p,
-            priceMin: Number(p.price_min),
-            priceMax: Number(p.price_max),
-            minStock: p.min_stock,
-        }));
-    };
-
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -38,19 +29,99 @@ const Product = () => {
     const [activeCategory, setActiveCategory] = useState('Semua');
     const [categories, setCategories] = useState([]);
     const [user, setUser] = useState(null);
-    const [isLoaded, setIsLoaded] = useState(false);
 
-    const {
-        notifications,
-        unreadCount,
-        markAllAsRead,
-    } = useNotifications();
+    const { notifications, unreadCount, markAllAsRead } = useNotifications();
 
+    const formatProducts = (data) => {
+        return data.map((p) => ({
+            ...p,
+            priceMin: Number(p.price_min),
+            priceMax: Number(p.price_max),
+            minStock: p.min_stock,
+        }));
+    };
+
+    /* ===============================
+       FETCH PRODUCTS (Reusable)
+    =============================== */
+    const fetchProducts = async () => {
+        if (!authData?.token) return;
+
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/products`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+            setProducts(formatProducts(data));
+        } catch (err) {
+            console.error("Gagal mengambil produk:", err);
+        }
+    };
+
+    /* ===============================
+       FETCH CATEGORIES
+    =============================== */
+    const fetchCategories = async () => {
+        if (!authData) return;
+
+        try {
+            const ownerId =
+                authData.role === "owner"
+                    ? authData.id
+                    : authData.ownerId;
+
+            const res = await fetch(
+                `http://localhost:5000/api/categories/${ownerId}`
+            );
+
+            const data = await res.json();
+            const categoryNames = data.map(cat => cat.name);
+            setCategories(['Semua', ...categoryNames]);
+        } catch (err) {
+            console.error("Gagal mengambil kategori:", err);
+        }
+    };
+
+    /* ===============================
+       LOAD AWAL
+    =============================== */
+    useEffect(() => {
+        if (!authData) return;
+        fetchCategories();
+        fetchProducts();
+    }, [authData?.token]);
+
+    /* ===============================
+       AUTO REFRESH SAAT STOCK BERUBAH
+    =============================== */
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const handleStockUpdate = () => {
+            fetchProducts();
+        };
+
+        window.addEventListener("stockUpdated", handleStockUpdate);
+
+        return () => {
+            window.removeEventListener("stockUpdated", handleStockUpdate);
+        };
+    }, [authData?.token]);
+
+    /* ===============================
+       RESET SAAT AUTH BERUBAH
+    =============================== */
     useEffect(() => {
         setSelectedProduct(null);
         setSearch('');
         setActiveCategory('Semua');
-    }, [authData]);
+    }, [authData?.token]);
 
     useEffect(() => {
         if (products.length > 0) {
@@ -69,145 +140,9 @@ const Product = () => {
         return matchSearch && matchCategory;
     });
 
-    useEffect(() => {
-        if (!authData) return;
-
-        const ownerId = authData.role === "owner" ? authData.id : authData.ownerId;
-
-        const fetchCategories = async () => {
-            try {
-                const res = await fetch(`http://localhost:5000/api/categories/${ownerId}`);
-                const data = await res.json();
-                const categoryNames = data.map(cat => cat.name);
-                setCategories(['Semua', ...categoryNames]);
-            } catch (err) {
-                console.error("Gagal mengambil kategori:", err);
-            }
-        };
-
-        const fetchProducts = async () => {
-            try {
-                const res = await fetch(
-                    `http://localhost:5000/api/products`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${authData.token}`,
-                        },
-                    }
-                );
-                const data = await res.json();
-
-                setProducts(formatProducts(data));
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        fetchCategories();
-        fetchProducts();
-    }, [authData]);
-
-    useEffect(() => {
-        if (!authData) return;
-
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
-
-        const USERS_KEY = `users_owner_${ownerId}`;
-
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
-
-    const handleSaveProduct = async (data) => {
-        try {
-            const ownerId =
-                authData.role === "owner"
-                    ? authData.id
-                    : authData.ownerId;
-
-            const res = await fetch("http://localhost:5000/api/products", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${authData.token}`,
-                },
-                body: JSON.stringify(data),
-            });
-            const result = await res.json();
-
-            if (!res.ok) {
-                alert(result.message);
-                return;
-            }
-
-            alert("Produk berhasil ditambahkan");
-
-            const refresh = await fetch(
-                `http://localhost:5000/api/products`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${authData.token}`,
-                    },
-                }
-            );
-            const newData = await refresh.json();
-            setProducts(formatProducts(newData));
-
-            setShowAddModal(false);
-
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const handleUpdateProduct = async (updated) => {
-        try {
-            const res = await fetch(
-                `http://localhost:5000/api/products/${updated.id}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updated),
-                }
-            );
-
-            if (!res.ok) {
-                const err = await res.json();
-                alert(err.message);
-                return;
-            }
-
-            alert("Produk berhasil diupdate");
-
-            const ownerId =
-                authData.role === "owner"
-                    ? authData.id
-                    : authData.ownerId;
-
-            const refresh = await fetch(
-                `http://localhost:5000/api/products/${ownerId}`
-            );
-            const newData = await refresh.json();
-            setProducts(formatProducts(newData));
-
-            setShowEditModal(false);
-
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
+    /* ===============================
+       FETCH PROFILE
+    =============================== */
     useEffect(() => {
         if (!authData?.token) return;
 
@@ -220,9 +155,7 @@ const Product = () => {
                 });
 
                 const data = await res.json();
-                if (res.ok) {
-                    setUser(data);
-                }
+                if (res.ok) setUser(data);
             } catch (err) {
                 console.error("Gagal ambil profile:", err);
             }
@@ -234,10 +167,7 @@ const Product = () => {
     if (!user) {
         return (
             <div className="dashboard-container">
-                <Sidebar
-                    isOpen={sidebarOpen}
-                    toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                />
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
                 <div className="main-content">
                     <div style={{ padding: 24 }}>Loading...</div>
                 </div>
@@ -565,7 +495,7 @@ const Product = () => {
                                         if (!selectedProduct) return;
 
                                         try {
-                                            await fetch(
+                                            const res = await fetch(
                                                 `http://localhost:5000/api/products/${selectedProduct.id}`,
                                                 {
                                                     method: "DELETE",
@@ -574,22 +504,21 @@ const Product = () => {
                                                     },
                                                 }
                                             );
-                                            const ownerId =
-                                                authData.role === "owner"
-                                                    ? authData.id
-                                                    : authData.ownerId;
 
-                                            const refresh = await fetch(
-                                                `http://localhost:5000/api/products/${ownerId}`
-                                            );
-                                            const newData = await refresh.json();
+                                            if (!res.ok) {
+                                                const err = await res.json();
+                                                alert(err.message || "Gagal menghapus produk");
+                                                return;
+                                            }
 
-                                            setProducts(formatProducts(newData));
+                                            // Refresh data dengan fungsi reusable
+                                            await fetchProducts();
+
                                             setSelectedProduct(null);
                                             setShowDeleteModal(false);
 
                                         } catch (err) {
-                                            console.error(err);
+                                            console.error("Error delete:", err);
                                         }
                                     }}
                                 >

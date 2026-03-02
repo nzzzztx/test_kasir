@@ -153,6 +153,8 @@ const Payment = () => {
                     `pending_transaction_owner_${ownerId}`
                 );
 
+                window.dispatchEvent(new Event("stockUpdated"));
+
                 pushNotification({
                     type: "payment",
                     title: "Pembayaran Berhasil",

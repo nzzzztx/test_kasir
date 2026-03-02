@@ -133,6 +133,25 @@ const Stock = () => {
         fetchProfile();
     }, [authData?.token]);
 
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const handleStockUpdate = async () => {
+            try {
+                const res = await api.get("/stock");
+                setStocks(res.data);
+            } catch (err) {
+                console.error("Gagal refresh stock:", err);
+            }
+        };
+
+        window.addEventListener("stockUpdated", handleStockUpdate);
+
+        return () => {
+            window.removeEventListener("stockUpdated", handleStockUpdate);
+        };
+    }, [authData?.token]);
+
     if (!user) {
         return (
             <div className="dashboard-container">
@@ -144,9 +163,9 @@ const Stock = () => {
         );
     }
 
-    console.log("authData:", authData);
-    console.log("ownerId:", authData?.ownerId);
-    console.log("id:", authData?.id);
+    // console.log("authData:", authData);
+    // console.log("ownerId:", authData?.ownerId);
+    // console.log("id:", authData?.id);
 
     return (
         <div className="dashboard-container">
@@ -241,8 +260,12 @@ const Stock = () => {
                                         <td>{item.code}</td>
                                         <td>{item.category}</td>
                                         <td>{item.stock}</td>
-                                        <td>{item.sellPrice.toLocaleString("id-ID")}</td>
-                                        <td>{item.basePrice.toLocaleString("id-ID")}</td>
+                                        <td>
+                                            {Number(item.sellPrice ?? item.price_max ?? 0).toLocaleString("id-ID")}
+                                        </td>
+                                        <td>
+                                            {Number(item.basePrice ?? item.price_min ?? 0).toLocaleString("id-ID")}
+                                        </td>
                                         <td>
                                             <div className="stock-actions-btn">
                                                 <button
@@ -261,7 +284,7 @@ const Stock = () => {
                                                     onClick={() =>
                                                         navigate("/dashboard/stock/logistic", {
                                                             state: {
-                                                                code: item.code,
+                                                                productId: item.id,
                                                                 name: item.name,
                                                             },
                                                         })

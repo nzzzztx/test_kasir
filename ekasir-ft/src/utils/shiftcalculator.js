@@ -3,22 +3,15 @@ const hitungSaldoSistem = ({
   transactions = [],
   expenses = [],
   notes = [],
-  activeShift,
 }) => {
   const totalPenjualanTunai = transactions
-    .filter(
-      (t) =>
-        t.metode === "TUNAI" &&
-        t.status === "paid" &&
-        t.shiftStartedAt === activeShift.startedAt,
-    )
-    .reduce((sum, t) => sum + Number(t.total || 0), 0);
+    .filter((t) => t.payment_method === "TUNAI")
+    .reduce((sum, t) => sum + Number(t.grand_total || 0), 0);
 
-  const totalPengeluaranTunai = expenses
-    .filter(
-      (e) => e.type === "TUNAI" && e.shiftStartedAt === activeShift.startedAt,
-    )
-    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const totalPengeluaranTunai = expenses.reduce(
+    (sum, e) => sum + Number(e.amount || 0),
+    0,
+  );
 
   const kasMasukLain = notes
     .filter((n) => n.type === "IN")

@@ -101,14 +101,26 @@ const Shift = () => {
 
         fetch("http://localhost:5000/api/shifts/history", {
             headers: {
-                Authorization: `Bearer ${authData.token}`
-            }
+                Authorization: `Bearer ${authData.token}`,
+            },
         })
-            .then(res => res.json())
-            .then(data => {
-                setHistory(data);
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Unauthorized");
+                }
+                return res.json();
             })
-            .catch(err => console.error(err));
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setHistory(data);
+                } else {
+                    setHistory([]);
+                }
+            })
+            .catch((err) => {
+                console.error("History error:", err);
+                setHistory([]);
+            });
     }, [authData?.token]);
 
     useEffect(() => {
@@ -130,14 +142,16 @@ const Shift = () => {
         return d >= start && d <= end;
     };
 
-    const filteredHistory = history.filter((h) => {
-        if (!h.started_at) return false;
-        return isInRange(h.started_at, range);
-    });
+    const filteredHistory = Array.isArray(history)
+        ? history.filter((h) => {
+            if (!h.started_at) return false;
+            return isInRange(h.started_at, range);
+        })
+        : [];
 
     const currentUser = {
-        name: user?.name || authData?.email || "Kasir",
-        role: authData?.role || "Kasir",
+        name: user?.nama || user?.email || "Kasir",
+        role: user?.role || authData?.role || "Kasir",
     };
 
     const [transactions, setTransactions] = useState([]);
@@ -169,6 +183,8 @@ const Shift = () => {
             activeShift,
         })
         : 0;
+
+    // console.log("USER DATA:", user);
 
     const handleMulaiShift = async () => {
         if (!saldoAwal) {
@@ -535,16 +551,38 @@ const Shift = () => {
                             <h4>Saat ini</h4>
 
                             <div className="shift-user">
-                                <div className="avatar">
-                                    {(activeShift?.cashier || currentUser.name)[0]}
+
+                                <div className="avatar-wrapper">
+                                    {user?.avatar ? (
+                                        <img
+                                            src={
+                                                user?.avatar?.startsWith("data:image")
+                                                    ? user.avatar
+                                                    : user?.avatar
+                                                        ? `data:image/png;base64,${user.avatar}`
+                                                        : userDummy
+                                            }
+                                            alt="avatar"
+                                            className="shift-avatar-img"
+                                        />
+                                    ) : (
+                                        <div className="avatar-fallback">
+                                            {(currentUser.name || "K")[0]}
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div>
                                     <div className="name">
-                                        {activeShift?.cashier || currentUser.name}
+                                        {currentUser.name}
                                     </div>
-                                    <div className="role">{currentUser.role}</div>
+
+                                    <div className="role">
+                                        {currentUser.role}
+                                    </div>
                                 </div>
                             </div>
+
                             {activeShift?.shiftStartTime && (
                                 <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
                                     {activeShift.shiftStartTime} - {activeShift.shiftEndTime}
@@ -645,7 +683,11 @@ const Shift = () => {
 
                                     {filteredHistory.map((item, i) => (
                                         <tr key={i}>
-                                            <td>{item.cashier}</td>
+                                            <td>
+                                                <div className="history-user-text">
+                                                    {item.cashier}
+                                                </div>
+                                            </td>
                                             <td>
                                                 {item.drawer}
                                                 {item.drawerLabel && (
@@ -721,13 +763,7 @@ const Shift = () => {
                                 transactions={detailTransactions}
                                 onUpdate={async (updatedShift) => {
 
-                                    // 1️⃣ Update selectedShift
-                                    setSelectedShift(updatedShift);
-
-                                    // 2️⃣ Refresh active shift (kalau shift masih ACTIVE)
-                                    await fetchActiveShift();
-
-                                    // 3️⃣ Refresh history
+                                    // 🔥 refresh history dulu
                                     const historyRes = await fetch(
                                         "http://localhost:5000/api/shifts/history",
                                         {
@@ -739,6 +775,16 @@ const Shift = () => {
 
                                     const historyData = await historyRes.json();
                                     setHistory(historyData);
+
+                                    // 🔥 cari shift terbaru dari database
+                                    const freshShift = historyData.find(
+                                        (s) => s.id === updatedShift.id
+                                    );
+
+                                    // pakai data yang benar-benar dari DB
+                                    setSelectedShift(freshShift || updatedShift);
+
+                                    await fetchActiveShift();
                                 }}
                             />
                             {/* <button

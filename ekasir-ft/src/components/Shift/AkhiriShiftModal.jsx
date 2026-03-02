@@ -82,10 +82,10 @@ const AkhiriShiftModal = ({
                     {!isInvalid && (
                         <div
                             className={`info-row ${selisih === 0
-                                    ? "match"
-                                    : selisih > 0
-                                        ? "lebih"
-                                        : "kurang"
+                                ? "match"
+                                : selisih > 0
+                                    ? "lebih"
+                                    : "kurang"
                                 }`}
                         >
                             <span>Selisih</span>

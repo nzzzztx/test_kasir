@@ -14,15 +14,16 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
             return;
         }
 
-        // kalau backend kirim string JSON
-        if (typeof shift.notes === "string") {
-            try {
-                setNotes(JSON.parse(shift.notes));
-            } catch {
-                setNotes([]);
-            }
-        } else {
-            setNotes(shift.notes);
+        try {
+            const parsed =
+                typeof shift.notes === "string"
+                    ? JSON.parse(shift.notes)
+                    : shift.notes;
+
+            setNotes(parsed || []);
+        } catch (err) {
+            console.error("Gagal parse notes:", err);
+            setNotes([]);
         }
     }, [shift]);
 
@@ -153,18 +154,19 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
                         {notes.map((n, i) => (
                             <div
                                 key={i}
-                                className={`rekap-detail-item ${n.type === "IN" ? "in" : "out"
-                                    }`}
+                                className={`rekap-detail-item ${n.type === "IN" ? "in" : "out"}`}
                             >
-                                <div>
+                                <div className="note-left">
                                     <div className="note-title">
-                                        {n.type === "IN" ? "Kas masuk lain" : "Kas keluar lain"}
+                                        {n.type === "IN"
+                                            ? "Kas masuk lain"
+                                            : "Kas keluar lain"}
                                     </div>
-                                    <small>{n.note}</small>
+                                    {n.note && <div className="note-desc">{n.note}</div>}
                                 </div>
 
-                                <div>
-                                    Rp {Number(n.amount).toLocaleString()}
+                                <div className="note-amount">
+                                    Rp {Number(n.amount).toLocaleString("id-ID")}
                                 </div>
                             </div>
                         ))}
