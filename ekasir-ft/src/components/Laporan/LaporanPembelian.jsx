@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import html2pdf from "html2pdf.js";
 import { getCurrentOwnerId } from "../../utils/owner";
-
 
 import "../../assets/css/laporanpembelian.css";
 import Sidebar from "../../components/Sidebar";
@@ -21,6 +20,7 @@ const LaporanPembelian = () => {
     const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const pdfRef = useRef(null);
 
     const [openCalendar, setOpenCalendar] = useState(false);
     const [range, setRange] = useState(null);
@@ -58,7 +58,7 @@ const LaporanPembelian = () => {
                     data.purchases.map(p => ({
                         id: p.id,
                         supplier: p.supplier_name || "-",
-                        namaBarang: "-",
+                        namaBarang: p.item_names || "-",
                         tanggal: new Date(p.purchase_date),
                         qty: p.total_qty,
                         satuan: "",
@@ -80,27 +80,33 @@ const LaporanPembelian = () => {
     useEffect(() => {
         if (!pelunasanPDF) return;
 
-        const timer = setTimeout(() => {
-            const el = document.getElementById("invoice-pelunasan-pdf");
-            if (!el) return;
+        const generatePDF = async () => {
+            await new Promise(resolve => setTimeout(resolve, 300));
 
-            html2pdf()
-                .from(el)
+            if (!pdfRef.current) return;
+
+            await html2pdf()
                 .set({
+                    margin: 0,
                     filename: `Invoice_Pelunasan_${pelunasanPDF.invoiceNumber}.pdf`,
-                    margin: 10,
-                    html2canvas: { scale: 2 },
-                    jsPDF: { format: "a4", orientation: "portrait" },
+                    html2canvas: {
+                        scale: 1.3,
+                        useCORS: true
+                    },
+                    jsPDF: {
+                        unit: "px",
+                        format: [794, 1123], // ukuran A4 dalam pixel
+                        orientation: "portrait"
+                    }
                 })
-                .save()
-                .then(() => {
-                    setPelunasanPDF(null);
-                });
-        }, 300);
+                .from(pdfRef.current)
+                .save();
 
-        return () => clearTimeout(timer);
+            setPelunasanPDF(null);
+        };
+
+        generatePDF();
     }, [pelunasanPDF]);
-
 
     const filtered = pembelian.filter(p => {
         const keyword = search.toLowerCase();
@@ -293,8 +299,30 @@ const LaporanPembelian = () => {
                                             {p.status === "paid" && (
                                                 <button
                                                     className="btn-outline success"
-                                                    onClick={() => {
-                                                        setPelunasanPDF(p);
+                                                    onClick={async () => {
+                                                        const response = await fetch(
+                                                            `http://localhost:5000/api/reports/purchases/${p.id}/invoice`,
+                                                            {
+                                                                headers: {
+                                                                    Authorization: `Bearer ${authData.token}`,
+                                                                },
+                                                            }
+                                                        );
+
+                                                        const result = await response.json();
+
+                                                        if (!response.ok) {
+                                                            alert(result.message);
+                                                            return;
+                                                        }
+
+                                                        setPelunasanPDF({
+                                                            invoiceNumber: result.purchase.invoice_number,
+                                                            supplier: { name: result.purchase.supplier_name },
+                                                            totalHarga: Number(result.purchase.total_amount),
+                                                            dibayar: Number(result.purchase.paid_amount),
+                                                            payments: result.payments || [],
+                                                        });
                                                     }}
                                                 >
                                                     Download Invoice
@@ -438,15 +466,13 @@ const LaporanPembelian = () => {
 
                 {pelunasanPDF && (
                     <div
-                        id="invoice-pelunasan-pdf"
+                        ref={pdfRef}
                         style={{
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            width: "800px",
-                            opacity: 0,
-                            pointerEvents: "none",
-                            zIndex: 9999
+                            width: "794px",
+                            height: "1123px",
+                            background: "#ffffff",
+                            padding: "60px",
+                            boxSizing: "border-box"
                         }}
                     >
                         <PembelianPelunasanPDF data={pelunasanPDF} />

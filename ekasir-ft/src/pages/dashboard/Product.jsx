@@ -38,6 +38,7 @@ const Product = () => {
             priceMin: Number(p.price_min),
             priceMax: Number(p.price_max),
             minStock: p.min_stock,
+            reward_points: p.reward_points || 0,
         }));
     };
 
@@ -163,6 +164,59 @@ const Product = () => {
 
         fetchProfile();
     }, [authData?.token]);
+
+    const handleSaveProduct = async (newProduct) => {
+        try {
+            const res = await fetch("http://localhost:5000/api/products", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
+                },
+                body: JSON.stringify(newProduct),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.message || "Gagal menambahkan produk");
+                return;
+            }
+
+            setShowAddModal(false);
+            await fetchProducts(); // refresh list
+        } catch (err) {
+            console.error("Error save product:", err);
+        }
+    };
+
+    const handleUpdateProduct = async (updatedProduct) => {
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/products/${updatedProduct.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                    body: JSON.stringify(updatedProduct),
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.message || "Gagal update produk");
+                return;
+            }
+
+            setShowEditModal(false);
+            await fetchProducts(); // refresh
+        } catch (err) {
+            console.error("Error update product:", err);
+        }
+    };
 
     if (!user) {
         return (
@@ -323,7 +377,7 @@ const Product = () => {
                                             rack: item.rack || '',
                                             weight: item.weight || '',
                                             unit: item.unit || 'gram',
-                                            discount: item.discount || '',
+                                            reward_points: item.reward_points || 0,
                                             description: item.description || '',
                                             image: item.image || productDummy,
                                         })
@@ -428,10 +482,10 @@ const Product = () => {
                             </div>
 
                             <div>
-                                <span>Diskon</span>
+                                <span>Point Reward</span>
                                 <p>
-                                    {selectedProduct?.discount
-                                        ? `${selectedProduct.discount}%`
+                                    {selectedProduct?.reward_points
+                                        ? `${selectedProduct.reward_points} point`
                                         : '-'}
                                 </p>
                             </div>

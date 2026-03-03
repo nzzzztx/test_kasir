@@ -23,7 +23,7 @@ const AddProduct = ({ onClose, onSave, categories }) => {
     const [rack, setRack] = useState('');
     const [weight, setWeight] = useState('');
     const [unit, setUnit] = useState('gram');
-    const [discount, setDiscount] = useState('');
+    const [rewardPoints, setRewardPoints] = useState('');
     const [note, setNote] = useState('');
 
     const nameInputRef = useRef(null);
@@ -211,11 +211,17 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                 </div>
 
                 <div className="form-group">
-                    <label>Diskon</label>
-                    <div className="input-prefix">
-                        <input value={discount} onChange={(e) => setDiscount(e.target.value)} />
-                        <span>%</span>
-                    </div>
+                    <label>Point Reward</label>
+                    <input
+                        type="number"
+                        value={rewardPoints}
+                        onChange={(e) => setRewardPoints(e.target.value)}
+                        placeholder="Contoh: 10"
+                        min="0"
+                    />
+                    <small style={{ fontSize: "12px", color: "#888" }}>
+                        Customer akan mendapatkan point setiap pembelian produk ini
+                    </small>
                 </div>
 
                 <div className="form-switches">
@@ -269,10 +275,11 @@ const AddProduct = ({ onClose, onSave, categories }) => {
                                 rack,
                                 weight: Number(weight) || 0,
                                 unit,
-                                discount: Number(discount) || 0,
+                                reward_points: Number(rewardPoints) || 0,
                                 description: note,
                                 image: imagePreview,
                                 showInTransaction,
+                                useStock,
                                 ownerId
                             };
 

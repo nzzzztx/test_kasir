@@ -110,8 +110,11 @@ const LaporanTransaksi = () => {
                 const queryParams = new URLSearchParams();
 
                 if (range) {
-                    queryParams.append("startDate", range.startDate.toISOString());
-                    queryParams.append("endDate", range.endDate.toISOString());
+                    const start = range.startDate.toISOString().split("T")[0];
+                    const end = range.endDate.toISOString().split("T")[0];
+
+                    queryParams.append("startDate", start);
+                    queryParams.append("endDate", end);
                 }
 
                 queryParams.append("status", statusFilter);
@@ -139,9 +142,9 @@ const LaporanTransaksi = () => {
                     waktu_bayar: t.waktu_bayar ? new Date(t.waktu_bayar) : null,
                     outlet: namaToko,
                     jenis_order: "Lainnya",
-                    penjualan: Number(t.penjualan),
+                    penjualan: Number(t.penjualan || 0),
                     metode: t.payment_method,
-                    status: t.status,
+                    status: t.status || "paid",
                 }));
 
                 setTransactions(formatted);
@@ -163,15 +166,18 @@ const LaporanTransaksi = () => {
 
     useEffect(() => {
         const saved = localStorage.getItem("laporanRange");
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            setRange({
-                startDate: new Date(parsed.startDate),
-                endDate: new Date(parsed.endDate),
-                startTime: parsed.startTime,
-                endTime: parsed.endTime,
-            });
-        }
+        if (!saved) return;
+
+        const parsed = JSON.parse(saved);
+
+        if (!parsed.startDate || !parsed.endDate) return;
+
+        setRange({
+            startDate: new Date(parsed.startDate),
+            endDate: new Date(parsed.endDate),
+            startTime: parsed.startTime || "00:00",
+            endTime: parsed.endTime || "23:59",
+        });
     }, []);
 
     const handleExport = async () => {
@@ -179,8 +185,11 @@ const LaporanTransaksi = () => {
             const queryParams = new URLSearchParams();
 
             if (range) {
-                queryParams.append("startDate", range.startDate.toISOString());
-                queryParams.append("endDate", range.endDate.toISOString());
+                const start = range.startDate.toISOString().split("T")[0];
+                const end = range.endDate.toISOString().split("T")[0];
+
+                queryParams.append("startDate", start);
+                queryParams.append("endDate", end);
             }
 
             queryParams.append("status", statusFilter);

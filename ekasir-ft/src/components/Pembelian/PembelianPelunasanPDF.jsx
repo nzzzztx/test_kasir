@@ -4,14 +4,15 @@ import { getInfoToko } from "../../utils/toko";
 const PembelianPelunasanPDF = ({ data }) => {
     if (!data) return null;
     const toko = getInfoToko();
-    const lastPayment =
-        data.payments?.slice().reverse().find(p => p.type === "PELUNASAN");
-
-    if (!lastPayment) return null;
+    const lastPayment = {
+        amount: data.dibayar,
+        date: new Date(),
+        id: 1
+    };
 
     return (
         <div
-            id="invoice-pelunasan-pdf"
+            // id="invoice-pelunasan-pdf"
             style={{
                 padding: 32,
                 fontFamily: "Arial",
@@ -23,15 +24,15 @@ const PembelianPelunasanPDF = ({ data }) => {
             <div
                 style={{
                     position: "absolute",
-                    top: 40,
+                    top: 60,
                     right: 40,
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: "bold",
                     color: "#16a34a",
-                    border: "3px solid #16a34a",
-                    padding: "6px 16px",
-                    transform: "rotate(-8deg)",
-                    opacity: 0.85
+                    border: "4px solid #16a34a",
+                    padding: "8px 18px",
+                    transform: "rotate(-10deg)",
+                    opacity: 0.8
                 }}
             >
                 PAID
@@ -95,13 +96,13 @@ const PembelianPelunasanPDF = ({ data }) => {
                     <tr>
                         <td>Total Pembelian</td>
                         <td align="right">
-                            Rp {(data.total || 0).toLocaleString("id-ID")}
+                            Rp {(data.totalHarga || 0).toLocaleString("id-ID")}
                         </td>
                     </tr>
                     <tr>
                         <td>Total Dibayar</td>
                         <td align="right">
-                            Rp {(data.paidAmount || 0).toLocaleString("id-ID")}
+                            Rp {(data.dibayar || 0).toLocaleString("id-ID")}
                         </td>
                     </tr>
                     <tr>

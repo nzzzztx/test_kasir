@@ -18,9 +18,11 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
         rack: '',
         weight: '',
         unit: '',
-        discount: '',
         description: '',
         image: '',
+        reward_points: '',
+        showInTransaction: 1,
+        useStock: 1,
     });
     const [showScanner, setShowScanner] = useState(false);
     const [imagePreview, setImagePreview] = useState(productDummy);
@@ -34,8 +36,12 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                 rack: product.rack || '',
                 weight: product.weight || '',
                 unit: product.unit || '',
-                discount: product.discount || '',
+                reward_points: product.reward_points || '',
                 description: product.description || '',
+                showInTransaction:
+                    product.show_in_transaction ?? 1,
+                useStock:
+                    product.use_stock ?? 1,
             });
 
             setImagePreview(product.image || productDummy);
@@ -222,11 +228,12 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                 </div>
 
                 <div className="form-group">
-                    <label>Diskon (%)</label>
+                    <label>Point Reward</label>
                     <input
                         type="number"
-                        value={form.discount}
-                        onChange={(e) => handleChange('discount', e.target.value)}
+                        value={form.reward_points || ''}
+                        onChange={(e) => handleChange('reward_points', e.target.value)}
+                        min="0"
                     />
                 </div>
 
@@ -236,6 +243,37 @@ const EditProduct = ({ product, onClose, onSave, categories }) => {
                         value={form.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                     />
+                </div>
+                <div className="form-switches">
+                    <label className="switch-item">
+                        <input
+                            type="checkbox"
+                            checked={!!form.showInTransaction}
+                            onChange={() =>
+                                handleChange(
+                                    "showInTransaction",
+                                    form.showInTransaction ? 0 : 1
+                                )
+                            }
+                        />
+                        <span className="switch-ui" />
+                        <span>Tampilkan di Transaksi</span>
+                    </label>
+
+                    <label className="switch-item">
+                        <input
+                            type="checkbox"
+                            checked={!!form.useStock}
+                            onChange={() =>
+                                handleChange(
+                                    "useStock",
+                                    form.useStock ? 0 : 1
+                                )
+                            }
+                        />
+                        <span className="switch-ui" />
+                        <span>Pakai Stok</span>
+                    </label>
                 </div>
 
                 <div className="modal-actions">

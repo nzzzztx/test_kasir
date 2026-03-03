@@ -80,12 +80,12 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                                     </div>
                                 )}
 
-                                {customer.address && customer.address !== "-" && (
+                                {/* {customer.address && customer.address !== "-" && (
                                     <div className="receipt-row">
                                         <span>Alamat</span>
                                         <span className="align-right">{customer.address}</span>
                                     </div>
-                                )}
+                                )} */}
                             </div>
 
                             <div className="receipt-line" />
@@ -173,6 +173,16 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         </div>
                     )}
 
+                    {transaction.rewardPoints > 0 && (
+                        <>
+                            <div className="receipt-line" />
+                            <div className="receipt-row">
+                                <span>Point Didapat</span>
+                                <span>+{transaction.rewardPoints}</span>
+                            </div>
+                        </>
+                    )}
+
                     {paidAmount < finalTotal && (
                         <div className="receipt-row unpaid">
                             <span>Kurang Bayar</span>
@@ -185,7 +195,9 @@ const ReceiptPreview = ({ transaction, visible, onClose }) => {
                         Barang yang sudah dibeli tidak dapat dikembalikan
                     </p>
                     <p className="receipt-footer small">
-                        {new Date(transaction.paidAt).toLocaleDateString("id-ID")}
+                        {transaction.paidAt
+                            ? new Date(transaction.paidAt).toLocaleDateString("id-ID")
+                            : ""}
                     </p>
                 </div>
 

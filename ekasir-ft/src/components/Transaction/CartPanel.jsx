@@ -27,17 +27,30 @@ const CartPanel = ({
     const [showTax, setShowTax] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const { activeShift, loadingShift } = useShift();
+    const [customers, setCustomers] = useState([]);
+    const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
     const subtotal = cart.reduce(
         (sum, i) => sum + i.sellPrice * i.qty,
         0
     );
 
-    const [customer, setCustomer] = useState({
-        name: "",
-        phone: "",
-        address: "",
-    });
+    // const [customer, setCustomer] = useState({
+    //     name: "",
+    //     phone: "",
+    //     address: "",
+    // });
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        fetch("http://localhost:5000/api/customers", {
+            headers: {
+                Authorization: `Bearer ${authData.token}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => setCustomers(data));
+    }, [authData?.token]);
 
     const afterDiscount = discount
         ? discount.type === "percent"
@@ -88,11 +101,14 @@ const CartPanel = ({
             return;
         }
 
+        const selectedCustomer = customers.find(
+            c => c.id === selectedCustomerId
+        );
+
         const payload = {
             items: cart.map(item => ({
-                id: item.id,
                 product_id: item.id,
-                product_name: item.name,
+                name: item.name,
                 price: item.sellPrice,
                 qty: item.qty
             })),
@@ -102,9 +118,9 @@ const CartPanel = ({
             tax,
             taxTotal: taxAmount,
             finalTotal,
-            customer,
-            cashier: cashierName || activeShift.cashier,
-            shift_id: activeShift.id
+            shift_id: activeShift.id,
+            customer_id: selectedCustomerId || null,
+            customer: selectedCustomer || null
         };
 
         localStorage.setItem(
@@ -192,15 +208,23 @@ const CartPanel = ({
             </div> */}
 
             <div className="cart-customer">
-                <h4>Pelanggan</h4>
+                <h4>Pelanggan Member</h4>
 
-                <input
-                    placeholder="Nama pelanggan (opsional)"
-                    value={customer.name}
+                <select
+                    value={selectedCustomerId || ""}
                     onChange={(e) =>
-                        setCustomer({ ...customer, name: e.target.value })
+                        setSelectedCustomerId(
+                            e.target.value ? Number(e.target.value) : null
+                        )
                     }
-                />
+                >
+                    <option value="">Pilih Pelanggan (Opsional)</option>
+                    {customers.map(c => (
+                        <option key={c.id} value={c.id}>
+                            {c.name} - {c.phone}
+                        </option>
+                    ))}
+                </select>
 
                 {/* <input
                     placeholder="No telepon"

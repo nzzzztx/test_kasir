@@ -113,16 +113,17 @@ const Payment = () => {
                         },
                         body: JSON.stringify({
                             shift_id: activeShift.id,
+                            customer_id: transaction.customer_id || null,
                             payment_method: method,
                             payment_sub_method: subMethod,
                             paid_amount: paid,
                             discount_total: transaction.discountTotal || 0,
                             tax_total: transaction.taxTotal || 0,
                             items: transaction.items.map(i => ({
-                                product_id: i.id,
+                                product_id: i.product_id,
                                 qty: i.qty,
                             })),
-                        }),
+                        })
                     }
                 );
 

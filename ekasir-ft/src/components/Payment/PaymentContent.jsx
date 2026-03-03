@@ -45,7 +45,7 @@ const PaymentContent = ({
                 <div className="payment-customer">
                     <h4 className="card-title">Pelanggan</h4>
 
-                    {/* <div className="customer-row">
+                    <div className="customer-row">
                         <span className="label">Nama</span>
                         <span className="value">
                             {customer.name || "Umum"}
@@ -57,16 +57,16 @@ const PaymentContent = ({
                         <span className="value">
                             {customer.phone || "-"}
                         </span>
-                    </div> */}
+                    </div>
 
-                    {customer.address && customer.address !== "-" && (
+                    {/* {customer.address && customer.address !== "-" && (
                         <div className="customer-row">
                             <span className="label">Alamat</span>
                             <span className="value">
                                 {customer.address}
                             </span>
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 <h4 className="card-title">List Barang</h4>
@@ -77,7 +77,7 @@ const PaymentContent = ({
                             <div className="qty">{item.qty}</div>
 
                             <div className="item-info">
-                                <div className="name">{item.product_name}</div>
+                                <div className="name">{item.product_name || item.name}</div>
                                 <div className="sub">
                                     {item.qty} x Rp {Number(item.price).toLocaleString("id-ID")}
                                 </div>
