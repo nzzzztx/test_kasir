@@ -38,11 +38,11 @@ const Setting = () => {
             icon: infoTokoIcon,
             path: "/dashboard/setting/informasi-toko",
         },
-        {
-            title: "Metode Pembayaran",
-            icon: metodeBayarIcon,
-            path: "/dashboard/setting/metode-pembayaran",
-        },
+        // {
+        //     title: "Metode Pembayaran",
+        //     icon: metodeBayarIcon,
+        //     path: "/dashboard/setting/metode-pembayaran",
+        // },
         {
             title: "Manajemen User",
             icon: profilIcon,
@@ -53,34 +53,35 @@ const Setting = () => {
             icon: edcIcon,
             path: "/dashboard/setting/edc",
         },
-        {
-            title: "Pengaturan Struk",
-            icon: strukIcon,
-            path: "/dashboard/setting/struk",
-        },
+        // {
+        //     title: "Pengaturan Struk",
+        //     icon: strukIcon,
+        //     path: "/dashboard/setting/struk",
+        // },
     ];
 
     useEffect(() => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
-        const ownerId =
-            authData.role === "owner"
-                ? authData.id
-                : authData.ownerId;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
 
-        const USERS_KEY = `users_owner_${ownerId}`;
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
 
-        const users =
-            JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-
-        const currentUser = users.find(
-            u => u.id === authData.id
-        );
-
-        if (currentUser) {
-            setUser(currentUser);
-        }
-    }, [authData]);
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (

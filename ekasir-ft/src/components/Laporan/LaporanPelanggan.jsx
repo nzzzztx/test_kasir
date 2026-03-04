@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getCurrentOwnerId } from "../../utils/owner";
 import { useMemo } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 import "../../assets/css/laporanpelanggan.css";
 import Sidebar from "../../components/Sidebar";
@@ -28,6 +29,7 @@ const formatRangeLabel = (start, end) => {
 
 const LaporanPelanggan = () => {
     const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -44,105 +46,64 @@ const LaporanPelanggan = () => {
 
     const [customers, setCustomers] = useState([]);
 
-    const normalizeDateRange = (start, end) => {
-        if (!start || !end) return null;
+    // const normalizeDateRange = (start, end) => {
+    //     if (!start || !end) return null;
 
-        const s = new Date(start);
-        const e = new Date(end);
+    //     const s = new Date(start);
+    //     const e = new Date(end);
 
-        s.setHours(0, 0, 0, 0);
-        e.setHours(23, 59, 59, 999);
+    //     s.setHours(0, 0, 0, 0);
+    //     e.setHours(23, 59, 59, 999);
 
-        return { start: s, end: e };
-    };
+    //     return { start: s, end: e };
+    // };
 
     useEffect(() => {
-        if (!ownerId) {
+        if (!ownerId || !authData?.token) {
             setCustomers([]);
             return;
         }
 
-        const transactions = JSON.parse(
-            localStorage.getItem(`transactions_owner_${ownerId}`) || "[]"
-        );
+        const fetchCustomers = async () => {
+            try {
+                const params = new URLSearchParams();
 
-        const grouped = {};
-
-        const normalizedRange = normalizeDateRange(
-            dateRange.start,
-            dateRange.end
-        );
-
-        transactions
-            .filter((trx) => trx.status === "paid")
-            .forEach((trx) => {
-
-                const customerName =
-                    trx.customerName ||
-                    trx.customer?.name ||
-                    "Umum";
-
-                const customerPhone =
-                    trx.customerPhone ||
-                    trx.customer?.phone ||
-                    "";
-
-                const customerAddress =
-                    trx.customerAddress ||
-                    trx.customer?.address ||
-                    "-";
-
-                const customerKey =
-                    trx.customer?.id ||
-                    `fallback:${customerName}-${customerPhone}`;
-
-                const trxDateRaw =
-                    trx.paidAt || trx.createdAt;
-
-                if (!trxDateRaw) return;
-
-                const trxDate = new Date(trxDateRaw);
-
-                if (normalizedRange) {
-                    if (trxDate < normalizedRange.start) return;
-                    if (trxDate > normalizedRange.end) return;
-                }
-
-                if (!grouped[customerKey]) {
-                    grouped[customerKey] = {
-                        nama: customerName,
-                        alamat: customerAddress,
-                        phone: customerPhone || "-",
-                        totalTransaksi: 0,
-                        totalPenjualan: 0,
-                        lastVisit: trxDateRaw,
-                        _trxIds: new Set(),
-                    };
-                }
-
-                const trxId = trx.id || `${trxDateRaw}-${customerKey}`;
-
-                if (!grouped[customerKey]._trxIds.has(trxId)) {
-                    grouped[customerKey]._trxIds.add(trxId);
-
-                    grouped[customerKey].totalTransaksi += 1;
-                    grouped[customerKey].totalPenjualan += Number(
-                        trx.finalTotal ?? trx.total ?? 0
+                if (dateRange.start && dateRange.end) {
+                    params.append(
+                        "startDate",
+                        dateRange.start.toISOString().split("T")[0]
+                    );
+                    params.append(
+                        "endDate",
+                        dateRange.end.toISOString().split("T")[0]
                     );
                 }
 
-                if (trxDate > new Date(grouped[customerKey].lastVisit)) {
-                    grouped[customerKey].lastVisit = trxDateRaw;
+                const response = await fetch(
+                    `http://localhost:5000/api/reports/customers?${params.toString()}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setCustomers(data.customers || []);
+                } else {
+                    console.error(data.message);
+                    setCustomers([]);
                 }
-            });
+            } catch (error) {
+                console.error("Gagal ambil laporan pelanggan:", error);
+                setCustomers([]);
+            }
+        };
 
-        const result = Object.values(grouped).map(
-            ({ _trxIds, ...rest }) => rest
-        );
-        result.sort((a, b) => b.totalPenjualan - a.totalPenjualan);
-
-        setCustomers(result);
-    }, [dateRange, ownerId]);
+        fetchCustomers();
+    }, [ownerId, dateRange, authData]);
 
     const filtered = useMemo(() => {
         const keyword = search.toLowerCase();

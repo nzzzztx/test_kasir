@@ -1,126 +1,168 @@
 import React, { useEffect, useState } from "react";
-import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
 import "../../assets/css/opname.css";
 
 const DetailOpname = ({ data, onBack, onUpdate }) => {
-    const ownerId = getCurrentOwnerId();
-    const [opname, setOpname] = useState(data);
+    const { authData } = useAuth();
 
-    // const [nama, setNama] = useState("");
+    const [opname, setOpname] = useState(null);
+    const [products, setProducts] = useState([]);
+    const [selectedProductId, setSelectedProductId] = useState("");
     const [stokSistem, setStokSistem] = useState("");
     const [stokFisik, setStokFisik] = useState("");
-    const products = ownerId
-        ? JSON.parse(localStorage.getItem(`products_${ownerId}`)) || []
-        : [];
+    const [loading, setLoading] = useState(false);
 
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [selectedProductId, setSelectedProductId] = useState("");
-    const filteredProducts = products.filter(
-        (p) => p.category === opname.kategori
-    );
-
+    // Load detail opname
     useEffect(() => {
-        setOpname(data);
-    }, [data]);
+        const fetchDetail = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/opname/${data.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const result = await res.json();
+            if (res.ok) {
+                setOpname(result);
+            }
+        };
+
+        fetchDetail();
+    }, [data.id]);
+
+    // Load products by kategori
+    useEffect(() => {
+        if (!opname) return;
+
+        const fetchProducts = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/products?category=${opname.kategori}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const result = await res.json();
+            if (res.ok) {
+                setProducts(result);
+            }
+        };
+
+        fetchProducts();
+    }, [opname]);
 
     if (!opname) return null;
 
     const isLocked = opname.status === "Selesai";
 
-    const handleFinishOpname = () => {
-        if (!opname.items || opname.items.length === 0) {
-            alert("Opname belum memiliki item");
+    //  Tambah Item
+    const handleAddItem = async () => {
+        if (!selectedProductId || stokFisik === "") {
+            alert("Lengkapi data");
             return;
         }
 
-        if (!window.confirm("Yakin selesaikan opname?")) return;
+        setLoading(true);
 
-        const finished = {
-            ...opname,
-            status: "Selesai",
-            finishedAt: new Date().toISOString(),
-        };
-
-        const productsKey = `products_${ownerId}`;
-        if (!ownerId) {
-            alert("Owner tidak ditemukan");
-            return;
-        }
-        const existingProducts =
-            JSON.parse(localStorage.getItem(productsKey)) || [];
-
-        const updatedProducts = existingProducts.map((p) => {
-            const found = opname.items.find(i => i.productId === p.id);
-            if (!found) return p;
-
-            return {
-                ...p,
-                stock: found.stokFisik
-            };
-        });
-
-        localStorage.setItem(productsKey, JSON.stringify(updatedProducts));
-
-        setOpname(finished);
-        onUpdate(finished);
-    };
-
-    const handleAddItem = () => {
-        if (!selectedProduct || stokFisik === "") {
-            alert("Pilih produk & isi stok fisik");
-            return;
-        }
-
-        const alreadyExists = opname.items?.some(
-            (i) => i.productId === selectedProduct.id
+        const res = await fetch(
+            "http://localhost:5000/api/opname/item",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
+                },
+                body: JSON.stringify({
+                    opname_id: opname.id,
+                    product_id: Number(selectedProductId),
+                    stok_sistem: Number(stokSistem),
+                    stok_fisik: Number(stokFisik),
+                }),
+            }
         );
 
-        if (alreadyExists) {
-            alert("Produk sudah ada di daftar opname");
-            return;
+        if (res.ok) {
+            // reload detail
+            const detailRes = await fetch(
+                `http://localhost:5000/api/opname/${opname.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const updated = await detailRes.json();
+            setOpname(updated);
+            setSelectedProductId("");
+            setStokFisik("");
         }
 
-        const selisih =
-            Number(stokFisik) - Number(stokSistem);
-
-        const newItem = {
-            id: Date.now(),
-            productId: selectedProduct.id,
-            nama: selectedProduct.name,
-            kategoriId: selectedProduct.categoryId,
-            stokSistem: Number(stokSistem),
-            stokFisik: Number(stokFisik),
-            selisih,
-        };
-
-        const updated = {
-            ...opname,
-            items: [...(opname.items || []), newItem],
-            totalItem: (opname.items?.length || 0) + 1,
-        };
-
-        setOpname(updated);
-        onUpdate(updated);
-
-        setSelectedProduct(null);
-        setSelectedProductId("");
-        setStokSistem("");
-        setStokFisik("");
+        setLoading(false);
     };
 
-    const handleDeleteItem = (itemId) => {
-        if (isLocked) return;
+    //  Delete Item
+    const handleDeleteItem = async (itemId) => {
+        setLoading(true);
 
-        const items = opname.items.filter((i) => i.id !== itemId);
+        const res = await fetch(
+            `http://localhost:5000/api/opname/item/${itemId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${authData.token}`,
+                },
+            }
+        );
 
-        const updated = {
-            ...opname,
-            items,
-            totalItem: items.length,
-        };
+        if (res.ok) {
+            // reload detail
+            const detailRes = await fetch(
+                `http://localhost:5000/api/opname/${opname.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
 
-        setOpname(updated);
-        onUpdate(updated);
+            const updated = await detailRes.json();
+            setOpname(updated);
+        }
+
+        setLoading(false);
+    };
+
+    //  Finish Opname
+    const handleFinishOpname = async () => {
+        if (!window.confirm("Yakin selesaikan opname?")) return;
+
+        setLoading(true);
+
+        const res = await fetch(
+            "http://localhost:5000/api/opname/finish",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
+                },
+                body: JSON.stringify({
+                    opname_id: opname.id,
+                }),
+            }
+        );
+
+        if (res.ok) {
+            onUpdate();
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -128,10 +170,10 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
 
             <div className="opname-info">
                 <div><b>Tanggal:</b> {opname.tanggal}</div>
-                <div><b>Label Opname:</b> {opname.kategori}</div>
+                <div><b>Kategori:</b> {opname.kategori}</div>
                 <div>
                     <b>Status:</b>{" "}
-                    <span className={`opname-status ${opname.status === "Selesai" ? "done" : "draft"}`}>
+                    <span className={`opname-status ${isLocked ? "done" : "draft"}`}>
                         {opname.status}
                     </span>
                 </div>
@@ -142,41 +184,33 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
                     <select
                         value={selectedProductId}
                         onChange={(e) => {
-                            const id = Number(e.target.value);
-                            const prod = products.find(p => p.id === id);
-
+                            const id = e.target.value;
+                            const product = products.find(p => p.id == id);
                             setSelectedProductId(id);
-                            setSelectedProduct(prod);
-                            setStokSistem(prod?.stock || 0);
+                            setStokSistem(product?.stock || 0);
                         }}
                     >
-                        <option value="">
-                            Pilih Produk ({opname.kategori})
-                        </option>
-                        {filteredProducts.map(p => (
+                        <option value="">Pilih Produk</option>
+                        {products.map(p => (
                             <option key={p.id} value={p.id}>
                                 {p.name}
                             </option>
                         ))}
                     </select>
+
+                    <input value={stokSistem} readOnly />
                     <input
-                        // type="number"
-                        placeholder="Stok Sistem (Otomatis Terisi)"
-                        value={stokSistem}
-                        readOnly
-                    />
-                    <input
-                        // type="number"
                         placeholder="Stok Fisik"
                         value={stokFisik}
                         onChange={(e) => setStokFisik(e.target.value)}
                     />
+
                     <button
                         className="opname-btn-primary"
                         onClick={handleAddItem}
-                        disabled={!selectedProduct || stokFisik === ""}
+                        disabled={loading}
                     >
-                        + Tambah Item
+                        Tambah
                     </button>
                 </div>
             )}
@@ -185,40 +219,25 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
                 <table className="opname-table">
                     <thead>
                         <tr>
-                            <th>Nama Barang</th>
-                            <th>Stok Sistem</th>
-                            <th>Stok Fisik</th>
+                            <th>Produk</th>
+                            <th>Sistem</th>
+                            <th>Fisik</th>
                             <th>Selisih</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {(!opname.items || opname.items.length === 0) && (
-                            <tr>
-                                <td colSpan="5" className="opname-empty">
-                                    Belum ada item opname
-                                </td>
-                            </tr>
-                        )}
-
                         {opname.items?.map((i) => (
                             <tr key={i.id}>
-                                <td>{i.nama}</td>
-                                <td>{i.stokSistem}</td>
-                                <td>{i.stokFisik}</td>
-                                <td
-                                    style={{
-                                        color: i.selisih < 0 ? "#ef4444" : "#16a34a",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {i.selisih}
-                                </td>
+                                <td>{i.product_name}</td>
+                                <td>{i.stok_sistem}</td>
+                                <td>{i.stok_fisik}</td>
+                                <td>{i.selisih}</td>
                                 <td>
                                     {!isLocked && (
                                         <button
-                                            className="opname-btn-danger"
                                             onClick={() => handleDeleteItem(i.id)}
+                                            className="opname-btn-danger"
                                         >
                                             Hapus
                                         </button>
@@ -231,22 +250,19 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
             </div>
 
             <div className="opname-footer">
-                <span>Total Item: {opname.totalItem}</span>
+                <button onClick={onBack} className="opname-btn-outline">
+                    Kembali
+                </button>
 
-                <div className="opname-footer-actions">
-                    <button className="opname-btn-outline" onClick={onBack}>
-                        Kembali
+                {!isLocked && (
+                    <button
+                        onClick={handleFinishOpname}
+                        className="opname-btn-primary"
+                        disabled={loading}
+                    >
+                        Selesaikan
                     </button>
-
-                    {opname.status === "Draft" && (
-                        <button
-                            className="opname-btn-primary"
-                            onClick={handleFinishOpname}
-                        >
-                            Selesaikan Opname
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );

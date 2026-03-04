@@ -34,20 +34,19 @@ const Dashboard = () => {
     const [lokasi, setLokasi] = useState("");
 
     useEffect(() => {
-        const loadToko = () => {
-            const data = getInfoToko();
+        if (!authData?.token) return;
+
+        const loadToko = async () => {
+            const data = await getInfoToko(authData.token);
+
+            if (!data) return;
+
             setNamaToko(data.namaToko);
             setLokasi(data.lokasi);
         };
 
         loadToko();
-
-        window.addEventListener("storage", loadToko);
-
-        return () => {
-            window.removeEventListener("storage", loadToko);
-        };
-    }, []);
+    }, [authData?.token]);
 
     const menuData = [
         {

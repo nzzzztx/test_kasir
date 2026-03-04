@@ -1,9 +1,14 @@
 import logoIcon from "../../assets/img/logo.png";
-import { getInfoToko } from "../../utils/toko";
 
-const PembelianPelunasanPDF = ({ data }) => {
+const PembelianPelunasanPDF = ({ data, toko = {} }) => {
     if (!data) return null;
-    const toko = getInfoToko();
+
+    const tokoData = {
+        namaToko: toko?.namaToko || "Nama Toko",
+        lokasi: toko?.lokasi || "-",
+        telepon: toko?.telepon || "-",
+    };
+
     const lastPayment = {
         amount: data.dibayar,
         date: new Date(),
@@ -12,7 +17,6 @@ const PembelianPelunasanPDF = ({ data }) => {
 
     return (
         <div
-            // id="invoice-pelunasan-pdf"
             style={{
                 padding: 32,
                 fontFamily: "Arial",
@@ -53,19 +57,19 @@ const PembelianPelunasanPDF = ({ data }) => {
 
                     <div>
                         <h2 style={{ margin: 0 }}>
-                            {toko.namaToko || "Nama Toko"}
+                            {tokoData.namaToko}
                         </h2>
 
                         <p style={{ margin: 0, fontSize: 11 }}>
-                            {toko.lokasi && toko.lokasi !== "-" && (
+                            {tokoData.lokasi !== "-" && (
                                 <>
-                                    {toko.lokasi}
+                                    {tokoData.lokasi}
                                     <br />
                                 </>
                             )}
 
-                            {toko.telepon && toko.telepon !== "-" && (
-                                <>Telp: {toko.telepon}</>
+                            {tokoData.telepon !== "-" && (
+                                <>Telp: {tokoData.telepon}</>
                             )}
                         </p>
                     </div>

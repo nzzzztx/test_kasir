@@ -1,34 +1,41 @@
 import html2pdf from "html2pdf.js";
-import { getInfoToko } from "./toko";
 
-/**
- * Generate PDF Stock Opname
- * @param {Object} opname
- * @param {String} logoUrl
- */
-export const generateStockOpnamePDF = (opname, logoUrl = "") => {
-  if (!opname.items || opname.items.length === 0) {
+export const generateStockOpnamePDF = (opname, toko = {}, logoUrl = "") => {
+  if (!opname?.items || opname.items.length === 0) {
     alert("Opname belum memiliki item");
     return;
   }
 
-  const { namaToko = "Nama Toko", lokasi = "-", telepon = "-" } = getInfoToko();
+  const tokoData = {
+    namaToko: toko?.namaToko || "Nama Toko",
+    lokasi: toko?.lokasi || "-",
+    telepon: toko?.telepon || "-",
+  };
+
+  // ✅ FIX PETUGAS (multi kemungkinan field)
+  const petugas =
+    opname.created_by || opname.user_name || opname.user || opname.name || "-";
+
+  // ✅ FIX TOTAL ITEM (selalu hitung dari items)
+  const totalItem = opname.items.length;
 
   const rows = opname.items
-    .map(
-      (i, idx) => `
-        <tr>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${idx + 1}</td>
-          <td style="border:1px solid #d1d5db;padding:6px">${i.nama}</td>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${i.stokSistem}</td>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${i.stokFisik}</td>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:center;
-            color:${i.selisih < 0 ? "#dc2626" : "#16a34a"}">
-            ${i.selisih}
-          </td>
-        </tr>
-      `,
-    )
+    .map((i, idx) => {
+      const selisih = Number(i.stok_fisik || 0) - Number(i.stok_sistem || 0);
+
+      return `
+      <tr>
+        <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${idx + 1}</td>
+        <td style="border:1px solid #d1d5db;padding:6px">${i.product_name || "-"}</td>
+        <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${i.stok_sistem ?? 0}</td>
+        <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${i.stok_fisik ?? 0}</td>
+        <td style="border:1px solid #d1d5db;padding:6px;text-align:center;
+          color:${selisih < 0 ? "#dc2626" : "#16a34a"}">
+          ${selisih}
+        </td>
+      </tr>
+    `;
+    })
     .join("");
 
   const element = document.createElement("div");
@@ -36,21 +43,18 @@ export const generateStockOpnamePDF = (opname, logoUrl = "") => {
   element.innerHTML = `
     <div style="font-family:Arial;padding:28px;color:#111827">
 
-      <!-- HEADER TOKO -->
       <div style="display:flex;align-items:center;gap:16px">
         ${logoUrl ? `<img src="${logoUrl}" style="height:60px"/>` : ""}
         <div>
-          <h2 style="margin:0">${namaToko}</h2>
-
+          <h2 style="margin:0">${tokoData.namaToko}</h2>
           ${
-            lokasi && lokasi !== "-"
-              ? `<p style="margin:2px 0;font-size:12px;color:#374151">${lokasi}</p>`
+            tokoData.lokasi !== "-"
+              ? `<p style="margin:2px 0;font-size:12px;color:#374151">${tokoData.lokasi}</p>`
               : ""
           }
-
           ${
-            telepon && telepon !== "-"
-              ? `<p style="margin:0;font-size:11px;color:#6b7280">Telp: ${telepon}</p>`
+            tokoData.telepon !== "-"
+              ? `<p style="margin:0;font-size:11px;color:#6b7280">Telp: ${tokoData.telepon}</p>`
               : ""
           }
         </div>
@@ -58,33 +62,30 @@ export const generateStockOpnamePDF = (opname, logoUrl = "") => {
 
       <hr style="margin:16px 0;border:1px solid #e5e7eb"/>
 
-      <!-- JUDUL -->
       <h3 style="margin-bottom:4px">Laporan Stock Opname</h3>
       <p style="font-size:11px;color:#6b7280;margin-bottom:16px">
         Dicetak: ${new Date().toLocaleString("id-ID")}
       </p>
 
-      <!-- INFO -->
       <table style="width:100%;font-size:12px;margin-bottom:16px">
         <tr>
           <td width="25%"><b>Tanggal</b></td>
-          <td>: ${opname.tanggal}</td>
+          <td>: ${new Date(opname.tanggal).toLocaleDateString("id-ID")}</td>
         </tr>
         <tr>
           <td><b>Label Opname</b></td>
-          <td>: ${opname.kategori}</td>
+          <td>: ${opname.kategori || "-"}</td>
         </tr>
         <tr>
           <td><b>Status</b></td>
-          <td>: ${opname.status}</td>
+          <td>: ${opname.status || "-"}</td>
         </tr>
         <tr>
           <td><b>Petugas</b></td>
-          <td>: ${opname.user}</td>
+          <td>: ${petugas}</td>
         </tr>
       </table>
 
-      <!-- TABEL -->
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead style="background:#f3f4f6">
           <tr>
@@ -101,15 +102,14 @@ export const generateStockOpnamePDF = (opname, logoUrl = "") => {
       </table>
 
       <p style="font-size:11px;margin-top:12px">
-        Total Item: <b>${opname.totalItem}</b>
+        Total Item: <b>${totalItem}</b>
       </p>
 
-      <!-- TTD -->
       <div style="margin-top:48px;display:flex;justify-content:space-between">
         <div style="text-align:center;width:200px">
           <p>Petugas</p>
           <div style="height:60px"></div>
-          <p><b>${opname.user}</b></p>
+          <p><b>${petugas}</b></p>
         </div>
 
         <div style="text-align:center;width:200px">

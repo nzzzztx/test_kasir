@@ -1,30 +1,27 @@
-import { getCurrentOwnerId } from "./owner";
-
-const DEFAULT_TOKO = {
-  namaToko: "Nama Toko",
-  pemilik: "-",
-  telepon: "-",
-  lokasi: "-",
-  metodeAkuntansi: "-",
-  statusOlshop: "-",
-};
-
-export const getInfoToko = () => {
-  const ownerId = getCurrentOwnerId();
-  if (!ownerId) return DEFAULT_TOKO;
-
-  const STORAGE_KEY = `informasi_toko_owner_${ownerId}`;
-  const saved = localStorage.getItem(STORAGE_KEY);
-
-  if (!saved) return DEFAULT_TOKO;
-
+export const getInfoToko = async (token) => {
   try {
-    const parsed = JSON.parse(saved);
+    const res = await fetch("http://localhost:5000/api/store-information", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+
+    if (!data) return null;
+
     return {
-      ...DEFAULT_TOKO,
-      ...parsed,
+      namaToko: data.nama_toko || "Nama Toko",
+      pemilik: data.pemilik || "-",
+      telepon: data.telepon || "-",
+      lokasi: data.lokasi || "-",
+      metodeAkuntansi: data.metode_akuntansi || "-",
+      statusOlshop: data.status_olshop || "-",
     };
-  } catch {
-    return DEFAULT_TOKO;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
 };

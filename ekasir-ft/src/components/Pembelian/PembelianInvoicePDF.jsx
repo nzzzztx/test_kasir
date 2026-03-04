@@ -1,9 +1,14 @@
 import logoIcon from "../../assets/img/logo.png";
-import { getInfoToko } from "../../utils/toko";
 
-const PembelianInvoicePDF = ({ data }) => {
+const PembelianInvoicePDF = ({ data, toko = {} }) => {
     if (!data) return null;
-    const toko = getInfoToko();
+
+    const tokoData = {
+        namaToko: toko?.namaToko || "Nama Toko",
+        lokasi: toko?.lokasi || "-",
+        telepon: toko?.telepon || "-",
+    };
+
     const kembalian = Math.max(
         (data.paidAmount || 0) - (data.total || 0),
         0
@@ -58,19 +63,19 @@ const PembelianInvoicePDF = ({ data }) => {
                     <img src={logoIcon} alt="Logo Kasir" style={{ width: 64 }} />
                     <div>
                         <h2 style={{ margin: 0 }}>
-                            {toko.namaToko || "Nama Toko"}
+                            {tokoData.namaToko}
                         </h2>
 
                         <p style={{ margin: 0, fontSize: 11 }}>
-                            {toko.lokasi && toko.lokasi !== "-" && (
+                            {tokoData.lokasi !== "-" && (
                                 <>
-                                    {toko.lokasi}
+                                    {tokoData.lokasi}
                                     <br />
                                 </>
                             )}
 
-                            {toko.telepon && toko.telepon !== "-" && (
-                                <>Telp: {toko.telepon}</>
+                            {tokoData.telepon !== "-" && (
+                                <>Telp: {tokoData.telepon}</>
                             )}
                         </p>
                     </div>
@@ -120,11 +125,11 @@ const PembelianInvoicePDF = ({ data }) => {
 
             <div style={{ marginTop: 20, textAlign: "right" }}>
                 <p>
-                    Total: <strong>Rp {data.total.toLocaleString("id-ID")}</strong>
+                    Total: <strong>Rp {(data.total || 0).toLocaleString("id-ID")}</strong>
                 </p>
 
                 <p>
-                    Dibayar: Rp {data.paidAmount.toLocaleString("id-ID")}
+                    Dibayar: Rp {(data.total || 0).toLocaleString("id-ID")}
                 </p>
 
                 {kembalian > 0 && (

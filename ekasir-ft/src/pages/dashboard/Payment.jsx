@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { getInfoToko } from "../../utils/toko";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { getCurrentOwnerId } from "../../utils/owner";
 import { useNavigate } from "react-router-dom";
 import { useShift } from "../../context/ShiftContext";
+import { getInfoToko } from "../../utils/toko";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
@@ -20,6 +20,7 @@ const Payment = () => {
     const navigate = useNavigate();
     const [transaction, setTransaction] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [toko, setToko] = useState(null);
 
     const [paidAmount, setPaidAmount] = useState("");
     const [method, setMethod] = useState("TUNAI");
@@ -29,9 +30,21 @@ const Payment = () => {
     const [showValidasi, setShowValidasi] = useState(false);
     const [kembalian, setKembalian] = useState(0);
     const [receiptData, setReceiptData] = useState(null);
-    const store = getInfoToko();
     const { pushNotification } = useNotifications();
     const { activeShift, loadingShift } = useShift();
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchToko = async () => {
+            const data = await getInfoToko(authData.token);
+            if (data) {
+                setToko(data);
+            }
+        };
+
+        fetchToko();
+    }, [authData?.token]);
 
     useEffect(() => {
         if (!ownerId) {
@@ -195,8 +208,7 @@ const Payment = () => {
     };
 
     if (!ownerId) {
-        console.error("OWNER ID NOT FOUND");
-        return null;
+        return <div className="payment-empty">Owner tidak ditemukan</div>;
     }
 
     return (
@@ -235,6 +247,7 @@ const Payment = () => {
                     transaction={receiptData}
                     visible={showReceipt}
                     onClose={() => setShowReceipt(false)}
+                    toko={toko}
                 />
             </div>
 

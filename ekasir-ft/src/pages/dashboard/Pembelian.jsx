@@ -6,6 +6,7 @@ import Sidebar from "../../components/Sidebar";
 import "../../assets/css/dashboard.css";
 import "../../assets/css/pembelian.css";
 import html2pdf from "html2pdf.js";
+import { getInfoToko } from "../../utils/toko";
 
 import PembelianForm from "../../components/Pembelian/PembelianForm";
 import PembelianItems from "../../components/Pembelian/PembelianItems";
@@ -21,6 +22,7 @@ const Pembelian = () => {
     const { authData } = useAuth();
     const navigate = useNavigate();
     const ownerId = getCurrentOwnerId();
+    const [toko, setToko] = useState(null);
 
     const [items, setItems] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
@@ -44,6 +46,19 @@ const Pembelian = () => {
     }, [items]);
 
     const sisa = Math.max(total - paidAmount, 0);
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchToko = async () => {
+            const data = await getInfoToko(authData.token);
+            if (data) {
+                setToko(data);
+            }
+        };
+
+        fetchToko();
+    }, [authData?.token]);
 
     // ================= FETCH SUPPLIERS =================
     useEffect(() => {
@@ -194,9 +209,10 @@ const Pembelian = () => {
                 </div>
 
                 <div style={{ display: "none" }}>
-                    <PembelianDraftPDF />
+                    <PembelianDraftPDF toko={toko} />
                     <PembelianInvoicePDF
                         data={lastSavedPembelian}
+                        toko={toko}
                     />
                 </div>
             </div>

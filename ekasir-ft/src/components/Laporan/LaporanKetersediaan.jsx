@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getCurrentOwnerId } from "../../utils/owner";
 import { useMemo } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 import "../../assets/css/ketersediaan.css";
 import Sidebar from "../../components/Sidebar";
@@ -13,6 +14,7 @@ import toggleIcon from "../../assets/icons/togglebutton.png";
 
 const LaporanKetersediaan = () => {
     const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -22,49 +24,33 @@ const LaporanKetersediaan = () => {
     const [kategoriList, setKategoriList] = useState([]);
 
     useEffect(() => {
-        if (!ownerId) {
-            setItems([]);
-            return;
-        }
+        if (!authData?.token) return;
 
-        const stocks = JSON.parse(
-            localStorage.getItem(`products_${ownerId}`) || "[]"
-        );
+        const fetchData = async () => {
+            const res = await fetch(
+                `http://localhost:5000/api/reports/stock-availability`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
 
-        const logistics = JSON.parse(
-            localStorage.getItem(`logistics_${ownerId}`) || "[]"
-        );
+            const data = await res.json();
 
-        const lastStockByCode = {};
+            if (res.ok && data.items) {
+                setItems(data.items);
 
-        logistics.forEach((log) => {
-            lastStockByCode[String(log.code)] = log;
-        });
+                const uniqueCategories = [
+                    ...new Set(data.items.map((i) => i.category).filter(Boolean)),
+                ];
 
-        const mapped = stocks.map((s) => {
-            const lastLog = lastStockByCode[String(s.code)];
+                setKategoriList(uniqueCategories);
+            }
+        };
 
-            return {
-                id: s.id,
-                nama: s.name,
-                sku: s.code,
-                kategori: s.category,
-                qty: Number(lastLog?.stock ?? s.stock ?? 0),
-                satuan: "pcs",
-                hargaModal: Number(s.basePrice || 0),
-                hargaJual: Number(s.sellPrice || 0),
-            };
-        });
-
-        setItems(mapped);
-
-        const uniqueCategories = [
-            ...new Set(stocks.map((s) => s.category).filter(Boolean)),
-        ];
-
-        setKategoriList(uniqueCategories);
-
-    }, [ownerId]);
+        fetchData();
+    }, [authData?.token]);
 
     const filtered = useMemo(() => {
         return items.filter((item) => {
@@ -73,13 +59,13 @@ const LaporanKetersediaan = () => {
             if (
                 keyword &&
                 !(
-                    (item.nama || "").toLowerCase().includes(keyword) ||
-                    (item.sku || "").toLowerCase().includes(keyword)
+                    (item.name || "").toLowerCase().includes(keyword) ||
+                    (item.code || "").toLowerCase().includes(keyword)
                 )
             )
                 return false;
 
-            if (kategori !== "ALL" && item.kategori !== kategori) return false;
+            if (kategori !== "ALL" && item.category !== kategori) return false;
 
             return true;
         });
@@ -87,7 +73,7 @@ const LaporanKetersediaan = () => {
 
     const totalNilaiPersediaan = useMemo(() => {
         return filtered.reduce(
-            (s, i) => s + (i.qty || 0) * (i.hargaModal || 0),
+            (s, i) => s + Number(i.total_nilai || 0),
             0
         );
     }, [filtered]);
@@ -95,13 +81,13 @@ const LaporanKetersediaan = () => {
     const handleExport = () => {
         const excel = filtered.map((i, idx) => ({
             No: idx + 1,
-            Produk: i.nama,
-            SKU: i.sku,
-            Kategori: i.kategori,
-            Stok: i.qty,
-            Satuan: i.satuan,
-            HargaModal: i.hargaModal,
-            TotalNilai: (i.qty || 0) * (i.hargaModal || 0),
+            Produk: i.name,
+            SKU: i.code,
+            Kategori: i.category,
+            Stok: i.stock,
+            Satuan: i.unit,
+            HargaModal: i.harga_modal,
+            TotalNilai: i.total_nilai,
         }));
 
         const ws = XLSX.utils.json_to_sheet(excel);
@@ -195,18 +181,16 @@ const LaporanKetersediaan = () => {
                             <tbody>
                                 {filtered.map((i) => (
                                     <tr key={i.id}>
-                                        <td>{i.nama}</td>
-                                        <td>{i.sku}</td>
-                                        <td>{i.kategori}</td>
-                                        <td>{i.qty}</td>
-                                        <td>{i.satuan}</td>
+                                        <td>{i.name}</td>
+                                        <td>{i.code}</td>
+                                        <td>{i.category}</td>
+                                        <td>{i.stock}</td>
+                                        <td>{i.unit}</td>
                                         <td>
-                                            Rp{" "}
-                                            {(i.hargaModal || 0).toLocaleString("id-ID")}
+                                            Rp {Number(i.harga_modal || 0).toLocaleString("id-ID")}
                                         </td>
                                         <td>
-                                            Rp{" "}
-                                            {(i.qty * (i.hargaModal || 0)).toLocaleString("id-ID")}
+                                            Rp {Number(i.total_nilai || 0).toLocaleString("id-ID")}
                                         </td>
                                     </tr>
                                 ))}

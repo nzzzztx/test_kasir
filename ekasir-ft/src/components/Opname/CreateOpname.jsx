@@ -1,54 +1,104 @@
 import React, { useState, useEffect } from "react";
-import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
 import "../../assets/css/opname.css";
 
-const CreateOpname = ({ open, onClose, onSaved, selectedDate }) => {
-    const ownerId = getCurrentOwnerId();
-    if (!open || !ownerId) return null;
-
-    const STORAGE_KEY = `stock_opname_${ownerId}`;
+const CreateOpname = ({ onClose, onSaved, selectedDate }) => {
+    const { authData } = useAuth();
 
     const [tanggal, setTanggal] = useState(selectedDate);
     const [kategori, setKategori] = useState("");
     const [keterangan, setKeterangan] = useState("");
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingCategory, setLoadingCategory] = useState(false);
 
     useEffect(() => {
         setTanggal(selectedDate);
     }, [selectedDate]);
 
-    // ⚠️ Kalau kategori juga mau scoped
-    const categories =
-        JSON.parse(localStorage.getItem(`categories_${ownerId}`)) || [];
+    // 🔥 AMBIL KATEGORI DARI API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            if (!authData?.token) return;
 
-    const handleSubmit = (e) => {
+            try {
+                setLoadingCategory(true);
+
+                const res = await fetch(
+                    "http://localhost:5000/api/opname/categories",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData.token}`,
+                        },
+                    }
+                );
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    setCategories(data);
+                } else {
+                    console.error(data.message);
+                }
+            } catch (err) {
+                console.error("Gagal ambil kategori:", err);
+            }
+
+            setLoadingCategory(false);
+        };
+
+        fetchCategories();
+    }, [authData?.token]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!kategori) {
-            alert("Kategori wajib diisi");
+            alert("Kategori wajib dipilih");
             return;
         }
 
-        const newOpname = {
-            id: Date.now(),
-            tanggal,
-            user: "Admin",
-            kategori,
-            totalItem: 0,
-            status: "Draft",
-            keterangan,
-            items: [],
-        };
+        if (!authData?.token) {
+            alert("Token tidak ditemukan");
+            return;
+        }
 
-        const existing =
-            JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        setLoading(true);
 
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify([newOpname, ...existing])
-        );
+        try {
+            const res = await fetch(
+                "http://localhost:5000/api/opname",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                    body: JSON.stringify({
+                        tanggal,
+                        kategori,
+                        keterangan,
+                    }),
+                }
+            );
 
-        onSaved();
-        onClose();
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.message || "Gagal membuat opname");
+                setLoading(false);
+                return;
+            }
+
+            onSaved();
+            onClose();
+
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan");
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -71,11 +121,17 @@ const CreateOpname = ({ open, onClose, onSaved, selectedDate }) => {
                     <select
                         value={kategori}
                         onChange={(e) => setKategori(e.target.value)}
+                        disabled={loadingCategory}
                     >
-                        <option value="">Pilih Kategori</option>
-                        {categories.map(c => (
-                            <option key={c.id} value={c.name}>
-                                {c.name}
+                        <option value="">
+                            {loadingCategory
+                                ? "Memuat kategori..."
+                                : "Pilih Kategori"}
+                        </option>
+
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.name}>
+                                {cat.name}
                             </option>
                         ))}
                     </select>
@@ -88,11 +144,21 @@ const CreateOpname = ({ open, onClose, onSaved, selectedDate }) => {
                     />
 
                     <div className="opname-modal-actions">
-                        <button type="button" className="btn-outline" onClick={onClose}>
+                        <button
+                            type="button"
+                            className="btn-outline"
+                            onClick={onClose}
+                            disabled={loading}
+                        >
                             Batal
                         </button>
-                        <button type="submit" className="btn-primary">
-                            Simpan Opname
+
+                        <button
+                            type="submit"
+                            className="btn-primary"
+                            disabled={loading}
+                        >
+                            {loading ? "Menyimpan..." : "Simpan Opname"}
                         </button>
                     </div>
                 </form>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { generateStockOpnamePDF } from "../../utils/stockOpnamePDF";
 import { getCurrentOwnerId } from "../../utils/owner";
+import { useAuth } from "../../context/AuthContext";
+import { getInfoToko } from "../../utils/toko";
 
 import Sidebar from "../../components/Sidebar";
 import KalenderTransaksi from "../../components/Laporan/KalenderTransaksi";
@@ -16,11 +18,13 @@ import toggleIcon from "../../assets/icons/togglebutton.png";
 
 const Opname = () => {
     const ownerId = getCurrentOwnerId();
+    const { authData } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [openCalendar, setOpenCalendar] = useState(false);
     const [range, setRange] = useState(null);
     const [search, setSearch] = useState("");
     const [opnameData, setOpnameData] = useState([]);
+    const [toko, setToko] = useState(null);
 
     const [showCreate, setShowCreate] = useState(false);
     const [mode, setMode] = useState("list");
@@ -33,18 +37,47 @@ const Opname = () => {
     );
 
     useEffect(() => {
-        if (!ownerId) return;
+        if (!authData?.token) return;
 
-        const STORAGE_KEY = `stock_opname_${ownerId}`;
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const fetchToko = async () => {
+            const data = await getInfoToko(authData.token);
+            if (data) {
+                setToko(data);
+            }
+        };
 
-        if (saved) {
-            setOpnameData(JSON.parse(saved));
-        } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-            setOpnameData([]);
+        fetchToko();
+    }, [authData?.token]);
+
+    const fetchOpname = async () => {
+        if (!authData?.token) return;
+
+        try {
+            const res = await fetch(
+                "http://localhost:5000/api/opname",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            if (!res.ok) {
+                console.error("Gagal ambil opname");
+                return;
+            }
+
+            const data = await res.json();
+            setOpnameData(data);
+
+        } catch (err) {
+            console.error(err);
         }
-    }, [ownerId]);
+    };
+
+    useEffect(() => {
+        fetchOpname();
+    }, [authData?.token]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -53,16 +86,18 @@ const Opname = () => {
     const filteredData = opnameData.filter((o) => {
         if (search) {
             const key = search.toLowerCase();
+
             if (
-                !o.user.toLowerCase().includes(key) &&
-                !o.kategori.toLowerCase().includes(key)
+                !o.kategori?.toLowerCase().includes(key)
             )
                 return false;
         }
 
         if (range) {
             const tgl = new Date(o.tanggal);
-            if (tgl < range.startDate || tgl > range.endDate) return false;
+            if (tgl < range.startDate || tgl > range.endDate) {
+                return false;
+            }
         }
 
         return true;
@@ -73,15 +108,26 @@ const Opname = () => {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (!window.confirm("Hapus data stock opname ini?")) return;
 
-        const updated = opnameData.filter((o) => o.id !== id);
-        setOpnameData(updated);
-        localStorage.setItem(
-            `stock_opname_${ownerId}`,
-            JSON.stringify(updated)
-        );
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/opname/${id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            if (res.ok) {
+                setOpnameData((prev) => prev.filter((o) => o.id !== id));
+            }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     return (
@@ -162,7 +208,7 @@ const Opname = () => {
                                     {paginatedData.map((o) => (
                                         <tr key={o.id}>
                                             <td>{o.tanggal}</td>
-                                            <td>{o.user}</td>
+                                            <td>{o.created_by || "-"}</td>
                                             <td>{o.kategori}</td>
                                             <td>{o.totalItem}</td>
                                             <td>{o.status}</td>
@@ -180,7 +226,31 @@ const Opname = () => {
                                                 {o.status === "Selesai" ? (
                                                     <button
                                                         className="opname-btn-outline"
-                                                        onClick={() => generateStockOpnamePDF(o, logoToko)}
+                                                        onClick={async () => {
+                                                            try {
+                                                                const res = await fetch(
+                                                                    `http://localhost:5000/api/opname/${o.id}`,
+                                                                    {
+                                                                        headers: {
+                                                                            Authorization: `Bearer ${authData.token}`,
+                                                                        },
+                                                                    }
+                                                                );
+
+                                                                if (!res.ok) {
+                                                                    alert("Gagal ambil detail opname");
+                                                                    return;
+                                                                }
+
+                                                                const detail = await res.json();
+
+                                                                generateStockOpnamePDF(detail, toko, logoToko);
+
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                alert("Terjadi kesalahan");
+                                                            }
+                                                        }}
                                                     >
                                                         PDF
                                                     </button>
@@ -215,23 +285,11 @@ const Opname = () => {
                     <DetailOpname
                         data={selectedOpname}
                         onBack={() => setMode("list")}
-                        onUpdate={(updated) => {
-                            const all =
-                                JSON.parse(
-                                    localStorage.getItem(`stock_opname_${ownerId}`)
-                                ) || [];
+                        onUpdate={() => {
+                            setMode("list");
 
-                            const newAll = all.map((o) =>
-                                o.id === updated.id ? updated : o
-                            );
-
-                            localStorage.setItem(
-                                `stock_opname_${ownerId}`,
-                                JSON.stringify(newAll)
-                            );
-
-                            setOpnameData(newAll);
-                            setSelectedOpname(updated);
+                            // refresh data
+                            fetchOpname();
                         }}
                     />
                 )}
@@ -241,12 +299,7 @@ const Opname = () => {
                         selectedDate={selectedDate}
                         onClose={() => setShowCreate(false)}
                         onSaved={() => {
-                            const data =
-                                JSON.parse(
-                                    localStorage.getItem(`stock_opname_${ownerId}`)
-                                ) || [];
-
-                            setOpnameData(data);
+                            fetchOpname();
                         }}
                     />
                 )}

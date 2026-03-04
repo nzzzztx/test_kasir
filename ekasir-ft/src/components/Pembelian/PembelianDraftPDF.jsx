@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { getCurrentOwnerId } from "../../utils/owner";
-import { getInfoToko } from "../../utils/toko";
 
-const PembelianDraftPDF = () => {
+const PembelianDraftPDF = ({ toko = {} }) => {
     const [draft, setDraft] = useState(null);
-    const { namaToko, lokasi, telepon } = getInfoToko();
+
+    const tokoData = {
+        namaToko: toko?.namaToko || "Nama Toko",
+        lokasi: toko?.lokasi || "-",
+        telepon: toko?.telepon || "-"
+    };
 
     useEffect(() => {
         const ownerId = getCurrentOwnerId();
@@ -29,9 +33,16 @@ const PembelianDraftPDF = () => {
 
     return (
         <div id="pembelian-pdf" style={{ padding: 24, fontFamily: "Arial" }}>
-            <h2 style={{ textAlign: "center" }}>{namaToko}</h2>
-            <p style={{ textAlign: "center", fontSize: 12 }}>{lokasi}</p>
-            <p style={{ textAlign: "center", fontSize: 12 }}>Telp: {telepon}</p>
+            <h2 style={{ textAlign: "center" }}>{tokoData.namaToko}</h2>
+            {tokoData.lokasi !== "-" && (
+                <p style={{ textAlign: "center", fontSize: 12 }}>{tokoData.lokasi}</p>
+            )}
+            {tokoData.telepon !== "-" && (
+                <p style={{ textAlign: "center", fontSize: 12 }}>
+                    Telp: {tokoData.telepon}
+                </p>
+            )}
+
             <h3 style={{ textAlign: "center" }}>Draft Pembelian</h3>
 
             <p><strong>Supplier:</strong> {supplier?.name}</p>
@@ -63,7 +74,8 @@ const PembelianDraftPDF = () => {
                             <td>{item.name}</td>
                             <td>{item.qty}</td>
                             <td>{item.unit}</td>
-                            <td>Rp {(item.price || 0).toLocaleString("id-ID")}
+                            <td>
+                                Rp {(item.price || 0).toLocaleString("id-ID")}
                             </td>
                             <td>
                                 Rp {((item.qty || 0) * (item.price || 0)).toLocaleString("id-ID")}
@@ -74,11 +86,11 @@ const PembelianDraftPDF = () => {
             </table>
 
             <p style={{ marginTop: 12 }}>
-                <strong>Total:</strong> Rp {total.toLocaleString("id-ID")}
+                <strong>Total:</strong> Rp {(total || 0).toLocaleString("id-ID")}
             </p>
 
             <p>
-                <strong>Dibayar:</strong> Rp {paidAmount.toLocaleString("id-ID")}
+                <strong>Dibayar:</strong> Rp {(paidAmount || 0).toLocaleString("id-ID")}
             </p>
 
             <p>
