@@ -5,9 +5,11 @@ export const getCurrentOwnerId = () => {
   try {
     const auth = JSON.parse(raw);
 
-    if (auth.role === "owner") return auth.id;
+    if (auth.role === "owner") {
+      return auth.id;
+    }
 
-    return auth.ownerId;
+    return auth.ownerId || auth.owner_id || null;
   } catch {
     return null;
   }

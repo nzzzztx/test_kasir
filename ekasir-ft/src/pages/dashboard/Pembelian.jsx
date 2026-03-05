@@ -133,7 +133,9 @@ const Pembelian = () => {
         setPaidAmount(0);
     };
 
-    if (!ownerId) return null;
+    if (!authData?.token) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="dashboard-container">

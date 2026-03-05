@@ -90,15 +90,21 @@ const Categories = () => {
 
         const fetchCategories = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/categories/${ownerId}`
+                "http://localhost:5000/api/categories",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
             );
+
             const data = await res.json();
-            setCategories(data);
+            setCategories(Array.isArray(data) ? data : []);
         };
 
         const fetchProducts = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/products`,
+                "http://localhost:5000/api/products",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -126,14 +132,14 @@ const Categories = () => {
         if (!authData?.token) return;
 
         const handleStockUpdate = async () => {
-            const res = await fetch(
-                `http://localhost:5000/api/products`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${authData.token}`,
-                    },
-                }
-            );
+            const res = await fetch("http://localhost:5000/api/categories", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`,
+                },
+                body: JSON.stringify({ ownerId, name }),
+            });
 
             const data = await res.json();
             setProducts(Array.isArray(data) ? data : []);

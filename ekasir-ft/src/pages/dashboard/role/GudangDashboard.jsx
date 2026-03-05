@@ -56,6 +56,18 @@ const GudangDashboard = () => {
         fetchProfile();
     }, [authData?.token]);
 
+    useEffect(() => {
+        if (role && role !== "gudang") {
+            navigate("/dashboard");
+        }
+    }, [role]);
+
+    useEffect(() => {
+        if (!authData?.token) {
+            navigate("/login");
+        }
+    }, [authData?.token]);
+
     const menuData = [
         {
             title: "Data Produk",
@@ -88,10 +100,16 @@ const GudangDashboard = () => {
             path: "/dashboard/stock",
         },
         {
-            title: "Laporan Barang",
-            desc: "Laporan aktivitas keluar masuk stock barang.",
+            title: "Laporan Pembelian Barang",
+            desc: "Laporan aktivitas keluar masuk pembelian stock.",
             icon: laporanIcon,
-            path: "/dashboard/laporan",
+            path: "/dashboard/laporan/laporan-pembelian",
+        },
+        {
+            title: "Laporan Persediaan Barang",
+            desc: "Pantau stok barang dan pergerakan persediaan secara real-time.",
+            icon: stokIcon,
+            path: "/dashboard/laporan/laporan-ketersediaan",
         },
     ];
 

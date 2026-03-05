@@ -12,19 +12,9 @@ import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
 import userDummy from "../../assets/img/profile.png";
 import searchIcon from "../../assets/icons/search.png";
-import hideIcon from "../../assets/icons/view.png";
-import hiddenIcon from "../../assets/icons/hidden.png";
 
 export default function Manajemen() {
     const { authData } = useAuth();
-
-    const ownerId =
-        authData?.role === "owner"
-            ? authData.id
-            : authData?.ownerId;
-
-    const STORAGE_KEY =
-        ownerId ? `users_owner_${ownerId}` : null;
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -32,7 +22,6 @@ export default function Manajemen() {
     const [search, setSearch] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
-    const [visiblePasswords, setVisiblePasswords] = useState({});
     const [user, setUser] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const usersPerPage = 5;
@@ -42,13 +31,6 @@ export default function Manajemen() {
         unreadCount,
         markAllAsRead,
     } = useNotifications();
-
-    const togglePassword = (id) => {
-        setVisiblePasswords((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
-    };
 
     useEffect(() => {
         if (authData) {
@@ -61,15 +43,33 @@ export default function Manajemen() {
     }, [search]);
 
     useEffect(() => {
-        if (!STORAGE_KEY) return;
+        if (!authData?.token) return;
 
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        const filtered = allUsers.filter(u => u.role !== "owner");
-        setUsers(filtered);
-    }, [STORAGE_KEY]);
+        const fetchUsers = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/users", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`
+                    }
+                });
+
+                const result = await res.json();
+
+                if (res.ok && result.success) {
+                    const filtered = result.data.filter(u => u.role !== "owner");
+                    setUsers(filtered);
+                }
+
+            } catch (err) {
+                console.error("Gagal ambil users:", err);
+            }
+        };
+
+        fetchUsers();
+    }, [authData?.token]);
 
     const filteredUsers = users.filter(u =>
-        u.username.toLowerCase().includes(search.toLowerCase())
+        (u.username || "").toLowerCase().includes(search.toLowerCase())
     );
     const indexOfLastUser = currentPage * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -77,45 +77,111 @@ export default function Manajemen() {
 
     const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-    const handleDelete = (id) => {
-        if (!STORAGE_KEY) return;
-
+    const handleDelete = async (id) => {
         const confirmDelete = window.confirm("Yakin ingin menghapus user ini?");
         if (!confirmDelete) return;
 
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${authData.token}`
+                }
+            });
 
-        const updated = allUsers.filter(u => u.id !== id);
+            if (!res.ok) {
+                const data = await res.json();
+                alert(data.message);
+                return;
+            }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setUsers(updated.filter(u => u.role !== "owner"));
+            setUsers(prev => prev.filter(u => u.id !== id));
+
+        } catch (err) {
+            console.error("Gagal hapus user:", err);
+        }
     };
 
-    const handleAddUser = (newUser) => {
-        if (!STORAGE_KEY) return;
+    const handleAddUser = async (newUser) => {
+        try {
+            const res = await fetch("http://localhost:5000/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData.token}`
+                },
+                body: JSON.stringify(newUser)
+            });
 
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const data = await res.json();
 
-        const updated = [...allUsers, newUser];
+            if (!res.ok) {
+                alert(data.message);
+                return;
+            }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setUsers(updated.filter(u => u.role !== "owner"));
-        setShowModal(false);
+            setUsers(prev => [...prev, data.user]);
+            setShowModal(false);
+
+        } catch (err) {
+            console.error("Gagal tambah user:", err);
+        }
     };
 
-    const handleUpdateUser = (updatedUser) => {
-        if (!STORAGE_KEY) return;
+    const handleUpdateUser = async (updatedUser) => {
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/users/${updatedUser.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authData.token}`
+                    },
+                    body: JSON.stringify(updatedUser)
+                }
+            );
 
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const data = await res.json();
 
-        const updated = allUsers.map(u =>
-            u.id === updatedUser.id ? updatedUser : u
-        );
+            if (!res.ok) {
+                alert(data.message);
+                return;
+            }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setUsers(updated.filter(u => u.role !== "owner"));
-        setEditingUser(null);
+            setUsers(prev =>
+                prev.map(u => u.id === updatedUser.id ? data.user : u)
+            );
+
+            setEditingUser(null);
+
+        } catch (err) {
+            console.error("Gagal update user:", err);
+        }
     };
+
+    useEffect(() => {
+        if (!authData?.token) return;
+
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error("Gagal ambil profile:", err);
+            }
+        };
+
+        fetchProfile();
+    }, [authData?.token]);
 
     if (!user) {
         return (
@@ -275,37 +341,26 @@ export default function Manajemen() {
                                 ) : (
                                     currentUsers.map((u) => (
                                         <tr key={u.id}>
-                                            <td>{u.name || u.username}</td>
+                                            <td>{u.nama || u.name || u.username}</td>
                                             <td>{u.phone || "-"}</td>
-                                            <td>{u.username}</td>
+                                            <td>{u.username || "-"}</td>
+
+                                            {/* PASSWORD: jangan tampilkan password dari server */}
                                             <td>
                                                 <div className="password-cell">
-                                                    <span>
-                                                        {visiblePasswords[u.id]
-                                                            ? "••••••••"
-                                                            : u.password
-                                                        }
-                                                    </span>
-
-                                                    <button
-                                                        type="button"
-                                                        className="toggle-password-btn"
-                                                        onClick={() => togglePassword(u.id)}
-                                                    >
-                                                        <img
-                                                            src={visiblePasswords[u.id] ? hideIcon : hiddenIcon}
-                                                            alt="toggle"
-                                                            style={{ width: "16px", opacity: 0.6 }}
-                                                        />
-                                                    </button>
+                                                    <span>••••••••</span>
                                                 </div>
                                             </td>
+
                                             <td>
                                                 <span className={`role-badge ${u.role}`}>
                                                     {u.role}
                                                 </span>
                                             </td>
-                                            <td>{u.referralCode}</td>
+
+                                            {/* referral_code dari backend */}
+                                            <td>{u.referral_code || "-"}</td>
+
                                             <td>
                                                 <div className="action-buttons">
                                                     <button

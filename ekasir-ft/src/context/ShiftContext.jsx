@@ -15,6 +15,13 @@ export const ShiftProvider = ({ children }) => {
             return;
         }
 
+        // 🔴 GUDANG TIDAK PERLU SHIFT
+        if (authData.role === "gudang") {
+            setActiveShift(null);
+            setLoadingShift(false);
+            return;
+        }
+
         try {
             const res = await fetch("http://localhost:5000/api/shifts/active", {
                 headers: {
@@ -38,13 +45,22 @@ export const ShiftProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        if (!authData?.token) return;
+
+        // 🔴 skip shift untuk gudang
+        if (authData.role === "gudang") {
+            setLoadingShift(false);
+            setActiveShift(null);
+            return;
+        }
+
         const init = async () => {
             setLoadingShift(true);
             await fetchActiveShift();
         };
 
         init();
-    }, [authData?.token]);
+    }, [authData]);
 
     useEffect(() => {
         console.log("ACTIVE SHIFT CONTEXT:", activeShift);

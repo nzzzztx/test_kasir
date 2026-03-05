@@ -53,6 +53,18 @@ const KasirDashboard = () => {
         fetchProfile();
     }, [authData?.token]);
 
+    useEffect(() => {
+        if (!authData?.token) {
+            navigate("/login");
+        }
+    }, [authData?.token]);
+
+    useEffect(() => {
+        if (role && role !== "kasir") {
+            navigate("/dashboard");
+        }
+    }, [role]);
+
     const menuData = [
         {
             title: "Transaksi",
@@ -68,9 +80,15 @@ const KasirDashboard = () => {
         },
         {
             title: "Laporan Transaksi",
-            desc: "Laporan aktivitas keluar masuk transaksi barang.",
+            desc: "Pantau dan unduh laporan transaksi harian, mingguan, atau bulanan untuk analisis penjualan.",
             icon: laporanIcon,
-            path: "/dashboard/laporan",
+            path: "/dashboard/laporan/laporan-transaksi",
+        },
+        {
+            title: "Laporan Pelanggan",
+            desc: "Analisis pelanggan berdasarkan transaksi dan riwayat pembelian.",
+            icon: customerIcon,
+            path: "/dashboard/laporan/laporan-pelanggan",
         },
     ];
 

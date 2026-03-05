@@ -15,6 +15,7 @@ import marketIcon from '../../../assets/icons/market.png';
 import stokIcon from '../../../assets/icons/stock.png';
 import toggleIcon from '../../../assets/icons/togglebutton.png';
 import notificationIcon from '../../../assets/icons/notification.png';
+import reportIcon from '../../../assets/icons/report.png';
 import taxIcon from '../../../assets/icons/tax.png';
 import keuanganIcon from '../../../assets/icons/keuangan.png';
 import cameraIcon from '../../../assets/icons/camera.png';
@@ -87,7 +88,7 @@ const Dashboard = () => {
         },
         {
             title: "Pajak Barang",
-            desc: "Buat potongan harga/diskon produk, baik berupa persentase atau nominal.",
+            desc: "Kelola pajak yang akan diterapkan pada transaksi penjualan.",
             icon: taxIcon,
             path: "/dashboard/pajak",
         },
@@ -103,11 +104,18 @@ const Dashboard = () => {
             icon: keuanganIcon,
             path: "/dashboard/transaction",
         },
+        {
+            title: "Laporan",
+            desc: "Lihat Semua Laporan Transaksi, Ketersediaan Barang, Pembelian & Pelanggan",
+            icon: reportIcon,
+            path: "/dashboard/laporan",
+        },
     ];
 
     useEffect(() => {
         if (!authData?.token) {
             navigate("/login");
+            return;
         }
     }, [authData, navigate]);
 

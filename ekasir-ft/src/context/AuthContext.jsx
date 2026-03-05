@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { secureSet, secureGet, secureRemove } from "../utils/secureStorage";
 import axios from "axios";
 
 const AuthContext = createContext();
@@ -6,25 +7,30 @@ const API = "http://localhost:5000/api/auth";
 
 export const AuthProvider = ({ children }) => {
 
-    // ✅ HARUS DI DALAM COMPONENT
     const [authData, setAuthData] = useState(() => {
-        const saved = localStorage.getItem("auth");
-        return saved ? JSON.parse(saved) : null;
+        return secureGet("auth"); // ✅ ambil dari encrypted storage
     });
-
     const [pendingUser, setPendingUser] = useState(null);
-
+    /*
+    ===============================
+    SET AUTH TOKEN KE AXIOS
+    ===============================
+    */
     useEffect(() => {
         if (authData?.token) {
-            localStorage.setItem("auth", JSON.stringify(authData));
+            secureSet("auth", authData);
             axios.defaults.headers.common["Authorization"] =
                 `Bearer ${authData.token}`;
         } else {
-            localStorage.removeItem("auth");
+            secureRemove("auth");
             delete axios.defaults.headers.common["Authorization"];
         }
     }, [authData]);
-
+    /*
+    ===============================
+    AUTO LOGOUT JIKA TOKEN EXPIRED
+    ===============================
+    */
     useEffect(() => {
         const interceptor = axios.interceptors.response.use(
             (res) => res,
@@ -36,21 +42,22 @@ export const AuthProvider = ({ children }) => {
                 return Promise.reject(err);
             }
         );
-
         return () => axios.interceptors.response.eject(interceptor);
     }, []);
-
+    /*
+    ===============================
+    REGISTER OWNER
+    ===============================
+    */
     const register = async ({ email, phone }) => {
         try {
             const res = await axios.post(`${API}/register-owner`, {
                 email,
                 phone,
             });
-
             if (res.data.success) {
                 setPendingUser({ email, phone });
             }
-
             return res.data;
         } catch (err) {
             return {
@@ -59,14 +66,17 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
+    /*
+    ===============================
+    VERIFY OTP
+    ===============================
+    */
     const verifyOtp = async ({ email, otp }) => {
         try {
             const res = await axios.post(`${API}/verify-otp`, {
                 email,
                 otp,
             });
-
             return res.data;
         } catch (err) {
             return {
@@ -75,7 +85,11 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
+    /*
+    ===============================
+    SET PASSWORD SETELAH OTP
+    ===============================
+    */
     const setPasswordAfterOtp = async (password) => {
         try {
             if (!pendingUser?.email) {
@@ -84,16 +98,13 @@ export const AuthProvider = ({ children }) => {
                     message: "Session OTP tidak ditemukan",
                 };
             }
-
             const res = await axios.post(`${API}/set-password`, {
                 email: pendingUser.email,
                 password,
             });
-
             if (res.data.success) {
                 setPendingUser(null);
             }
-
             return res.data;
         } catch (err) {
             return {
@@ -102,16 +113,18 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
+    /*
+    ===============================
+    LOGIN
+    ===============================
+    */
     const login = async (identifier, password) => {
         try {
             const res = await axios.post(`${API}/login`, {
                 identifier,
                 password,
             });
-
             const { token, user } = res.data;
-
             const finalAuth = {
                 token,
                 id: user.id,
@@ -120,9 +133,7 @@ export const AuthProvider = ({ children }) => {
                 ownerId: user.ownerId,
                 isLoggedIn: true,
             };
-
             setAuthData(finalAuth);
-
             return { success: true };
         } catch (err) {
             return {
@@ -131,12 +142,21 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
+    /*
+    ===============================
+    LOGOUT
+    ===============================
+    */
     const logout = () => {
+        secureRemove("auth");
         setAuthData(null);
         window.location.href = "/login";
     };
-
+    /*
+    ===============================
+    FORGOT PASSWORD
+    ===============================
+    */
     const forgotPassword = async (email) => {
         try {
             const res = await axios.post(`${API}/forgot-password`, { email });
@@ -148,7 +168,11 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
+    /*
+    ===============================
+    RESET PASSWORD
+    ===============================
+    */
     const resetPassword = async ({ email, otp, newPassword }) => {
         try {
             const res = await axios.post(`${API}/reset-password`, {
@@ -179,6 +203,7 @@ export const AuthProvider = ({ children }) => {
                 resetPassword,
             }}
         >
+
             {children}
         </AuthContext.Provider>
     );
