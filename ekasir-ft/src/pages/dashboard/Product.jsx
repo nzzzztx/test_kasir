@@ -69,7 +69,7 @@ const Product = () => {
        FETCH CATEGORIES
     =============================== */
     const fetchCategories = async () => {
-        if (!authData) return;
+        if (!authData?.token) return;
 
         try {
             const ownerId =
@@ -78,12 +78,18 @@ const Product = () => {
                     : authData.ownerId;
 
             const res = await fetch(
-                `http://localhost:5000/api/categories/${ownerId}`
+                `http://localhost:5000/api/categories`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
             );
-
             const data = await res.json();
-            const categoryNames = data.map(cat => cat.name);
+
+            const categoryNames = data.map((cat) => cat.name);
             setCategories(['Semua', ...categoryNames]);
+
         } catch (err) {
             console.error("Gagal mengambil kategori:", err);
         }

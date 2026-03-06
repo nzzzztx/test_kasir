@@ -24,7 +24,8 @@ export default function PwNotif() {
     };
 
     if (!email) {
-        return navigate("/forgot-password");
+        navigate("/forgot-password");
+        return null;
     }
 
     return (

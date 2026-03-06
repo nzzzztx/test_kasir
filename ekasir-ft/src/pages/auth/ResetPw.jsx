@@ -73,7 +73,9 @@ export default function ResetPw() {
             return;
         }
 
-        navigate("/reset-succes");
+        navigate("/reset-succes", {
+            state: { email }
+        });
     };
 
     return (

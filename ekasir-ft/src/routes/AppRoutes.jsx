@@ -142,19 +142,19 @@ export default function AppRoutes() {
             />
             <Route
                 path="/dashboard/laporan/laporan-transaksi"
-                element={<ProtectRoute allowedRoles={["owner"]}><LaporanTransaksi /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><LaporanTransaksi /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-pembelian"
-                element={<ProtectRoute allowedRoles={["owner"]}><LaporanPembelian /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><LaporanPembelian /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-ketersediaan"
-                element={<ProtectRoute allowedRoles={["owner"]}><LaporanKetersediaan /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "gudang"]}><LaporanKetersediaan /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/laporan/laporan-pelanggan"
-                element={<ProtectRoute allowedRoles={["owner"]}><LaporanPelanggan /></ProtectRoute>}
+                element={<ProtectRoute allowedRoles={["owner", "kasir"]}><LaporanPelanggan /></ProtectRoute>}
             />
             <Route
                 path="/dashboard/shift"

@@ -17,7 +17,7 @@ import TambahCatatanModal from "../../components/Shift/TambahCatatanModal";
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import notificationIcon from "../../assets/icons/notification.png";
 import cameraIcon from "../../assets/icons/camera.png";
-import userDummy from "../../assets/img/user1.png";
+import userDummy from "../../assets/img/profile.png";
 
 const DRAWER_CONFIG = {
     "Cash Drawer 1": {

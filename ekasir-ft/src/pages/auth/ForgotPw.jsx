@@ -19,7 +19,25 @@ export default function ForgotPw() {
             return;
         }
 
-        const result = await forgotPassword(email);
+        try {
+            const result = await forgotPassword(email);
+
+            if (!result.success) {
+                setError(result.message);
+                setMessage("");
+                return;
+            }
+
+            setError("");
+            setMessage("OTP reset dikirim ke email Anda");
+
+            navigate("/password-notification", {
+                state: { email },
+            });
+
+        } catch (err) {
+            setError("Terjadi kesalahan server");
+        }
 
         if (!result.success) {
             setError(result.message);

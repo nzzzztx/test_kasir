@@ -104,12 +104,12 @@ const Dashboard = () => {
             icon: keuanganIcon,
             path: "/dashboard/transaction",
         },
-        {
-            title: "Laporan",
-            desc: "Lihat Semua Laporan Transaksi, Ketersediaan Barang, Pembelian & Pelanggan",
-            icon: reportIcon,
-            path: "/dashboard/laporan",
-        },
+        // {
+        //     title: "Laporan",
+        //     desc: "Lihat Semua Laporan Transaksi, Ketersediaan Barang, Pembelian & Pelanggan",
+        //     icon: reportIcon,
+        //     path: "/dashboard/laporan",
+        // },
     ];
 
     useEffect(() => {

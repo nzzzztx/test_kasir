@@ -96,6 +96,13 @@ const Akun = () => {
                             </div>
 
                             <div className="akun-row">
+                                <span>Kode Referral</span>
+                                <b>
+                                    {user.referral_code || "-"}
+                                </b>
+                            </div>
+
+                            <div className="akun-row">
                                 <span>Email</span>
                                 <b>{user.email}</b>
                             </div>

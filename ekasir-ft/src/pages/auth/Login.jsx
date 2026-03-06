@@ -19,9 +19,9 @@ export default function Login() {
 
     useEffect(() => {
         if (authData?.token) {
-            navigate("/dashboard");
+            navigate("/dashboard", { replace: true });
         }
-    }, [authData]);
+    }, [authData?.token]);
 
     const [showPassword, setShowPassword] = useState(false);
 
@@ -42,7 +42,12 @@ export default function Login() {
             return;
         }
 
-        navigate("/dashboard");
+        // navigate("/dashboard");
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        handleLogin();
     };
 
     return (
@@ -54,7 +59,7 @@ export default function Login() {
             <div className="auth-right">
                 <img src={logo} alt="logo" className="auth-logo" />
 
-                <div className="auth-card">
+                <form className="auth-card" onSubmit={handleSubmit}>
                     <h2>Masuk ke Akun Anda</h2>
                     <p>Kamu dapat masuk sebagai owner, kasir ataupun gudang</p>
 
@@ -62,6 +67,7 @@ export default function Login() {
                         <label>Email/Username</label>
                         <input
                             type="text"
+                            autoComplete="username"
                             placeholder="Masukan Email atau Username anda"
                             value={form.identifier}
                             onChange={(e) =>
@@ -75,6 +81,7 @@ export default function Login() {
                         <div className="auth-password">
                             <input
                                 type={showPassword ? "text" : "password"}
+                                autoComplete="current-password"
                                 placeholder="Masukkan kata sandi"
                                 value={form.password}
                                 onChange={(e) =>
@@ -96,7 +103,7 @@ export default function Login() {
                         </span>
                     </div>
 
-                    <button className="auth-btn" onClick={handleLogin} disabled={loading}>
+                    <button type="submit" className="auth-btn" disabled={loading}>
                         {loading ? "Memproses..." : "Masuk"}
                     </button>
 
@@ -104,7 +111,7 @@ export default function Login() {
                         Belum punya akun?{" "}
                         <span onClick={() => navigate("/register")}>Daftar</span>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );
