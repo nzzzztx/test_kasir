@@ -68,17 +68,8 @@ const Categories = () => {
             return;
         }
 
-        const refresh = await fetch(
-            `http://localhost:5000/api/categories/${ownerId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${authData.token}`
-                }
-            }
-        );
-
-        const newData = await refresh.json();
-        setCategories(newData);
+        // 🔥 langsung update state
+        setCategories(prev => [...prev, result.category]);
 
         setShowAdd(false);
     };

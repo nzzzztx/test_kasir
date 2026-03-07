@@ -5,7 +5,7 @@ import ProfileEditModal from "../../components/Akun/ProfileEditModal";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/akun.css";
-import userDummy from "../../assets/img/Profile.png";
+import userDummy from "../../assets/img/profile.png";
 
 const API = "http://localhost:5000/api";
 

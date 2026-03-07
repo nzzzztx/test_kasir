@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import userDummy from "../../assets/img/Profile.png";
+import userDummy from "../../assets/img/profile.png";
 
 const ProfileEditModal = ({ user, onClose, onSave }) => {
     const [form, setForm] = useState({ ...user });

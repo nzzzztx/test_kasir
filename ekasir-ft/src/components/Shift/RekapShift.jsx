@@ -25,38 +25,43 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
             console.error("Gagal parse notes:", err);
             setNotes([]);
         }
-    }, [shift]);
+    }, [shift?.id]);
 
     const handleAddNote = async (data) => {
-        try {
-            const res = await fetch(
-                `http://localhost:5000/api/shifts/${shift.id}/note`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${authData?.token}`,
-                    },
-                    body: JSON.stringify(data),
-                }
-            );
-
-            const result = await res.json();
-            if (!res.ok) {
-                alert(result.message);
-                return;
+        const res = await fetch(
+            `http://localhost:5000/api/shifts/${shift.id}/note`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authData?.token}`,
+                },
+                body: JSON.stringify(data),
             }
+        );
 
-            setNotes(result.notes || []);
-            setShowCatatan(false);
+        const result = await res.json();
 
-            if (onUpdate) {
-                await onUpdate(result.updatedShift);
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Gagal menambahkan catatan");
+        if (!res.ok) {
+            alert(result.message);
+            return;
         }
+
+        const parsedNotes =
+            typeof result.notes === "string"
+                ? JSON.parse(result.notes)
+                : result.notes || [];
+
+        setNotes(parsedNotes);
+
+        if (onUpdate) {
+            onUpdate({
+                ...shift,
+                notes: parsedNotes
+            });
+        }
+
+        setShowCatatan(false);
     };
 
     // 🔥 hitung dari transaksi API

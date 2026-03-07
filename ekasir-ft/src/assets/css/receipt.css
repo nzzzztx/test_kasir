@@ -9,15 +9,15 @@
 }
 
 .receipt-card {
-  width: 300px;
+  width: 260px;
   background: #ffffff;
   border-radius: 10px;
-  padding: 16px 14px;
+  padding: 12px 10px;
   color: #111827;
 
   font-family: "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.35;
 
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
@@ -39,7 +39,7 @@
 
 .receipt-line {
   border-top: 1px dashed #9ca3af;
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .receipt-line.thick {
@@ -60,7 +60,7 @@
 }
 
 .receipt-item {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .receipt-row span:last-child {
@@ -74,9 +74,10 @@
 
 .receipt-footer {
   text-align: center;
-  margin-top: 10px;
-  font-size: 12px;
+  margin-top: 6px;
+  font-size: 11px;
   color: #000;
+  page-break-inside: avoid;
 }
 
 .receipt-footer.small {
@@ -150,6 +151,11 @@
 }
 
 @media print {
+
+  body {
+    margin: 0;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -163,9 +169,11 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
+    width: 260px;
+    padding: 10px;
     box-shadow: none !important;
     border-radius: 0 !important;
+    page-break-inside: avoid;
   }
 
   .receipt-close,

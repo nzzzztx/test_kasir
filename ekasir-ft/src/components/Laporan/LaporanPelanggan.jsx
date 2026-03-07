@@ -227,10 +227,7 @@ const LaporanPelanggan = () => {
                                         <td>{c.phone}</td>
                                         <td>{c.totalTransaksi}</td>
                                         <td>
-                                            Rp{" "}
-                                            {c.totalPenjualan.toLocaleString(
-                                                "id-ID"
-                                            )}
+                                            Rp {Number(c.totalPenjualan).toLocaleString("id-ID")}
                                         </td>
                                         <td>
                                             {new Date(

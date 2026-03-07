@@ -284,86 +284,9 @@ const Transaction = () => {
                             )}
                         </div>
 
-                        <div
-                            className="profile-box profile-trigger"
-                            onClick={() => setProfileOpen(!profileOpen)}
-                        >
-                            <img
-                                src={user?.avatar || userDummy}
-                                alt="profile"
-                                className="header-avatar"
-                            />
-                            <span className="profile-caret">▾</span>
-
-                            {profileOpen && (
-                                <div
-                                    className="profile-dropdown"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <div className="profile-title">
-                                        Akun Saya
-                                    </div>
-
-                                    <div className="profile-header profile-header-center">
-                                        <div className="profile-avatar-wrapper profile-avatar-large">
-                                            <img
-                                                src={user?.avatar || userDummy}
-                                                alt="avatar"
-                                                className="profile-avatar-img"
-                                            />
-
-                                            <label className="profile-avatar-edit">
-                                                <img
-                                                    src={cameraIcon}
-                                                    alt="edit avatar"
-                                                    className="profile-avatar-edit-icon"
-                                                />
-
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    hidden
-                                                    onChange={(e) => {
-                                                        console.log(e.target.files[0]);
-                                                    }}
-                                                />
-                                            </label>
-                                        </div>
-
-                                        <div className="profile-info profile-info-center">
-                                            <div className="profile-fullname">{user?.name}</div>
-                                            <div className="profile-email">{user?.email}</div>
-                                            <div className={`profile-role-badge ${authData?.role}`}>
-                                                {authData?.role?.toUpperCase()}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="profile-menu">
-                                        <button
-                                            className="profile-menu-item"
-                                            onClick={() => {
-                                                setProfileOpen(false);
-                                                navigate("/dashboard/akun");
-                                            }}
-                                        >
-                                            Edit Profile
-                                        </button>
-
-                                        <button
-                                            className="profile-menu-item"
-                                            onClick={() => {
-                                                setProfileOpen(false);
-                                                setShowPasswordModal(true);
-                                            }}
-                                        >
-                                            Ganti Password
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="profile-box">
+                            <img src={user?.avatar || userDummy} alt="profile" />
                         </div>
-
                     </div>
                 </header>
 

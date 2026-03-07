@@ -97,23 +97,28 @@ const ReceiptPreview = ({ transaction, visible, onClose, toko = {} }) => {
                         </>
                     )}
 
-                    {items.map((item) => {
-                        const name = item.name ?? item.product_name ?? "-";
-                        const price = item.sellPrice ?? item.price ?? 0;
+                    {items.map((item, i) => {
+                        const name = item.product_name || item.name || "-";
+                        const price = item.price || item.sellPrice || 0;
 
                         return (
-                            <div key={item.id} className="receipt-item">
-                                <div className="receipt-item-name">
-                                    {name}
+                            <div key={`${item.product_id}-${i}`} className="receipt-item">
+
+                                <div className="receipt-row item-name-row">
+                                    <span>{name}</span>
+                                    <span></span>
                                 </div>
-                                <div className="receipt-row">
+
+                                <div className="receipt-row item-row">
                                     <span>
                                         {item.qty} x Rp {Number(price).toLocaleString("id-ID")}
                                     </span>
+
                                     <span>
                                         Rp {(Number(price) * item.qty).toLocaleString("id-ID")}
                                     </span>
                                 </div>
+
                             </div>
                         );
                     })}
