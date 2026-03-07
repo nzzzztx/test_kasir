@@ -9,6 +9,7 @@ import eyeOpen from "../../assets/icons/view.png";
 import eyeClose from "../../assets/icons/hidden.png";
 
 export default function RegisterPassword() {
+
     const navigate = useNavigate();
     const location = useLocation();
     const { setPasswordAfterOtp } = useAuth();
@@ -22,7 +23,7 @@ export default function RegisterPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    // Kalau masuk tanpa email → redirect
+    // redirect kalau email tidak ada
     useEffect(() => {
         if (!email) {
             navigate("/register");
@@ -30,6 +31,7 @@ export default function RegisterPassword() {
     }, [email, navigate]);
 
     const handleSubmit = async () => {
+
         if (!password || !confirm) {
             alert("Password wajib diisi");
             return;
@@ -42,7 +44,9 @@ export default function RegisterPassword() {
 
         setLoading(true);
 
-        const result = await setPasswordAfterOtp(password);
+        const result = await setPasswordAfterOtp({
+            password
+        });
 
         setLoading(false);
 
@@ -52,19 +56,26 @@ export default function RegisterPassword() {
         }
 
         alert("Akun berhasil dibuat, silakan login");
+
         navigate("/login");
     };
 
     return (
         <div className="auth-wrapper">
+
             <div className="auth-left">
                 <img src={illustration} alt="register-password" />
             </div>
 
             <div className="auth-right">
+
                 <img src={logo} alt="logo" className="auth-logo" />
 
-                <div className="auth-card">
+                <form className="auth-card" onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmit();
+                }}>
+
                     <h2>Buat Password</h2>
                     <p>Lengkapi kata sandi untuk menyelesaikan pendaftaran</p>
 
@@ -74,37 +85,49 @@ export default function RegisterPassword() {
                     </div>
 
                     <div className="auth-group">
+
                         <label>Kata Sandi</label>
+
                         <div className="auth-password">
+
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan kata sandi"
                                 value={password}
                                 onChange={(e) => setPasswordInput(e.target.value)}
                             />
+
                             <img
                                 src={showPassword ? eyeOpen : eyeClose}
                                 className="password-icon"
                                 onClick={() => setShowPassword(!showPassword)}
                             />
+
                         </div>
+
                     </div>
 
                     <div className="auth-group">
+
                         <label>Konfirmasi Kata Sandi</label>
+
                         <div className="auth-password">
+
                             <input
                                 type={showConfirm ? "text" : "password"}
                                 placeholder="Ulangi kata sandi"
                                 value={confirm}
                                 onChange={(e) => setConfirm(e.target.value)}
                             />
+
                             <img
                                 src={showConfirm ? eyeOpen : eyeClose}
                                 className="password-icon"
                                 onClick={() => setShowConfirm(!showConfirm)}
                             />
+
                         </div>
+
                     </div>
 
                     <button
@@ -121,8 +144,9 @@ export default function RegisterPassword() {
                             Masuk
                         </span>
                     </div>
-                </div>
+                </form>
             </div>
-        </div>
+
+        </div >
     );
 }

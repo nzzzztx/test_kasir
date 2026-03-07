@@ -100,7 +100,11 @@ export default function OtpModal({ email, onClose }) {
                     <button className="otp-cancel" onClick={onClose}>
                         Batal
                     </button>
-                    <button className="otp-submit" onClick={handleVerify}>
+                    <button
+                        className="otp-submit"
+                        onClick={handleVerify}
+                        disabled={otp.join("").length !== 4}
+                    >
                         Verifikasi
                     </button>
                 </div>

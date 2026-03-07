@@ -1,5 +1,10 @@
-export const getInfoToko = async (token) => {
+export const getInfoToko = async () => {
   try {
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    const token = auth?.token;
+
+    if (!token) return null;
+
     const res = await fetch("http://localhost:5000/api/store-information", {
       headers: {
         Authorization: `Bearer ${token}`,

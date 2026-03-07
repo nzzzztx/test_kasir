@@ -86,12 +86,12 @@ const ReceiptPreview = ({ transaction, visible, onClose, toko = {} }) => {
                                     <span>{customer.name || "Umum"}</span>
                                 </div>
 
-                                {customer.phone && (
+                                {/* {customer.phone && (
                                     <div className="receipt-row">
                                         <span>No. HP</span>
                                         <span>{customer.phone}</span>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                             <div className="receipt-line" />
                         </>

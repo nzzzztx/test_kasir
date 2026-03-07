@@ -54,7 +54,10 @@ const Categories = () => {
 
         const res = await fetch("http://localhost:5000/api/categories", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authData.token}`
+            },
             body: JSON.stringify({ ownerId, name })
         });
 
@@ -66,7 +69,12 @@ const Categories = () => {
         }
 
         const refresh = await fetch(
-            `http://localhost:5000/api/categories/${ownerId}`
+            `http://localhost:5000/api/categories/${ownerId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${authData.token}`
+                }
+            }
         );
 
         const newData = await refresh.json();
@@ -129,29 +137,50 @@ const Categories = () => {
     }, [authData?.token]);
 
     useEffect(() => {
-        if (!authData?.token) return;
-
-        const handleStockUpdate = async () => {
-            const res = await fetch("http://localhost:5000/api/categories", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${authData.token}`,
-                },
-                body: JSON.stringify({ ownerId, name }),
-            });
-
-            const data = await res.json();
-            setProducts(Array.isArray(data) ? data : []);
-        };
-
-        window.addEventListener("stockUpdated", handleStockUpdate);
-
-        return () => {
-            window.removeEventListener("stockUpdated", handleStockUpdate);
-        };
+        setSelectedCategory(null);
+        setSearch('');
     }, [authData?.token]);
 
+    useEffect(() => {
+        if (!authData) return;
+
+        const ownerId =
+            authData.role === "owner"
+                ? authData.id
+                : authData.ownerId;
+
+        const fetchCategories = async () => {
+            const res = await fetch(
+                "http://localhost:5000/api/categories",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+            setCategories(Array.isArray(data) ? data : []);
+        };
+
+        const fetchProducts = async () => {
+            const res = await fetch(
+                "http://localhost:5000/api/products",
+                {
+                    headers: {
+                        Authorization: `Bearer ${authData.token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+            setProducts(data);
+        };
+
+        fetchCategories();
+        fetchProducts();
+
+    }, [authData?.token]);
     useEffect(() => {
         if (!authData?.token) return;
 
@@ -385,7 +414,10 @@ const Categories = () => {
                                     `http://localhost:5000/api/categories/${cat.id}`,
                                     {
                                         method: "DELETE",
-                                        headers: { "Content-Type": "application/json" },
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            Authorization: `Bearer ${authData.token}`
+                                        },
                                         body: JSON.stringify({ ownerId })
                                     }
                                 );
@@ -398,7 +430,12 @@ const Categories = () => {
                                 }
 
                                 const refresh = await fetch(
-                                    `http://localhost:5000/api/categories/${ownerId}`
+                                    `http://localhost:5000/api/categories/${ownerId}`,
+                                    {
+                                        headers: {
+                                            Authorization: `Bearer ${authData.token}`
+                                        }
+                                    }
                                 );
 
                                 const newData = await refresh.json();

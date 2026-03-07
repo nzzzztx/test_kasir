@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
             const res = await axios.post(`${API}/register-owner`, {
                 email,
-                phone,
+                phone
             });
 
             if (res.data.success) {
@@ -135,10 +135,15 @@ export const AuthProvider = ({ children }) => {
 
     /*
     ===============================
-    SET PASSWORD
+    SET PASSWORD + LICENSE
     ===============================
     */
-    const setPasswordAfterOtp = async (password) => {
+    /*
+===============================
+SET PASSWORD (LICENSE AUTO)
+===============================
+*/
+    const setPasswordAfterOtp = async ({ password }) => {
 
         try {
 
@@ -153,7 +158,7 @@ export const AuthProvider = ({ children }) => {
 
             const res = await axios.post(`${API}/set-password`, {
                 email: pendingUser.email,
-                password,
+                password
             });
 
             if (res.data.success) {

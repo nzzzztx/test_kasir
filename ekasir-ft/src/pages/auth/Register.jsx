@@ -26,7 +26,10 @@ export default function Register() {
 
         setLoading(true);
 
-        const result = await register(form);
+        const result = await register({
+            email: form.email.trim(),
+            phone: form.phone.trim()
+        });
 
         setLoading(false);
 

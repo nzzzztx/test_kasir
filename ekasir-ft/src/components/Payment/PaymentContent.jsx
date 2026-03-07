@@ -2,7 +2,7 @@ import qrImage from "../../assets/img/qrcode.png";
 import { useEffect, useState } from "react";
 import { getActiveEDC } from "../../utils/edc";
 import { getInfoToko } from "../../utils/toko";
-import { useMemo } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { getCurrentOwnerId } from "../../utils/owner";
 
 const PaymentContent = ({
@@ -16,6 +16,7 @@ const PaymentContent = ({
     setPaidAmount,
     onConfirm,
 }) => {
+    const { authData } = useAuth();
     const {
         items = [],
         subtotal = 0,
@@ -26,15 +27,26 @@ const PaymentContent = ({
         finalTotal = 0,
     } = transaction;
 
-    const customer = transaction.customer || {};
+    const customer = transaction?.customer ?? {};
     const [activeEDC, setActiveEDC] = useState([]);
     const isCash = method === "TUNAI";
     const ownerId = getCurrentOwnerId();
-    const store = useMemo(() => getInfoToko(), [ownerId]);
+    const [store, setStore] = useState(null);
 
     useEffect(() => {
         setActiveEDC(getActiveEDC());
     }, []);
+
+    useEffect(() => {
+        const loadStore = async () => {
+            if (!authData?.token) return;
+
+            const data = await getInfoToko(authData.token);
+            setStore(data);
+        };
+
+        loadStore();
+    }, [authData]);
 
     return (
         <div className="payment-layout">
@@ -72,8 +84,8 @@ const PaymentContent = ({
                 <h4 className="card-title">List Barang</h4>
 
                 <div className="payment-receipt-list">
-                    {items.map((item) => (
-                        <div key={item.id} className="payment-receipt-item">
+                    {items.map((item, i) => (
+                        <div key={`${item.product_id}-${i}`} className="payment-receipt-item">
                             <div className="qty">{item.qty}</div>
 
                             <div className="item-info">

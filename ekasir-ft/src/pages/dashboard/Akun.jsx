@@ -33,7 +33,7 @@ const Akun = () => {
         if (authData?.token) {
             fetchProfile();
         }
-    }, [authData]);
+    }, [authData?.token]);
 
     const handleSaveProfile = async (updated) => {
         try {
