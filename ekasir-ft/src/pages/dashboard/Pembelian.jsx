@@ -67,7 +67,7 @@ const Pembelian = () => {
         const fetchSuppliers = async () => {
             try {
                 const res = await fetch(
-                    "http://localhost:5000/api/suppliers",
+                    "http://192.168.2.20:5000/api/suppliers",
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,
@@ -112,9 +112,23 @@ const Pembelian = () => {
                 .from(el)
                 .set({
                     filename: `${lastSavedPembelian.invoiceNumber}.pdf`,
-                    margin: 10,
-                    html2canvas: { scale: 2 },
-                    jsPDF: { format: "a4" },
+                    margin: 5,
+
+                    image: {
+                        type: "jpeg",
+                        quality: 0.7,
+                    },
+
+                    html2canvas: {
+                        scale: 1,
+                        useCORS: true
+                    },
+
+                    jsPDF: {
+                        unit: "mm",
+                        format: "a5",
+                        orientation: "portrait"
+                    }
                 })
                 .save();
         }, 300);

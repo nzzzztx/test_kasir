@@ -115,7 +115,7 @@ const Stock = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },

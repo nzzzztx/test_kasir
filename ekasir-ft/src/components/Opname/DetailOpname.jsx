@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import "../../assets/css/opname.css";
+import { useNotifications } from "../../context/NotificationContext";
 
 const DetailOpname = ({ data, onBack, onUpdate }) => {
     const { authData } = useAuth();
-
+    const { pushNotification } = useNotifications();
     const [opname, setOpname] = useState(null);
     const [products, setProducts] = useState([]);
     const [selectedProductId, setSelectedProductId] = useState("");
@@ -12,11 +13,12 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
     const [stokFisik, setStokFisik] = useState("");
     const [loading, setLoading] = useState(false);
 
+
     // Load detail opname
     useEffect(() => {
         const fetchDetail = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/opname/${data.id}`,
+                `http://192.168.2.20:5000/api/opname/${data.id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -39,7 +41,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
 
         const fetchProducts = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/products?category=${opname.kategori}`,
+                `http://192.168.2.20:5000/api/products?category=${opname.kategori}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -70,7 +72,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
         setLoading(true);
 
         const res = await fetch(
-            "http://localhost:5000/api/opname/item",
+            "http://192.168.2.20:5000/api/opname/item",
             {
                 method: "POST",
                 headers: {
@@ -89,7 +91,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
         if (res.ok) {
             // reload detail
             const detailRes = await fetch(
-                `http://localhost:5000/api/opname/${opname.id}`,
+                `http://192.168.2.20:5000/api/opname/${opname.id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -111,7 +113,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
         setLoading(true);
 
         const res = await fetch(
-            `http://localhost:5000/api/opname/item/${itemId}`,
+            `http://192.168.2.20:5000/api/opname/item/${itemId}`,
             {
                 method: "DELETE",
                 headers: {
@@ -123,7 +125,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
         if (res.ok) {
             // reload detail
             const detailRes = await fetch(
-                `http://localhost:5000/api/opname/${opname.id}`,
+                `http://192.168.2.20:5000/api/opname/${opname.id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -145,7 +147,7 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
         setLoading(true);
 
         const res = await fetch(
-            "http://localhost:5000/api/opname/finish",
+            "http://192.168.2.20:5000/api/opname/finish",
             {
                 method: "POST",
                 headers: {
@@ -158,9 +160,20 @@ const DetailOpname = ({ data, onBack, onUpdate }) => {
             }
         );
 
-        if (res.ok) {
-            onUpdate();
+        if (!res.ok) {
+            alert("Gagal menyelesaikan opname");
+            setLoading(false);
+            return;
         }
+
+        pushNotification({
+            type: "opname",
+            title: "Stock Opname",
+            message: `Stock opname kategori ${opname.kategori} telah diselesaikan (${opname.items?.length} produk)`,
+            role: ["owner", "gudang"]
+        });
+
+        onUpdate();
 
         setLoading(false);
     };

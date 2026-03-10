@@ -37,7 +37,7 @@ const Suppliers = () => {
     const fetchSuppliers = async () => {
         try {
             const res = await fetch(
-                "http://localhost:5000/api/suppliers",
+                "http://192.168.2.20:5000/api/suppliers",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -120,7 +120,7 @@ const Suppliers = () => {
 
             try {
                 for (const row of rows) {
-                    const res = await fetch("http://localhost:5000/api/suppliers", {
+                    const res = await fetch("http://192.168.2.20:5000/api/suppliers", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -159,7 +159,7 @@ const Suppliers = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -405,7 +405,7 @@ const Suppliers = () => {
                 onSubmit={async (data) => {
                     try {
                         const res = await fetch(
-                            "http://localhost:5000/api/suppliers",
+                            "http://192.168.2.20:5000/api/suppliers",
                             {
                                 method: "POST",
                                 headers: {
@@ -440,7 +440,7 @@ const Suppliers = () => {
                 onSubmit={async (updated) => {
                     try {
                         const res = await fetch(
-                            `http://localhost:5000/api/suppliers/${updated.id}`,
+                            `http://192.168.2.20:5000/api/suppliers/${updated.id}`,
                             {
                                 method: "PUT",
                                 headers: {
@@ -476,7 +476,7 @@ const Suppliers = () => {
                 onConfirm={async (id) => {
                     try {
                         const res = await fetch(
-                            `http://localhost:5000/api/suppliers/${id}`,
+                            `http://192.168.2.20:5000/api/suppliers/${id}`,
                             {
                                 method: "DELETE",
                                 headers: {

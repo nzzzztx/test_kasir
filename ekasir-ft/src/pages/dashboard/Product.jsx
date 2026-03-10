@@ -50,7 +50,7 @@ const Product = () => {
 
         try {
             const res = await fetch(
-                `http://localhost:5000/api/products`,
+                `http://192.168.2.20:5000/api/products`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -78,7 +78,7 @@ const Product = () => {
                     : authData.ownerId;
 
             const res = await fetch(
-                `http://localhost:5000/api/categories`,
+                `http://192.168.2.20:5000/api/categories`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -155,7 +155,7 @@ const Product = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -173,7 +173,7 @@ const Product = () => {
 
     const handleSaveProduct = async (newProduct) => {
         try {
-            const res = await fetch("http://localhost:5000/api/products", {
+            const res = await fetch("http://192.168.2.20:5000/api/products", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -199,7 +199,7 @@ const Product = () => {
     const handleUpdateProduct = async (updatedProduct) => {
         try {
             const res = await fetch(
-                `http://localhost:5000/api/products/${updatedProduct.id}`,
+                `http://192.168.2.20:5000/api/products/${updatedProduct.id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -556,7 +556,7 @@ const Product = () => {
 
                                         try {
                                             const res = await fetch(
-                                                `http://localhost:5000/api/products/${selectedProduct.id}`,
+                                                `http://192.168.2.20:5000/api/products/${selectedProduct.id}`,
                                                 {
                                                     method: "DELETE",
                                                     headers: {

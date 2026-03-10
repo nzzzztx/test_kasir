@@ -25,7 +25,7 @@ const CreateOpname = ({ onClose, onSaved, selectedDate }) => {
                 setLoadingCategory(true);
 
                 const res = await fetch(
-                    "http://localhost:5000/api/opname/categories",
+                    "http://192.168.2.20:5000/api/opname/categories",
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,
@@ -67,7 +67,7 @@ const CreateOpname = ({ onClose, onSaved, selectedDate }) => {
 
         try {
             const res = await fetch(
-                "http://localhost:5000/api/opname",
+                "http://192.168.2.20:5000/api/opname",
                 {
                     method: "POST",
                     headers: {

@@ -44,7 +44,7 @@ const LaporanPembelian = () => {
                 }
 
                 const res = await fetch(
-                    `http://localhost:5000/api/reports/purchases?${queryParams.toString()}`,
+                    `http://192.168.2.20:5000/api/reports/purchases?${queryParams.toString()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`
@@ -154,7 +154,7 @@ const LaporanPembelian = () => {
             }
 
             const response = await fetch(
-                `http://localhost:5000/api/reports/purchases/export-pdf?${queryParams.toString()}`,
+                `http://192.168.2.20:5000/api/reports/purchases/export-pdf?${queryParams.toString()}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`
@@ -301,7 +301,7 @@ const LaporanPembelian = () => {
                                                     className="btn-outline success"
                                                     onClick={async () => {
                                                         const response = await fetch(
-                                                            `http://localhost:5000/api/reports/purchases/${p.id}/invoice`,
+                                                            `http://192.168.2.20:5000/api/reports/purchases/${p.id}/invoice`,
                                                             {
                                                                 headers: {
                                                                     Authorization: `Bearer ${authData.token}`,
@@ -397,7 +397,7 @@ const LaporanPembelian = () => {
                                             }
 
                                             const response = await fetch(
-                                                "http://localhost:5000/api/reports/purchases/pay",
+                                                "http://192.168.2.20:5000/api/reports/purchases/pay",
                                                 {
                                                     method: "POST",
                                                     headers: {
@@ -420,7 +420,7 @@ const LaporanPembelian = () => {
 
                                             // Refresh data dari backend
                                             const refresh = await fetch(
-                                                "http://localhost:5000/api/reports/purchases",
+                                                "http://192.168.2.20:5000/api/reports/purchases",
                                                 {
                                                     headers: {
                                                         Authorization: `Bearer ${authData.token}`,

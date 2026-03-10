@@ -23,7 +23,7 @@ export const ShiftProvider = ({ children }) => {
         }
 
         try {
-            const res = await fetch("http://localhost:5000/api/shifts/active", {
+            const res = await fetch("http://192.168.2.20:5000/api/shifts/active", {
                 headers: {
                     Authorization: `Bearer ${authData.token}`,
                 },

@@ -28,7 +28,7 @@ const LaporanKetersediaan = () => {
 
         const fetchData = async () => {
             const res = await fetch(
-                `http://localhost:5000/api/reports/stock-availability`,
+                `http://192.168.2.20:5000/api/reports/stock-availability`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,

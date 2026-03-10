@@ -7,7 +7,7 @@ import "../../assets/css/dashboard.css";
 import "../../assets/css/akun.css";
 import userDummy from "../../assets/img/profile.png";
 
-const API = "http://localhost:5000/api";
+const API = "http://192.168.2.20:5000/api";
 
 const Akun = () => {
     const [showEdit, setShowEdit] = useState(false);

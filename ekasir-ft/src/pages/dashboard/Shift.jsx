@@ -72,7 +72,7 @@ const Shift = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -99,7 +99,7 @@ const Shift = () => {
     useEffect(() => {
         if (!authData?.token) return;
 
-        fetch("http://localhost:5000/api/shifts/history", {
+        fetch("http://192.168.2.20:5000/api/shifts/history", {
             headers: {
                 Authorization: `Bearer ${authData.token}`,
             },
@@ -160,7 +160,7 @@ const Shift = () => {
         if (!activeShift || !authData?.token) return;
 
         fetch(
-            `http://localhost:5000/api/transactions?shift_id=${activeShift.id}`,
+            `http://192.168.2.20:5000/api/transactions?shift_id=${activeShift.id}`,
             {
                 headers: {
                     Authorization: `Bearer ${authData.token}`,
@@ -195,7 +195,7 @@ const Shift = () => {
         const drawerInfo = DRAWER_CONFIG[drawer];
 
         try {
-            const res = await fetch("http://localhost:5000/api/shifts/start", {
+            const res = await fetch("http://192.168.2.20:5000/api/shifts/start", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -232,7 +232,7 @@ const Shift = () => {
 
         try {
             const res = await fetch(
-                `http://localhost:5000/api/shifts/end/${activeShift.id}`,
+                `http://192.168.2.20:5000/api/shifts/end/${activeShift.id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -270,7 +270,7 @@ const Shift = () => {
 
             // ambil detail shift lengkap
             const shiftRes = await fetch(
-                `http://localhost:5000/api/shifts/${shiftId}`,
+                `http://192.168.2.20:5000/api/shifts/${shiftId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -285,7 +285,7 @@ const Shift = () => {
 
             // ambil transaksi shift
             const res = await fetch(
-                `http://localhost:5000/api/transactions?shift_id=${shiftId}`,
+                `http://192.168.2.20:5000/api/transactions?shift_id=${shiftId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -306,7 +306,7 @@ const Shift = () => {
 
         try {
             const res = await fetch(
-                `http://localhost:5000/api/shifts/${selectedShift.id}/note`,
+                `http://192.168.2.20:5000/api/shifts/${selectedShift.id}/note`,
                 {
                     method: "PUT",
                     headers: {
@@ -325,7 +325,7 @@ const Shift = () => {
 
             // refresh history
             const historyRes = await fetch(
-                "http://localhost:5000/api/shifts/history",
+                "http://192.168.2.20:5000/api/shifts/history",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -702,7 +702,7 @@ const Shift = () => {
 
                                     // 🔥 refresh history dulu
                                     const historyRes = await fetch(
-                                        "http://localhost:5000/api/shifts/history",
+                                        "http://192.168.2.20:5000/api/shifts/history",
                                         {
                                             headers: {
                                                 Authorization: `Bearer ${authData.token}`,

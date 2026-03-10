@@ -29,7 +29,7 @@ const Customers = () => {
     const [customers, setCustomers] = useState([]);
     const fetchCustomers = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/customers", {
+            const res = await fetch("http://192.168.2.20:5000/api/customers", {
                 headers: {
                     Authorization: `Bearer ${authData.token}`,
                 },
@@ -55,7 +55,7 @@ const Customers = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -128,7 +128,7 @@ const Customers = () => {
 
             try {
                 for (const row of rows) {
-                    await fetch("http://localhost:5000/api/customers", {
+                    await fetch("http://192.168.2.20:5000/api/customers", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -144,7 +144,7 @@ const Customers = () => {
                 }
 
                 // Reload setelah import selesai
-                const reload = await fetch("http://localhost:5000/api/customers", {
+                const reload = await fetch("http://192.168.2.20:5000/api/customers", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -373,7 +373,7 @@ const Customers = () => {
                 onClose={() => setOpenModal(false)}
                 onSubmit={async (data) => {
                     try {
-                        const res = await fetch("http://localhost:5000/api/customers", {
+                        const res = await fetch("http://192.168.2.20:5000/api/customers", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -390,7 +390,7 @@ const Customers = () => {
                         }
 
                         // Reload data dari server
-                        const reload = await fetch("http://localhost:5000/api/customers", {
+                        const reload = await fetch("http://192.168.2.20:5000/api/customers", {
                             headers: {
                                 Authorization: `Bearer ${authData.token}`,
                             },
@@ -414,7 +414,7 @@ const Customers = () => {
                 onSubmit={async (updated) => {
                     try {
                         const res = await fetch(
-                            `http://localhost:5000/api/customers/${updated.id}`,
+                            `http://192.168.2.20:5000/api/customers/${updated.id}`,
                             {
                                 method: "PUT",
                                 headers: {
@@ -432,7 +432,7 @@ const Customers = () => {
                             return;
                         }
 
-                        const reload = await fetch("http://localhost:5000/api/customers", {
+                        const reload = await fetch("http://192.168.2.20:5000/api/customers", {
                             headers: {
                                 Authorization: `Bearer ${authData.token}`,
                             },
@@ -457,7 +457,7 @@ const Customers = () => {
                 onConfirm={async (id) => {
                     try {
                         await fetch(
-                            `http://localhost:5000/api/customers/${id}`,
+                            `http://192.168.2.20:5000/api/customers/${id}`,
                             {
                                 method: "DELETE",
                                 headers: {
@@ -466,7 +466,7 @@ const Customers = () => {
                             }
                         );
 
-                        const reload = await fetch("http://localhost:5000/api/customers", {
+                        const reload = await fetch("http://192.168.2.20:5000/api/customers", {
                             headers: {
                                 Authorization: `Bearer ${authData.token}`,
                             },

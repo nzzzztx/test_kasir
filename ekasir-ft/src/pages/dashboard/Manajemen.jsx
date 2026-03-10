@@ -47,7 +47,7 @@ export default function Manajemen() {
 
         const fetchUsers = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/users", {
+                const res = await fetch("http://192.168.2.20:5000/api/users", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`
                     }
@@ -82,7 +82,7 @@ export default function Manajemen() {
         if (!confirmDelete) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+            const res = await fetch(`http://192.168.2.20:5000/api/users/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${authData.token}`
@@ -104,7 +104,7 @@ export default function Manajemen() {
 
     const handleAddUser = async (newUser) => {
         try {
-            const res = await fetch("http://localhost:5000/api/users", {
+            const res = await fetch("http://192.168.2.20:5000/api/users", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export default function Manajemen() {
     const handleUpdateUser = async (updatedUser) => {
         try {
             const res = await fetch(
-                `http://localhost:5000/api/users/${updatedUser.id}`,
+                `http://192.168.2.20:5000/api/users/${updatedUser.id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -165,7 +165,7 @@ export default function Manajemen() {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },

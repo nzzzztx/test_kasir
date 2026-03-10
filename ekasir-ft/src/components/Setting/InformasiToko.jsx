@@ -31,7 +31,7 @@ const InformasiToko = () => {
                 setLoading(true);
 
                 const res = await fetch(
-                    "http://localhost:5000/api/store-information",
+                    "http://192.168.2.20:5000/api/store-information",
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,
@@ -73,7 +73,7 @@ const InformasiToko = () => {
     const handleSave = async () => {
         try {
             const res = await fetch(
-                "http://localhost:5000/api/store-information",
+                "http://192.168.2.20:5000/api/store-information",
                 {
                     method: "POST",
                     headers: {

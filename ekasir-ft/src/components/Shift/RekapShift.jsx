@@ -29,7 +29,7 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
 
     const handleAddNote = async (data) => {
         const res = await fetch(
-            `http://localhost:5000/api/shifts/${shift.id}/note`,
+            `http://192.168.2.20:5000/api/shifts/${shift.id}/note`,
             {
                 method: "PUT",
                 headers: {

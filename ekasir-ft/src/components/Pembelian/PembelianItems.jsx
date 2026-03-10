@@ -14,7 +14,7 @@ const PembelianItems = ({ items, setItems }) => {
 
         const fetchProducts = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/products", {
+                const res = await fetch("http://192.168.2.20:5000/api/products", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`
                     }

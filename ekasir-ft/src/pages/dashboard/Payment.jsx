@@ -5,6 +5,8 @@ import { getCurrentOwnerId } from "../../utils/owner";
 import { useNavigate } from "react-router-dom";
 import { useShift } from "../../context/ShiftContext";
 import { getInfoToko } from "../../utils/toko";
+import { useSearchParams } from "react-router-dom";
+import { useRef } from "react";
 
 import "../../assets/css/dashboard.css";
 import "../../assets/css/payment.css";
@@ -21,6 +23,10 @@ const Payment = () => {
     const [transaction, setTransaction] = useState(null);
     const [loading, setLoading] = useState(true);
     const [toko, setToko] = useState(null);
+
+    const [searchParams] = useSearchParams();
+    const invoiceId = searchParams.get("invoice_id");
+    const transactionCreated = useRef(false);
 
     const [paidAmount, setPaidAmount] = useState("");
     const [method, setMethod] = useState("TUNAI");
@@ -73,6 +79,109 @@ const Payment = () => {
         setLoading(false);
     }, [ownerId]);
 
+    useEffect(() => {
+
+        const checkPayment = async () => {
+
+            if (!invoiceId || !authData?.token || loadingShift || !activeShift) return;
+
+            try {
+
+                const res = await fetch(
+                    `http://192.168.2.20:5000/api/payment/status/${invoiceId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${authData?.token}`
+                        }
+                    }
+                );
+
+                const data = await res.json();
+
+                if (data.status === "PAID" && !transactionCreated.current) {
+
+                    transactionCreated.current = true;
+
+                    const saved = localStorage.getItem(
+                        `pending_transaction_owner_${ownerId}`
+                    );
+
+                    if (!saved) return;
+
+                    const pending = JSON.parse(saved);
+
+                    const finalTotal = Number(pending.finalTotal || 0);
+
+                    /* =========================
+                       CREATE TRANSACTION
+                    ========================= */
+
+                    const response = await fetch(
+                        "http://192.168.2.20:5000/api/transactions",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${authData?.token}`,
+                            },
+                            body: JSON.stringify({
+                                shift_id: activeShift.id,
+                                customer_id: pending.customer_id || null,
+                                payment_method: pending.payment_method,
+                                payment_sub_method: pending.payment_sub_method,
+
+                                grand_total: finalTotal,
+                                paid_amount: finalTotal,
+
+                                discount_total: pending.discountTotal || 0,
+                                tax_total: pending.taxTotal || 0,
+
+                                items: pending.items.map(i => ({
+                                    product_id: i.product_id,
+                                    qty: i.qty
+                                }))
+                            })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        alert(err.message || "Gagal membuat transaksi");
+                        return;
+                    }
+
+                    const trx = await response.json();
+
+                    const completedTransaction = {
+                        ...pending,
+                        invoiceNumber: trx.invoice,
+                        paidAmount: finalTotal,
+                        change: 0,
+                        paymentMethod: pending.payment_method,
+                        paymentSubMethod: pending.payment_sub_method,
+                        paidAt: new Date().toISOString(),
+                        status: "paid"
+                    };
+
+                    setTransaction(completedTransaction);
+                    setReceiptData(completedTransaction);
+                    setKembalian(0);
+                    setShowValidasi(true);
+
+                    localStorage.removeItem(
+                        `pending_transaction_owner_${ownerId}`
+                    );
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
+        };
+
+        checkPayment();
+
+    }, [invoiceId, authData?.token, ownerId, activeShift, loadingShift]);
+
     const handleKeyPress = async (key) => {
         if (!transaction) return;
 
@@ -103,6 +212,65 @@ const Payment = () => {
                 return;
             }
 
+            /* ================================
+             XENDIT PAYMENT
+            ================================ */
+
+            if (["QRIS", "TRANSFER", "EWALLET"].includes(method)) {
+
+                try {
+
+                    const res = await fetch(
+                        "http://192.168.2.20:5000/api/payment/invoice",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${authData?.token}`,
+                            },
+                            body: JSON.stringify({
+                                amount: finalTotal,
+                                items: transaction.items
+                            })
+                        }
+                    );
+
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        alert(data.message || "Gagal membuat invoice");
+                        return;
+                    }
+
+                    if (data.invoice_url) {
+
+                        // simpan transaksi sementara
+                        localStorage.setItem(
+                            `pending_transaction_owner_${ownerId}`,
+                            JSON.stringify({
+                                ...transaction,
+                                customer_id: transaction.customer_id || null,
+                                payment_method: method,
+                                payment_sub_method: subMethod,
+                                shift_id: activeShift.id
+                            })
+                        );
+
+                        // redirect ke Xendit
+                        window.location.href = data.invoice_url;
+
+                    }
+
+                } catch (err) {
+
+                    console.error(err);
+                    alert("Gagal koneksi ke payment gateway");
+
+                }
+
+                return;
+            }
+
             const paid =
                 method === "TUNAI"
                     ? Number(paidAmount || 0)
@@ -117,7 +285,7 @@ const Payment = () => {
 
             try {
                 const response = await fetch(
-                    "http://localhost:5000/api/transactions",
+                    "http://192.168.2.20:5000/api/transactions",
                     {
                         method: "POST",
                         headers: {
@@ -129,13 +297,15 @@ const Payment = () => {
                             customer_id: transaction.customer_id || null,
                             payment_method: method,
                             payment_sub_method: subMethod,
-                            paid_amount: paid,
+
                             discount_total: transaction.discountTotal || 0,
                             tax_total: transaction.taxTotal || 0,
+
+                            paid_amount: paid,
                             items: transaction.items.map(i => ({
                                 product_id: i.product_id,
-                                qty: i.qty,
-                            })),
+                                qty: i.qty
+                            }))
                         })
                     }
                 );
@@ -143,6 +313,7 @@ const Payment = () => {
                 const data = await response.json();
 
                 if (!response.ok) {
+                    console.log("ERROR RESPONSE:", data);
                     alert(data.message || "Transaksi gagal");
                     return;
                 }
@@ -173,6 +344,7 @@ const Payment = () => {
                     type: "payment",
                     title: "Pembayaran Berhasil",
                     message: `Transaksi ${data.invoice} berhasil`,
+                    role: ["owner", "kasir"],
                 });
 
                 setTransaction(updatedTransaction);

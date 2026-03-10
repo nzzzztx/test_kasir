@@ -80,7 +80,7 @@ const LaporanPelanggan = () => {
                 }
 
                 const response = await fetch(
-                    `http://localhost:5000/api/reports/customers?${params.toString()}`,
+                    `http://192.168.2.20:5000/api/reports/customers?${params.toString()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,

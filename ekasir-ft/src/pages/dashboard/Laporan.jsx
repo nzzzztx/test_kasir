@@ -71,7 +71,7 @@ const Laporan = () => {
         const fetchProfile = async () => {
             try {
                 const res = await fetch(
-                    "http://localhost:5000/api/profile",
+                    "http://192.168.2.20:5000/api/profile",
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,
@@ -331,7 +331,7 @@ const Laporan = () => {
 
                                     try {
                                         const res = await fetch(
-                                            "http://localhost:5000/api/profile/change-password",
+                                            "http://192.168.2.20:5000/api/profile/change-password",
                                             {
                                                 method: "PUT",
                                                 headers: {

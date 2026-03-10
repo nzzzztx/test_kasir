@@ -119,7 +119,7 @@ const LaporanTransaksi = () => {
                 queryParams.append("waktuType", waktuType);
 
                 const res = await fetch(
-                    `http://localhost:5000/api/reports/transactions?${queryParams.toString()}`,
+                    `http://192.168.2.20:5000/api/reports/transactions?${queryParams.toString()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${authData.token}`,

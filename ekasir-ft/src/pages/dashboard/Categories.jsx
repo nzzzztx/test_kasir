@@ -52,7 +52,7 @@ const Categories = () => {
                 ? authData.id
                 : authData.ownerId;
 
-        const res = await fetch("http://localhost:5000/api/categories", {
+        const res = await fetch("http://192.168.2.20:5000/api/categories", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -89,7 +89,7 @@ const Categories = () => {
 
         const fetchCategories = async () => {
             const res = await fetch(
-                "http://localhost:5000/api/categories",
+                "http://192.168.2.20:5000/api/categories",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -103,7 +103,7 @@ const Categories = () => {
 
         const fetchProducts = async () => {
             const res = await fetch(
-                "http://localhost:5000/api/products",
+                "http://192.168.2.20:5000/api/products",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -142,7 +142,7 @@ const Categories = () => {
 
         const fetchCategories = async () => {
             const res = await fetch(
-                "http://localhost:5000/api/categories",
+                "http://192.168.2.20:5000/api/categories",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -156,7 +156,7 @@ const Categories = () => {
 
         const fetchProducts = async () => {
             const res = await fetch(
-                "http://localhost:5000/api/products",
+                "http://192.168.2.20:5000/api/products",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -177,7 +177,7 @@ const Categories = () => {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch("http://192.168.2.20:5000/api/profile", {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
                     },
@@ -402,7 +402,7 @@ const Categories = () => {
                                         : authData.ownerId;
 
                                 const res = await fetch(
-                                    `http://localhost:5000/api/categories/${cat.id}`,
+                                    `http://192.168.2.20:5000/api/categories/${cat.id}`,
                                     {
                                         method: "DELETE",
                                         headers: {
@@ -421,7 +421,7 @@ const Categories = () => {
                                 }
 
                                 const refresh = await fetch(
-                                    `http://localhost:5000/api/categories/${ownerId}`,
+                                    `http://192.168.2.20:5000/api/categories/${ownerId}`,
                                     {
                                         headers: {
                                             Authorization: `Bearer ${authData.token}`

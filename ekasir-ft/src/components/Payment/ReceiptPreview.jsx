@@ -22,7 +22,9 @@ const ReceiptPreview = ({ transaction, visible, onClose, toko = {} }) => {
     } = transaction;
 
     const cashier = transaction.cashier;
-    const isUnpaid = paidAmount < finalTotal;
+    const isUnpaid =
+        transaction.status !== "paid" &&
+        paidAmount < finalTotal;
     const customer = transaction.customer || {};
 
     return (

@@ -43,7 +43,7 @@ const CartPanel = ({
     useEffect(() => {
         if (!authData?.token) return;
 
-        fetch("http://localhost:5000/api/customers", {
+        fetch("http://192.168.2.20:5000/api/customers", {
             headers: {
                 Authorization: `Bearer ${authData.token}`
             }

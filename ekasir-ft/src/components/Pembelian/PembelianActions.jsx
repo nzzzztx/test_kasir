@@ -1,5 +1,6 @@
 import html2pdf from "html2pdf.js";
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 const PembelianActions = ({
     items,
@@ -13,6 +14,7 @@ const PembelianActions = ({
 }) => {
     const sisa = Math.max(total - paidAmount, 0);
     const { authData } = useAuth();
+    const { pushNotification } = useNotifications();
 
     const handleExportDraftPDF = () => {
         const element = document.getElementById("draft-pdf");
@@ -30,6 +32,7 @@ const PembelianActions = ({
     };
 
     const handleSavePembelian = async () => {
+
         if (!authData?.token) {
             alert("Session expired");
             return;
@@ -42,10 +45,9 @@ const PembelianActions = ({
             return alert("Pembayaran belum lunas!");
         }
 
-        const sisa = Math.max(total - paidAmount, 0);
-
         try {
-            const res = await fetch("http://localhost:5000/api/purchases", {
+
+            const res = await fetch("http://192.168.2.20:5000/api/purchases", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -71,6 +73,13 @@ const PembelianActions = ({
                 return;
             }
 
+            pushNotification({
+                type: "purchase",
+                title: "Pembelian Barang",
+                message: `Pembelian ${result.invoiceNumber} dari ${supplier.name} berhasil dibuat`,
+                role: ["owner", "gudang"]
+            });
+
             onSaved({
                 id: result.id || Date.now(),
                 invoiceNumber: result.invoiceNumber,
@@ -80,7 +89,7 @@ const PembelianActions = ({
                 paidAmount,
                 sisa,
                 status: paymentStatus,
-                tanggal: tanggal,
+                tanggal,
                 createdAt: new Date().toISOString()
             });
 

@@ -68,7 +68,7 @@ const Opname = () => {
 
         try {
             const res = await fetch(
-                "http://localhost:5000/api/opname",
+                "http://192.168.2.20:5000/api/opname",
                 {
                     headers: {
                         Authorization: `Bearer ${authData.token}`,
@@ -127,7 +127,7 @@ const Opname = () => {
 
         try {
             const res = await fetch(
-                `http://localhost:5000/api/opname/${id}`,
+                `http://192.168.2.20:5000/api/opname/${id}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -243,7 +243,7 @@ const Opname = () => {
                                                         onClick={async () => {
                                                             try {
                                                                 const res = await fetch(
-                                                                    `http://localhost:5000/api/opname/${o.id}`,
+                                                                    `http://192.168.2.20:5000/api/opname/${o.id}`,
                                                                     {
                                                                         headers: {
                                                                             Authorization: `Bearer ${authData.token}`,
