@@ -17,42 +17,55 @@
 
   font-family: "Courier New", monospace;
   font-size: 11px;
-  line-height: 1.35;
+  line-height: 1.25;
 
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
+
+/* ================= HEADER ================= */
 
 .receipt-title {
   text-align: center;
   font-weight: bold;
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  margin-top: 0;
   color: #000;
+  letter-spacing: 0.3px;
 }
 
 .receipt-sub {
   text-align: center;
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 11px;
+  margin-bottom: 2px;
   color: #374151;
 }
 
+.receipt-sub:last-child {
+  margin-bottom: 6px;
+}
+
+/* ================= LINE ================= */
+
 .receipt-line {
   border-top: 1px dashed #9ca3af;
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .receipt-line.thick {
   border-top: 2px solid #000;
+  margin: 6px 0;
 }
+
+/* ================= ROW ================= */
 
 .receipt-row {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 12px;
+  font-size: 11px;
   color: #000;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .receipt-item-name {
@@ -60,7 +73,7 @@
 }
 
 .receipt-item {
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .receipt-row span:last-child {
@@ -70,11 +83,14 @@
 .receipt-row.total {
   font-weight: 900;
   margin-top: 6px;
+  font-size: 12px;
 }
+
+/* ================= FOOTER ================= */
 
 .receipt-footer {
   text-align: center;
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 11px;
   color: #000;
   page-break-inside: avoid;
@@ -84,6 +100,8 @@
   font-size: 11px;
   opacity: 0.7;
 }
+
+/* ================= BUTTON ================= */
 
 .receipt-close {
   margin-top: 14px;
@@ -104,6 +122,8 @@
   background: #ff4500;
 }
 
+/* ================= STATUS ================= */
+
 .receipt-row.unpaid {
   color: #dc2626;
   font-weight: 600;
@@ -115,7 +135,7 @@
   font-weight: bold;
   letter-spacing: 1px;
   padding: 6px 0;
-  margin: 6px 0 10px;
+  margin: 6px 0 8px;
   border-radius: 6px;
 }
 
@@ -134,8 +154,10 @@
   font-weight: 600;
 }
 
+/* ================= CUSTOMER ================= */
+
 .receipt-customer {
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 6px;
 }
 
@@ -150,10 +172,13 @@
   max-width: 60%;
 }
 
+/* ================= PRINT ================= */
+
 @media print {
 
   body {
     margin: 0;
+    padding: 0;
   }
 
   body * {
@@ -169,18 +194,34 @@
     position: absolute;
     left: 0;
     top: 0;
+
     width: 260px;
     padding: 10px;
+
     box-shadow: none !important;
     border-radius: 0 !important;
+
     page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .receipt-card {
+    width: 260px;
+    padding: 10px;
+    box-shadow: none;
   }
 
   .receipt-close,
   .receipt-overlay {
     display: none !important;
   }
+
+  .receipt-footer {
+    margin-top: 10px;
+  }
 }
+
+/* ================= MOBILE ================= */
 
 @media (max-width: 767px) {
   .receipt-overlay {
@@ -201,6 +242,8 @@
     border-radius: 10px;
   }
 }
+
+/* ================= TABLET ================= */
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .receipt-card {

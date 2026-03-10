@@ -251,10 +251,7 @@ const Stock = () => {
                                 {paginatedData.map((item) => (
                                     <tr key={item.id}>
                                         <td className="stock-name">
-                                            <img
-                                                src={item.image}
-                                                alt={item.name}
-                                            />
+                                            <img src={item.image || productImg} alt={item.name} />
                                             {item.name}
                                         </td>
                                         <td>{item.code}</td>

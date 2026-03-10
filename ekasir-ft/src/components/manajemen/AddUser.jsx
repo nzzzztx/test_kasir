@@ -17,8 +17,18 @@ export default function AddUser({ onClose, onSave }) {
 
     const handleSubmit = () => {
 
-        if (!form.username || !form.password) {
-            alert("Username dan password wajib diisi");
+        if (!form.nama.trim()) {
+            alert("Nama wajib diisi");
+            return;
+        }
+
+        if (!form.username.trim()) {
+            alert("Username wajib diisi");
+            return;
+        }
+
+        if (!form.password) {
+            alert("Password wajib diisi");
             return;
         }
 

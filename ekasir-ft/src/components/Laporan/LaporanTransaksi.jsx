@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getCurrentOwnerId } from "../../utils/owner";
 import { useAuth } from "../../context/AuthContext";
+import { getInfoToko } from "../../utils/toko";
 
 import "../../assets/css/laporantransaksi.css";
 import Sidebar from "../../components/Sidebar";
@@ -14,30 +15,6 @@ import backIcon from "../../assets/icons/back.png"
 import toggleIcon from "../../assets/icons/togglebutton.png";
 import downIcon from "../../assets/icons/down.png";
 
-const getInfoToko = () => {
-    const ownerId = getCurrentOwnerId();
-    if (!ownerId) {
-        return { namaToko: "Nama Toko", lokasi: "-" };
-    }
-
-    const saved = localStorage.getItem(
-        `informasi_toko_owner_${ownerId}`
-    );
-
-    if (!saved) {
-        return { namaToko: "Nama Toko", lokasi: "-" };
-    }
-
-    try {
-        const parsed = JSON.parse(saved);
-        return {
-            namaToko: parsed.namaToko || "Nama Toko",
-            lokasi: parsed.lokasi || "-",
-        };
-    } catch {
-        return { namaToko: "Nama Toko", lokasi: "-" };
-    }
-};
 
 const LaporanTransaksi = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,8 +28,26 @@ const LaporanTransaksi = () => {
     const [openExport, setOpenExport] = useState(false);
     const [search, setSearch] = useState("");
     const [transactions, setTransactions] = useState([]);
-    const { namaToko, lokasi } = getInfoToko();
+    const [infoToko, setInfoToko] = useState({
+        namaToko: "Nama Toko",
+        lokasi: "-"
+    });
+    const namaToko = infoToko.namaToko;
     const { authData } = useAuth();
+
+    useEffect(() => {
+
+        const loadToko = async () => {
+            const data = await getInfoToko();
+
+            if (data) {
+                setInfoToko(data);
+            }
+        };
+
+        loadToko();
+
+    }, []);
 
     // const dummyTransaksi = [
     //     {
@@ -109,9 +104,12 @@ const LaporanTransaksi = () => {
             try {
                 const queryParams = new URLSearchParams();
 
+                const formatSQLDate = (date) =>
+                    date.toLocaleDateString("sv-SE");
+
                 if (range) {
-                    const start = range.startDate.toISOString().split("T")[0];
-                    const end = range.endDate.toISOString().split("T")[0];
+                    const start = formatSQLDate(range.startDate);
+                    const end = formatSQLDate(range.endDate);
 
                     queryParams.append("startDate", start);
                     queryParams.append("endDate", end);
@@ -155,7 +153,7 @@ const LaporanTransaksi = () => {
         };
 
         fetchReport();
-    }, [authData?.token, range, statusFilter, waktuType]);
+    }, [authData?.token, range, statusFilter, waktuType, namaToko]);
 
     const formatDate = (date) =>
         date.toLocaleDateString("id-ID", {
@@ -180,50 +178,38 @@ const LaporanTransaksi = () => {
         });
     }, []);
 
-    const handleExport = async () => {
-        try {
-            const queryParams = new URLSearchParams();
+    const handleExport = () => {
 
-            if (range) {
-                const start = range.startDate.toISOString().split("T")[0];
-                const end = range.endDate.toISOString().split("T")[0];
+        const data = filteredTransaksi.map((t, index) => ({
+            No: index + 1,
+            "Nomor Transaksi": t.nomor,
+            "Waktu Order": t.waktu_order
+                ? t.waktu_order.toLocaleString("id-ID")
+                : "-",
+            "Waktu Bayar": t.waktu_bayar
+                ? t.waktu_bayar.toLocaleString("id-ID")
+                : "-",
+            Outlet: t.outlet,
+            "Jenis Order": t.jenis_order,
+            Penjualan: t.penjualan,
+            "Metode Pembayaran": t.metode,
+            Status: t.status === "paid" ? "Lunas" : "Belum Lunas",
+        }));
 
-                queryParams.append("startDate", start);
-                queryParams.append("endDate", end);
-            }
+        const worksheet = XLSX.utils.json_to_sheet(data);
 
-            queryParams.append("status", statusFilter);
-            queryParams.append("waktuType", waktuType);
+        const workbook = XLSX.utils.book_new();
 
-            const response = await fetch(
-                `http://localhost:5000/api/reports/transactions/export-pdf?${queryParams.toString()}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${authData.token}`,
-                    },
-                }
-            );
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Laporan Transaksi"
+        );
 
-            if (!response.ok) {
-                alert("Gagal export PDF");
-                return;
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `Laporan_Transaksi_${Date.now()}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            window.URL.revokeObjectURL(url);
-
-        } catch (error) {
-            console.error("Export gagal:", error);
-        }
+        XLSX.writeFile(
+            workbook,
+            `Laporan_Transaksi_${Date.now()}.xlsx`
+        );
     };
 
     const filteredTransaksi = transactions.filter((t) => {
@@ -398,9 +384,9 @@ const LaporanTransaksi = () => {
                                         </button>
 
                                         <button
-                                            className={waktuType === "bayar" ? "active" : ""}
+                                            className={waktuType === "payment" ? "active" : ""}
                                             onClick={() => {
-                                                setWaktuType("bayar");
+                                                setWaktuType("payment");
                                                 setOpenWaktu(false);
                                             }}
                                         >
@@ -482,7 +468,7 @@ const LaporanTransaksi = () => {
                             </thead>
                             <tbody>
                                 {filteredTransaksi.map((t, i) => (
-                                    <tr key={i}>
+                                    <tr key={t.nomor}>
                                         <td>{t.nomor}</td>
                                         <td>
                                             {t.waktu_order
@@ -534,7 +520,7 @@ const LaporanTransaksi = () => {
                                         ? `${formatDate(range.startDate)} – ${formatDate(range.endDate)}`
                                         : "Semua tanggal"}
                                 </strong>{" "}
-                                akan diekspor dalam format <strong>PDF</strong> dan disimpan di perangkat
+                                akan diekspor dalam format <strong>Excel (.xlsx)</strong> dan disimpan di perangkat
                                 yang sedang digunakan. Lanjutkan?
                             </p>
 

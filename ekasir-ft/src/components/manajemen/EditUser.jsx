@@ -16,8 +16,23 @@ export default function EditUser({ user, onClose, onUpdate }) {
 
     const handleSubmit = () => {
 
+        if (!form.nama.trim()) {
+            alert("Nama wajib diisi");
+            return;
+        }
+
         if (!form.username.trim()) {
             alert("Username wajib diisi");
+            return;
+        }
+
+        if (!form.password) {
+            alert("Password wajib diisi");
+            return;
+        }
+
+        if (form.password.length < 8) {
+            alert("Password minimal 8 karakter");
             return;
         }
 
@@ -26,7 +41,7 @@ export default function EditUser({ user, onClose, onUpdate }) {
             return;
         }
 
-        onUpdate(form);
+        onSave(form);
     };
 
 

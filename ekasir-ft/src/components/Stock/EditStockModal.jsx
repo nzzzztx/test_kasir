@@ -34,44 +34,15 @@ const EditStockModal = ({ open, onClose, stock, onSubmit }) => {
 
         const qty = Number(form.qty);
         const basePrice = Number(form.basePrice);
-        if (qty <= 0 || basePrice <= 0) return;
 
-        const newStock = stock.stock + qty;
+        if (qty <= 0 || basePrice <= 0) return;
 
         onSubmit({
             id: stock.id,
             qty,
             basePrice,
+            note: form.note || "-"
         });
-
-        const ownerId = authData?.id;
-        if (!ownerId) return;
-
-        const STORAGE_KEY = `logistics_${ownerId}`;
-
-        const newLog = {
-            id: Date.now(),
-            code: String(stock.code),
-            productName: stock.name,
-            date: form.date,
-            in: qty,
-            out: 0,
-            stock: newStock,
-            basePrice,
-            sellPrice: stock.sellPrice,
-            email: authData.email || "unknown@system",
-            mode: "Manajemen Stok Barang",
-            note: form.note || "-",
-        };
-
-        const prevLogs = JSON.parse(
-            localStorage.getItem(STORAGE_KEY) || "[]"
-        );
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify([newLog, ...prevLogs])
-        );
 
         onClose();
     };

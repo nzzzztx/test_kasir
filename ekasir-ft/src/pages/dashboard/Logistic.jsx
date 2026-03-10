@@ -74,11 +74,9 @@ const Logistics = () => {
     };
 
     const filtered = logs.filter((l) => {
-
-        if (!selectedProductId) return false;
-
-        const matchProduct =
-            String(l.product_id) === String(selectedProductId);
+        const matchProduct = selectedProductId
+            ? String(l.product_id) === String(selectedProductId)
+            : true;
 
         const matchSearch =
             (l.note || "").toLowerCase().includes(search.toLowerCase()) ||

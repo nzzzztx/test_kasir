@@ -36,6 +36,20 @@ const Opname = () => {
         new Date().toISOString().slice(0, 10)
     );
 
+    const formatTanggal = (dateString) => {
+        if (!dateString) return "-";
+
+        const date = new Date(dateString);
+
+        return date.toLocaleString("id-ID", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
     useEffect(() => {
         if (!authData?.token) return;
 
@@ -207,7 +221,7 @@ const Opname = () => {
 
                                     {paginatedData.map((o) => (
                                         <tr key={o.id}>
-                                            <td>{o.tanggal}</td>
+                                            <td>{formatTanggal(o.tanggal)}</td>
                                             <td>{o.created_by || "-"}</td>
                                             <td>{o.kategori}</td>
                                             <td>{o.totalItem}</td>
