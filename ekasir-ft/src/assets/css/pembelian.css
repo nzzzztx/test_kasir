@@ -160,10 +160,37 @@
 
 .pembelian-actions {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
 }
+
+.payment-container{
+  width:100%;
+  max-width:520px; 
+}
+
+.payment-label{
+  font-size:13px;
+  color:#555;
+  font-weight:500;
+  margin-bottom:6px;
+}
+
+/* row input + tombol */
+.payment-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.payment-row input{
+  flex:1;                 
+  height:44px;
+  padding:0 14px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+}
+
 
 .pembelian-actions input {
   width: 160px;

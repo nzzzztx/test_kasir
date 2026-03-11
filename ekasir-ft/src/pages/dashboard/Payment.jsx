@@ -152,6 +152,13 @@ const Payment = () => {
 
                     const trx = await response.json();
 
+                    pushNotification({
+                        type: "payment",
+                        title: "Pembayaran Berhasil",
+                        message: `Invoice ${trx.invoice} • Rp ${finalTotal.toLocaleString("id-ID")}`,
+                        role: ["owner", "kasir"],
+                    })
+
                     const completedTransaction = {
                         ...pending,
                         invoiceNumber: trx.invoice,

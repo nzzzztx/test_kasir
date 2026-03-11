@@ -103,28 +103,41 @@ const PembelianActions = ({
 
     return (
         <div className="pembelian-actions">
-            <input
-                // type="number"
-                placeholder="Nominal Dibayar"
-                value={paidAmount}
-                onChange={(e) =>
-                    setPaidAmount(e.target.value ? Number(e.target.value) : 0)
-                }
-            />
 
-            <button
-                className="btn-outline"
-                onClick={handleExportDraftPDF}
-            >
-                Simpan Draft
-            </button>
+            <div className="payment-container">
 
-            <button
-                className="btn-primary"
-                onClick={handleSavePembelian}
-            >
-                Simpan Pembelian
-            </button>
+                <div className="payment-label">
+                    Masukkan Uang Pembayaran
+                </div>
+
+                <div className="payment-row">
+
+                    <input
+                        type="number"
+                        value={paidAmount}
+                        onChange={(e) =>
+                            setPaidAmount(e.target.value ? Number(e.target.value) : 0)
+                        }
+                    />
+
+                    <button
+                        className="btn-outline"
+                        onClick={handleExportDraftPDF}
+                    >
+                        Simpan Draft
+                    </button>
+
+                    <button
+                        className="btn-primary"
+                        onClick={handleSavePembelian}
+                    >
+                        Simpan Pembelian
+                    </button>
+
+                </div>
+
+            </div>
+
         </div>
     );
 };

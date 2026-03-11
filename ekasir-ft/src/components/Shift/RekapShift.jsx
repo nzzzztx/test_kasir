@@ -64,6 +64,14 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
         setShowCatatan(false);
     };
 
+    const durasi =
+        shift?.ended_at && shift?.started_at
+            ? Math.floor(
+                (new Date(shift.ended_at) - new Date(shift.started_at)) /
+                60000
+            )
+            : 0;
+
     // 🔥 hitung dari transaksi API
     const totalPenjualanTunai = transactions
         .filter((t) => t.payment_method === "TUNAI")
@@ -72,6 +80,10 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
     const totalNonTunai = transactions
         .filter((t) => t.payment_method !== "TUNAI")
         .reduce((sum, t) => sum + Number(t.grand_total || 0), 0);
+
+    const totalSemua =
+        totalPenjualanTunai +
+        totalNonTunai;
 
     const kasMasuk = notes
         .filter((n) => n.type === "IN")
@@ -100,12 +112,41 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
 
                     <div className="rekap-row">
                         <span>Mulai</span>
-                        <b>{shift.started_at}</b>
+                        <b>
+                            {shift.started_at
+                                ? new Date(shift.started_at).toLocaleString("id-ID", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                })
+                                : "-"
+                            }
+                        </b>
                     </div>
 
                     <div className="rekap-row">
                         <span>Selesai</span>
-                        <b>{shift.ended_at || "-"}</b>
+                        <b>
+                            {shift.ended_at
+                                ? new Date(shift.ended_at).toLocaleString("id-ID", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                })
+                                : "-"
+                            }
+                        </b>
+                    </div>
+
+                    <div className="rekap-row">
+                        <span>Durasi</span>
+                        <b>{durasi} menit</b>
                     </div>
 
                     <hr />
@@ -113,6 +154,18 @@ const RekapShift = ({ shift, transactions = [], onUpdate }) => {
                     <div className="rekap-row">
                         Penjualan tunai
                         <b>Rp {totalPenjualanTunai.toLocaleString()}</b>
+                    </div>
+
+                    <div className="rekap-row">
+                        Penjualan non tunai
+                        <b>Rp {totalNonTunai.toLocaleString()}</b>
+                    </div>
+
+                    <hr />
+
+                    <div className="rekap-row">
+                        Total penjualan
+                        <b>Rp {totalSemua.toLocaleString()}</b>
                     </div>
 
                     <div className="rekap-row">
