@@ -74,11 +74,11 @@ const CreateOpname = ({ onClose, onSaved, selectedDate }) => {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${authData.token}`,
                     },
+
                     body: JSON.stringify({
-                        tanggal,
                         kategori,
                         keterangan,
-                    }),
+                    })
                 }
             );
 

@@ -39,7 +39,7 @@ const Opname = () => {
     const formatTanggal = (dateString) => {
         if (!dateString) return "-";
 
-        const date = new Date(dateString);
+        const date = new Date(dateString.replace(" ", "T"));
 
         return date.toLocaleString("id-ID", {
             day: "2-digit",

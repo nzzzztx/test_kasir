@@ -48,11 +48,11 @@ const Setting = () => {
             icon: profilIcon,
             path: "/dashboard/setting/manajemen-user",
         },
-        {
-            title: "Perangkat EDC",
-            icon: edcIcon,
-            path: "/dashboard/setting/edc",
-        },
+        // {
+        //     title: "Perangkat EDC",
+        //     icon: edcIcon,
+        //     path: "/dashboard/setting/edc",
+        // },
         // {
         //     title: "Pengaturan Struk",
         //     icon: strukIcon,
