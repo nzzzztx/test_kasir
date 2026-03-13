@@ -95,12 +95,6 @@ const Pajak = () => {
             <div className={`main-content ${sidebarOpen ? "shifted" : ""}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button
-                            className="toggle-btn"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                        >
-                            <img src={toggleIcon} alt="toggle" />
-                        </button>
                         <h1>Pajak Barang</h1>
                     </div>
 

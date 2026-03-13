@@ -21,26 +21,104 @@
 .sidebar.open {
   width: 240px;
 }
+
 .sidebar.closed {
   width: 80px;
 }
 
+.sidebar-toggle {
+  margin-bottom: 2px;
+}
+
+.sidebar.closed .brand-name {
+  display: none;
+}
+
+.sidebar.closed .sidebar-header {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar.closed .sidebar-brand {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 .sidebar-header {
-  padding: 20px;
   display: flex;
   align-items: center;
+  padding: 14px;
   gap: 12px;
   height: 70px;
+
+  position: relative;
+  z-index: 2000;
+}
+
+.sidebar-toggle {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: #374151;
+
+  flex-shrink: 0;
+
+  position: relative;
+  z-index: 2000;  
+}
+
+.sidebar-toggle:hover {
+  background: #f3f4f6;
+}
+
+.sidebar.closed .sidebar-brand {
+  justify-content: center;
+}
+
+.sidebar.closed .brand-name {
+  display: none;
+}
+
+.sidebar.closed .menu-item {
+  justify-content: center;
+}
+
+.sidebar.closed .menu-item span {
+  display: none;
+}
+
+.sidebar.closed .menu-label {
+  text-align: center;
+  padding-left: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .logo-img {
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 
 .brand-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #111827;
 }
@@ -99,6 +177,7 @@
 }
 
 @media (min-width: 1025px) {
+
   .sidebar {
     transform: translateX(0);
   }
@@ -110,9 +189,11 @@
   .sidebar.closed {
     width: 80px;
   }
+
 }
 
-@media (max-width: 767px), (max-width: 1024px) and (orientation: portrait) {
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+
   .sidebar {
     width: 240px;
     transform: translateX(-100%);
@@ -125,9 +206,11 @@
   .sidebar.closed {
     transform: translateX(-100%);
   }
+
 }
 
-@media (min-width: 768px) and (orientation: landscape) {
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+
   .sidebar {
     transform: translateX(0);
   }
@@ -139,12 +222,23 @@
   .sidebar.closed {
     width: 80px;
   }
+
 }
+
 
 @media (max-width: 767px) {
+
   .sidebar {
-    height: 100vh;
-    top: 0;
-    bottom: auto;
+    width: 240px;
+    transform: translateX(-100%);
   }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
+
 }

@@ -13,15 +13,23 @@ import userIcon from '../assets/icons/user.png';
 import settingIcon from '../assets/icons/settings.png';
 import logoutIcon from '../assets/icons/logout.png';
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, toggleSidebar }) => {
     const { authData, logout } = useAuth();
     const role = authData?.role;
 
     return (
         <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
             <div className="sidebar-header">
-                <img src={logo} alt="Logo" className="logo-img" />
-                {isOpen && <h2 className="brand-name">Kasir Test</h2>}
+
+                <div className="sidebar-brand">
+                    <img src={logo} alt="Logo" className="logo-img" />
+                    {isOpen && <h2 className="brand-name">Kasir Test</h2>}
+                </div>
+
+                <button className="sidebar-toggle" onClick={toggleSidebar}>
+                    ☰
+                </button>
+
             </div>
 
             <div className="sidebar-menu">

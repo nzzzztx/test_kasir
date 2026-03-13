@@ -204,12 +204,6 @@ export default function Manajemen() {
             <div className="main-content">
                 <header className="content-header">
                     <div className="header-left">
-                        <button
-                            className="toggle-btn"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                        >
-                            <img src={toggleIcon} alt="toggle" />
-                        </button>
                         <h1>Manajemen User</h1>
                     </div>
 

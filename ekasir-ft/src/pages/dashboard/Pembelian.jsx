@@ -162,15 +162,6 @@ const Pembelian = () => {
                 <header className="content-header">
                     <div className="header-left">
                         <button
-                            className="toggle-btn"
-                            onClick={() =>
-                                setSidebarOpen(!sidebarOpen)
-                            }
-                        >
-                            <img src={toggleIcon} alt="toggle" />
-                        </button>
-
-                        <button
                             className="btn-back"
                             onClick={() => navigate(-1)}
                         >

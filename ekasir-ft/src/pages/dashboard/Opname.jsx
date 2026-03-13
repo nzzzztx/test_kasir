@@ -154,12 +154,6 @@ const Opname = () => {
             <div className={`main-content ${sidebarOpen ? "shifted" : ""}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button
-                            className="toggle-btn"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                        >
-                            <img src={toggleIcon} alt="toggle" />
-                        </button>
                         <h1>Stock Opname</h1>
                     </div>
                 </header>

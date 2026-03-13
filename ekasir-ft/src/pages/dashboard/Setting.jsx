@@ -105,12 +105,6 @@ const Setting = () => {
             <div className={`main-content ${sidebarOpen ? "shifted" : ""}`}>
                 <header className="content-header">
                     <div className="header-left">
-                        <button
-                            className="toggle-btn"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                        >
-                            <img src={toggleIcon} alt="Toggle Sidebar" />
-                        </button>
                         <h1>Pengaturan</h1>
                     </div>
 
